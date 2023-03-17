@@ -16,6 +16,7 @@ Dynfit = (Cal2[0][0][0])
 Yawfit = (Cal2[0][0][1])
 LDyn = (Cal2[0][0][2])
 LYaw = (Cal2[0][0][3])
+
 LDyn_0 = (Cal2[0][0][4])
 
 import numpy as np
