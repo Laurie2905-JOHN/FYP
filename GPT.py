@@ -60,4 +60,53 @@ prb['U1'][np.imag(prb['U1']) > 0] = 0
 prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
 prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
 
+# Loading vector data
+vect_raw = np.loadtxt(VectorFolder + VectFile + '.dat')
+vect_start = vect_raw[:, 1]
+vect_Ux = -vect_raw[:, 3]
+vect_Uy = vect_raw[:, 4]
+vect_Uz = vect_raw[:, 5]
+
+# Vector time data
+vect_t = vect_start / fs + np.linspace(0, len(vect_raw)-1/fs, len(vect_raw))
+
+vect_U1 = np.sqrt(vect_Ux**2 + vect_Uy**2 + vect_Uz**2)
+vect_apitch = np.arcsin(vect_Uz / vect_U1)
+vect_ayaw = np.arctan(vect_Uy / vect_Ux)
+
+# cut data so that each file is the same length
+if vect_t[-1] > prb.t[-1]:
+    vect_Ux = vect_Ux[vect_t <= prb.t[-1]]
+    vect_Uy = vect_Uy[vect_t <= prb.t[-1]]
+    vect_Uz = vect_Uz[vect_t <= prb.t[-1]]
+    vect_ayaw = vect_ayaw[vect_t <= prb.t[-1]]
+    vect_apitch = vect_apitch[vect_t <= prb.t[-1]]
+    vect_t = vect_t[vect_t <= prb.t[-1]]
+elif prb.t[-1] > vect_t[-1]:
+    prb.Ux = prb.Ux[prb.t <= vect_t[-1]]
+    prb.Uy = prb.Uy[prb.t <= vect_t[-1]]
+    prb.Uz = prb.Uz[prb.t <= vect_t[-1]]
+    prb.ayaw = prb.ayaw[prb.t <= vect_t[-1]]
+    prb.apitch = prb.apitch[prb.t <= vect_t[-1]]
+    prb.t = prb.t[prb.t <= vect_t[-1]]
+
+prb.Ux = prb.Ux[prb.t >= vect_t[0]]
+prb.Uy = prb.Uy[prb.t >= vect_t[0]]
+prb.Uz = prb.Uz[prb.t >= vect_t[0]]
+prb.ayaw = prb.ayaw[prb.t >= vect_t[0]]
+prb.apitch = prb.apitch[prb.t >= vect_t[0]]
+prb.t = prb.t[prb.t >= vect_t[0]]
+
+if vect_start < 0:
+    vect_Ux = vect_Ux[vect_t >= prb.t[0]]
+    vect_Uy = vect_Uy[vect_t >= prb.t[0]]
+    vect_Uz = vect_Uz[vect_t >= prb.t[0]]
+    vect_t = vect_t[vect_t >= prb.t[0]]
+
+fig, axs = plt.subplots(2, 2)
+axs[0, 0].plot(prb.t, prb.Ux, 'k')
+axs[0, 0].plot(vect_t, vect_Ux, 'r')
+axs[0, 1].plot(prb.t, prb.Uy, 'k')
+axs[0, 1].plot(vect_t, vect_Uy, 'r')
+axs[1, 0].plot(prb.t, prb.Uz, 'k')
 
