@@ -17,12 +17,22 @@ VectorFolder = ZeroFolder
 VectFile = 'MinMon20210607150154'
 Cal = sio.loadmat(CalFolder + CalFile)
 
+Cal = Cal["Cal"]
+Dynfit = Cal[0][0][0]
+Yawfit = Cal[0][0][1]
+LDyn = Cal[0][0][2]
+LYaw = Cal[0][0][3]
+LDyn_0 = Cal[0][0][4]
+
+
+
 # Evaluating yawcal for a polynomial Cal.Yawfit and dyncal
 yawcal = np.zeros((91, 2))
 yawcal[:, 0] = np.linspace(-45, 45, 91)
-# print(yawcal)
-yawcal[:, 1] = np.polyval(Cal['Yawfit'].flatten(), yawcal[:, 0])
-dyncal = np.polyval(Cal['Dynfit'].flatten(), yawcal[:, 0]) * Cal['LDyn_0']
+
+
+yawcal[:, 1] = np.polyval(Yawfit, yawcal[:, 0])
+dyncal = np.polyval(Dynfit, yawcal[:, 0])
 
 # Importing Zeroes
 zeros = {}
