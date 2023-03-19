@@ -20,6 +20,7 @@ Cal = sio.loadmat(CalFolder + CalFile)
 # Evaluating yawcal for a polynomial Cal.Yawfit and dyncal
 yawcal = np.zeros((91, 2))
 yawcal[:, 0] = np.linspace(-45, 45, 91)
+# print(yawcal)
 yawcal[:, 1] = np.polyval(Cal['Yawfit'].flatten(), yawcal[:, 0])
 dyncal = np.polyval(Cal['Dynfit'].flatten(), yawcal[:, 0]) * Cal['LDyn_0']
 
@@ -49,4 +50,4 @@ prb['U1'][np.imag(prb['U1']) > 0] = 0
 prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
 prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
 
-print(len(prb['Uy']))
+
