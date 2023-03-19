@@ -46,6 +46,7 @@ prb['raw'] -= zeros['pr_mean']
 # Data analysis
 prb['denom'] = np.mean(prb['raw'][:, :4], axis = 1)
 prb['Lyaw'] = (prb['raw'][:, 1] - prb['raw'][:, 3]) / prb['denom']
+print(prb['Lyaw'] )
 prb['Lpitch'] = (prb['raw'][:, 0] - prb['raw'][:, 2]) / prb['denom']
 
 from scipy import interpolate
