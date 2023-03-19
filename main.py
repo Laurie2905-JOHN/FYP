@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.io as sio
+import matplotlib.pyplot as plt
 
 # Constants
 rho = 997
@@ -41,14 +42,24 @@ prb = {}
 prb['raw'] = np.loadtxt(BarnFolder + BarnFile, delimiter=',')
 prb['raw'] -= zeros['pr_mean']
 
+
 # Data analysis
-prb['denom'] = np.mean(prb['raw'][:, :4], axis=1)
+prb['denom'] = np.mean(prb['raw'][:, :4], axis = 1)
 prb['Lyaw'] = (prb['raw'][:, 1] - prb['raw'][:, 3]) / prb['denom']
 prb['Lpitch'] = (prb['raw'][:, 0] - prb['raw'][:, 2]) / prb['denom']
 prb['ayaw'] = np.interp(prb['Lyaw'], yawcal[:, 1], yawcal[:, 0], left=None, right=None, period=None)
-prb['apitch'] = np.interp(prb['Lpitch'], yawcal[:, 1], yawcal[:, 0], left=None, right=None, period=None)
-prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
-prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
-prb['ldyn'] = np.interp(prb['amax'], yawcal[:, 0], dyncal, left=None, right=None, period=None)
 
-print(prb)
+print(prb['ayaw'])
+
+
+plt.plot(x, y, 'o')
+[<matplotlib.lines.Line2D object at 0x...>]
+plt.plot(xvals, yinterp, '-x')
+[<matplotlib.lines.Line2D object at 0x...>]
+plt.show()
+
+#prb['apitch'] = np.interp(prb['Lpitch'], yawcal[:, 1], yawcal[:, 0], left=None, right=None, period=None)
+#prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
+#prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
+#prb['ldyn'] = np.interp(prb['amax'], yawcal[:, 0], dyncal, left=None, right=None, period=None)
+
