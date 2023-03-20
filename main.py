@@ -42,7 +42,6 @@ prb = {}
 prb['raw'] = np.loadtxt(BarnFolder + BarnFile, delimiter=',')
 prb['raw'] -= zeros['pr_mean']
 
-
 # Data analysis
 prb['denom'] = np.mean(prb['raw'][:, :4], axis = 1)
 prb['Lyaw'] = (prb['raw'][:, 1] - prb['raw'][:, 3]) / prb['denom']
@@ -52,43 +51,21 @@ from scipy import interpolate
 
 ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
 apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
-
-
 prb['ayaw'] = ayaw_interp(prb['Lyaw'])
 prb['apitch'] = apitch_interp(prb['Lpitch'])
-
-
-#plt.scatter(yawcal[:, 1], yawcal[:, 0])
-#plt.scatter(prb['Lyaw'], prb['ayaw'])
-#plt.show()
-
-#plt.scatter(yawcal[:, 1], yawcal[:, 0])
-#plt.scatter(prb['Lpitch'], prb['apitch'])
-#plt.show()
-
-
 prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
 prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
-
 ldyn_interp = interpolate.interp1d(yawcal[:, 0],dyncal, kind = 'linear' ,fill_value = 'extrapolate')
 prb['ldyn'] = ldyn_interp(prb['amax'])
 
 
-#plt.scatter(yawcal[:, 0], dyncal)
-#plt.scatter(prb['amax'], prb['ldyn'] )
-#plt.show()
-
 # Splitting into velocities
 prb['U1'] = np.sqrt(2 * -prb['ldyn'] * np.mean(prb['raw'][:, :4], axis=1) / rho )
 prb['U1'][np.imag(prb['U1']) > 0] = 0
-
 prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
 prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
 prb['Uz'] = prb['U1'] * np.sin(np.deg2rad(prb['apitch']))
-
 prb['t'] = np.linspace(0,prb['raw'].shape[0]/fs,prb['raw'].shape[0]);
-
-
 
 
 # Loading vector data
@@ -103,8 +80,6 @@ vect['Uz'] = vect['raw'][:, 4]
 # Vector time data
 vect['start'] = 795
 vect['t'] = (vect['start'] / fs) + np.linspace(0, (len(vect['raw'])-1)/fs, len(vect['raw']))
-
-
 vect['U1'] = np.sqrt(vect['Ux']**2 + vect['Uy']**2 + vect['Uz']**2)
 vect['apitch']  = np.arcsin(vect['Uz'] / vect['U1'])
 vect['ayaw']  = np.arctan(vect['Uy'] / vect['Ux'])
