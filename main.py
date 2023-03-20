@@ -30,7 +30,7 @@ yawcal = np.zeros((91, 2))
 yawcal[:, 0] = np.linspace(-45, 45, 91)
 yawcal[:, 1] = np.polyval(Yawfit,yawcal[:, 0])
 dyncal = np.polyval(Dynfit, yawcal[:, 0])
-
+dyncal = dyncal * LDyn_0
 
 # Importing Zeroes
 zeros = {}
@@ -62,12 +62,14 @@ apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear'
 # Large disparity between MATLAB in ayaw
 
 prb['ayaw'] = ayaw_interp(prb['Lyaw'])
+test = ayaw_interp(-0.1170)
+print(test)
 prb['apitch'] = apitch_interp(prb['Lpitch'])
 
 
-plt.scatter(yawcal[:, 1], yawcal[:, 0])
-plt.scatter(prb['Lyaw'], prb['ayaw'])
-plt.show()
+#plt.scatter(yawcal[:, 1], yawcal[:, 0])
+#plt.scatter(prb['Lyaw'], prb['ayaw'])
+#plt.show()
 
 
 #plt.scatter(yawcal[:, 1], yawcal[:, 0])
@@ -78,8 +80,8 @@ plt.show()
 prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
 prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
 
-interp1 = interpolate.interp1d(dyncal,yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
-prb['ldyn'] = interp1(prb['amax'])
+ldyn_interp = interpolate.interp1d(yawcal[:, 0],dyncal, kind = 'linear' ,fill_value = 'extrapolate')
+prb['ldyn'] = ldyn_interp(prb['amax'])
 
 
 #plt.scatter(yawcal[:, 0], dyncal)
@@ -87,10 +89,8 @@ prb['ldyn'] = interp1(prb['amax'])
 #plt.show()
 
 # Splitting into velocities
-prb['U1'] = np.sqrt(2 * -prb['ldyn'] * np.mean(prb['raw'][:, :4], axis=1) / rho)
+prb['U1'] = np.sqrt(2 * -prb['ldyn'] * np.mean(prb['raw'][:, :4], axis=1) / rho )
 prb['U1'][np.imag(prb['U1']) > 0] = 0
-
-
 
 prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
 prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
@@ -153,17 +153,17 @@ prb['t'] = prb['t'][prb['t']>= vect['t'][0]]
 
 
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(prb['t'], prb['Ux'], 'k')
-axs[0, 0].plot(vect['t'],  vect['Ux'] , 'r')
+plt.plot(prb['t'], prb['Ux'], 'k')
+plt.plot(vect['t'],  vect['Ux'] , 'r')
 
-axs[0, 1].plot(prb['t'], prb['Uy'], 'k')
-axs[0, 1].plot(vect['t'], vect['Uy'], 'r')
+#fig, axs = plt.subplots(1, 1)
+#axs[0, 0].plot(prb['t'], prb['Ux'], 'k')
+#axs[0, 0].plot(vect['t'],  vect['Ux'] , 'r')
 
-axs[1, 0].plot(prb['t'], prb['Uz'], 'k')
-axs[1, 0].plot(vect['t'], vect['Uz'], 'r')
+#axs[0, 1].plot(prb['t'], prb['Uy'], 'k')
+#axs[0, 1].plot(vect['t'], vect['Uy'], 'r')
 
-print(len(vect['Ux']))
-print(len(prb['Ux']))
+#axs[1, 0].plot(prb['t'], prb['Uz'], 'k')
+#axs[1, 0].plot(vect['t'], vect['Uz'], 'r')
 
 plt.show()
