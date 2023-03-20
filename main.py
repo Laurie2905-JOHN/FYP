@@ -50,27 +50,17 @@ prb['Lpitch'] = (prb['raw'][:, 0] - prb['raw'][:, 2]) / prb['denom']
 
 from scipy import interpolate
 
-# Linear extrapolation of endpoints
-#slope = (y[-1] - y[-2]) / (x[-1] - x[-2])
-#y_extrap_left = y[0] - slope * (x[0] - x[1])
-#slope = (y[1] - y[0]) / (x[1] - x[0])
-#y_extrap_right = y[-1] + slope * (x[-1] - x[-2])
-
 ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
 apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
 
-# Large disparity between MATLAB in ayaw
 
 prb['ayaw'] = ayaw_interp(prb['Lyaw'])
-test = ayaw_interp(-0.1170)
-print(test)
 prb['apitch'] = apitch_interp(prb['Lpitch'])
 
 
 #plt.scatter(yawcal[:, 1], yawcal[:, 0])
 #plt.scatter(prb['Lyaw'], prb['ayaw'])
 #plt.show()
-
 
 #plt.scatter(yawcal[:, 1], yawcal[:, 0])
 #plt.scatter(prb['Lpitch'], prb['apitch'])
@@ -106,12 +96,14 @@ vect = {}
 vect['raw'] = np.loadtxt(VectorFolder + VectFile + '.dat')
 vect['start'] = vect['raw'][:, 1]
 vect['Ux'] = -vect['raw'][:, 2]
-vect['Uy'] = vect['raw'][:, 3]
+vect['Uy'] = -vect['raw'][:, 3]
 vect['Uz'] = vect['raw'][:, 4]
 
 
 # Vector time data
+vect['start'] = 795
 vect['t'] = (vect['start'] / fs) + np.linspace(0, (len(vect['raw'])-1)/fs, len(vect['raw']))
+
 
 vect['U1'] = np.sqrt(vect['Ux']**2 + vect['Uy']**2 + vect['Uz']**2)
 vect['apitch']  = np.arcsin(vect['Uz'] / vect['U1'])
@@ -121,49 +113,45 @@ vect['ayaw']  = np.arctan(vect['Uy'] / vect['Ux'])
 
 # cut data so that each file is the same length
 if vect['t'][-1] > prb['t'][-1]:
-    vect['Ux'] = vect['Ux'] [vect['t'] <= prb['t'][-1]]
-    vect['Uy'] = vect['Uy'][vect['t'] <= prb['t'][-1]]
-    vect['Uz'] = vect['Uz'][vect['t'] <= prb['t'][-1]]
-    vect['ayaw'] = vect['ayaw'][vect['t'] <= prb['t'][-1]]
-    vect['apitch'] = vect['apitch'][vect['t'] <= prb['t'][-1]]
-    vect['t'] = vect['t'][vect['t'] <= prb['t'][-1]]
+    vect['Ux'][vect['t'] >= prb['t'][-1]] = []
+    vect['Uy'][vect['t'] >= prb['t'][-1]] = []
+    vect['Uz'][vect['t'] >= prb['t'][-1]] = []
+    vect['ayaw'][vect['t'] >= prb['t'][-1]] = []
+    vect['apitch'][vect['t'] >= prb['t'][-1]] = []
+    vect['t'][vect['t'] >= prb['t'][-1]] = []
 
 elif prb['t'][-1] > vect['t'][-1]:
-    prb['Ux'] = prb['Ux'][prb['t'] <= vect['t'][-1]]
-    prb['Uy'] = prb['Uz'][prb['t'] <= vect['t'][-1]]
-    prb['Uz'] = prb['Uz'][prb['t']<= vect['t'][-1]]
-    prb['ayaw'] = prb['ayaw'][prb['t'] <= vect['t'][-1]]
-    prb['apitch'] = prb['apitch'][prb['t'] <= vect['t'][-1]]
-    prb['t'] = prb['t'][prb['t'] <= vect['t'][-1]]
+    prb['Ux'][prb['t'] >= vect['t'][-1]] = []
+    prb['Uz'][prb['t'] >= vect['t'][-1]] = []
+    prb['Uz'][prb['t'] >= vect['t'][-1]] = []
+    prb['ayaw'][prb['t'] >= vect['t'][-1]] = []
+    prb['apitch'][prb['t'] >= vect['t'][-1]] = []
+    prb['t'][prb['t'] >= vect['t'][-1]] = []
 
-prb['Ux'] = prb['Ux'][prb['t'] >= vect['t'][0]]
-prb['Uy'] = prb['Uy'][prb['t'] >= vect['t'][0]]
-prb['Uz'] = prb['Uz'][prb['t'] >= vect['t'][0]]
-prb['ayaw'] = prb['ayaw'][prb['t'] >= vect['t'][0]]
-prb['apitch'] = prb['apitch'][prb['t'] >= vect['t'][0]]
-prb['t'] = prb['t'][prb['t']>= vect['t'][0]]
-
-
-#if vect['start'] < 0:
-    #vect['Ux'] = vect['Ux'][vect['t'] >= prb['t'][0]]
-    #vect['Uy'] = vect['Uy'][vect['t'] >= prb['t'][0]]
-   # vect['Uz'] = vect['Uz'][vect['t'] >= prb['t'][0]]
-    #vect['t'] = vect['t'][vect['t'] >= prb['t'][0]]
+prb['Ux'][prb['t'] <= vect['t'][0]] = []
+prb['Uy'][prb['t'] <= vect['t'][0]] = []
+prb['Uz'][prb['t'] <= vect['t'][0]] = []
+prb['ayaw'][prb['t'] <= vect['t'][0]] = []
+prb['apitch'][prb['t'] <= vect['t'][0]] = []
+prb['t'][prb['t'] <= vect['t'][0]] = []
 
 
+if vect['start'] < 0:
+    vect['Ux'][vect['t'] <= prb['t'][0]] = []
+    vect['Uy'][vect['t'] <= prb['t'][0]] = []
+    vect['Uz'][vect['t'] <= prb['t'][0]] = []
+    vect['t'][vect['t'] <= prb['t'][0]] = []
 
 
-plt.plot(prb['t'], prb['Ux'], 'k')
-plt.plot(vect['t'],  vect['Ux'] , 'r')
 
-#fig, axs = plt.subplots(1, 1)
-#axs[0, 0].plot(prb['t'], prb['Ux'], 'k')
-#axs[0, 0].plot(vect['t'],  vect['Ux'] , 'r')
+fig, axs = plt.subplots(3, 1)
+axs[0].plot(prb['t'], prb['Ux'], 'k')
+axs[0].plot(vect['t'],  vect['Ux'] , 'r')
 
-#axs[0, 1].plot(prb['t'], prb['Uy'], 'k')
-#axs[0, 1].plot(vect['t'], vect['Uy'], 'r')
+axs[1].plot(prb['t'], prb['Uy'], 'k')
+axs[1].plot(vect['t'], vect['Uy'], 'r')
 
-#axs[1, 0].plot(prb['t'], prb['Uz'], 'k')
-#axs[1, 0].plot(vect['t'], vect['Uz'], 'r')
+axs[2].plot(prb['t'], prb['Uz'], 'k')
+axs[2].plot(vect['t'], vect['Uz'], 'r')
 
 plt.show()
