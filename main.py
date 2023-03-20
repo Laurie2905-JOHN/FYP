@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.io as sio
-
+import matplotlib.pyplot as plt
 
 # Constants
 rho = 997
@@ -46,84 +46,124 @@ prb['raw'] -= zeros['pr_mean']
 # Data analysis
 prb['denom'] = np.mean(prb['raw'][:, :4], axis = 1)
 prb['Lyaw'] = (prb['raw'][:, 1] - prb['raw'][:, 3]) / prb['denom']
-print(prb['Lyaw'] )
 prb['Lpitch'] = (prb['raw'][:, 0] - prb['raw'][:, 2]) / prb['denom']
 
 from scipy import interpolate
 
-interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
+# Linear extrapolation of endpoints
+#slope = (y[-1] - y[-2]) / (x[-1] - x[-2])
+#y_extrap_left = y[0] - slope * (x[0] - x[1])
+#slope = (y[1] - y[0]) / (x[1] - x[0])
+#y_extrap_right = y[-1] + slope * (x[-1] - x[-2])
+
+ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
+apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
 
 # Large disparity between MATLAB in ayaw
-prb['ayaw'] = interp(prb['Lyaw'])
-prb['apitch'] = interp(prb['Lpitch'])
+
+prb['ayaw'] = ayaw_interp(prb['Lyaw'])
+prb['apitch'] = apitch_interp(prb['Lpitch'])
 
 
-print(prb['ayaw'])
-print(prb['apitch'][4790])
+#plt.scatter(yawcal[:, 1], yawcal[:, 0])
+#plt.scatter(prb['Lyaw'], prb['ayaw'])
+#plt.show()
 
-# Disparity caused by ayaw
+
+#plt.scatter(yawcal[:, 1], yawcal[:, 0])
+#plt.scatter(prb['Lpitch'], prb['apitch'])
+#plt.show()
+
+
 prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
 prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
+
 interp1 = interpolate.interp1d(yawcal[:, 0], dyncal, kind = 'linear' ,fill_value = 'extrapolate')
 prb['ldyn'] = interp1(prb['amax'])
+
+#plt.scatter(yawcal[:, 0], dyncal)
+#plt.scatter(prb['amax'], prb['ldyn'] )
+#plt.show()
 
 # Splitting into velocities
 prb['U1'] = np.sqrt(2 * -prb['ldyn'] * np.mean(prb['raw'][:, :4], axis=1) / rho)
 prb['U1'][np.imag(prb['U1']) > 0] = 0
+
+
+
 prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
 prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
-
+prb['Uz'] = prb['U1'] * np.sin(np.deg2rad(prb['apitch']))
 
 prb['t'] = np.linspace(0,prb['raw'].shape[0]/fs,prb['raw'].shape[0]);
+
+
+
+
 
 # Loading vector data
 vect = {}
 vect['raw'] = np.loadtxt(VectorFolder + VectFile + '.dat')
 vect['start'] = vect['raw'][:, 1]
-vect['Ux'] = -vect['raw'][:, 3]
-vect['Uy'] = vect['raw'][:, 4]
-vect['Uz'] = vect['raw'][:, 5]
+vect['Ux'] = -vect['raw'][:, 2]
+vect['Uy'] = vect['raw'][:, 3]
+vect['Uz'] = vect['raw'][:, 4]
+
 
 # Vector time data
-vect['t'] = vect['start'] / fs + np.linspace(0, (len(vect['raw'])-1)/fs, len(vect['raw']))
+vect['t'] = (vect['start'] / fs) + np.linspace(0, (len(vect['raw'])-1)/fs, len(vect['raw']))
 
 vect['U1'] = np.sqrt(vect['Ux']**2 + vect['Uy']**2 + vect['Uz']**2)
-vect_apitch = np.arcsin(vect_Uz / vect_U1)
-vect_ayaw = np.arctan(vect_Uy / vect_Ux)
+vect['apitch']  = np.arcsin(vect['Uz'] / vect['U1'])
+vect['ayaw']  = np.arctan(vect['Uy'] / vect['Ux'])
+
+
 
 # cut data so that each file is the same length
-if vect_t[-1] > prb.t[-1]:
-    vect_Ux = vect_Ux[vect_t <= prb.t[-1]]
-    vect_Uy = vect_Uy[vect_t <= prb.t[-1]]
-    vect_Uz = vect_Uz[vect_t <= prb.t[-1]]
-    vect_ayaw = vect_ayaw[vect_t <= prb.t[-1]]
-    vect_apitch = vect_apitch[vect_t <= prb.t[-1]]
-    vect_t = vect_t[vect_t <= prb.t[-1]]
-elif prb.t[-1] > vect_t[-1]:
-    prb.Ux = prb.Ux[prb.t <= vect_t[-1]]
-    prb.Uy = prb.Uy[prb.t <= vect_t[-1]]
-    prb.Uz = prb.Uz[prb.t <= vect_t[-1]]
-    prb.ayaw = prb.ayaw[prb.t <= vect_t[-1]]
-    prb.apitch = prb.apitch[prb.t <= vect_t[-1]]
-    prb.t = prb.t[prb.t <= vect_t[-1]]
+if vect['t'][-1] > prb['t'][-1]:
+    vect['Ux'] = vect['Ux'] [vect['t'] <= prb['t'][-1]]
+    vect['Uy'] = vect['Uy'][vect['t'] <= prb['t'][-1]]
+    vect['Uz'] = vect['Uz'][vect['t'] <= prb['t'][-1]]
+    vect['ayaw'] = vect['ayaw'][vect['t'] <= prb['t'][-1]]
+    vect['apitch'] = vect['apitch'][vect['t'] <= prb['t'][-1]]
+    vect['t'] = vect['t'][vect['t'] <= prb['t'][-1]]
 
-prb.Ux = prb.Ux[prb.t >= vect_t[0]]
-prb.Uy = prb.Uy[prb.t >= vect_t[0]]
-prb.Uz = prb.Uz[prb.t >= vect_t[0]]
-prb.ayaw = prb.ayaw[prb.t >= vect_t[0]]
-prb.apitch = prb.apitch[prb.t >= vect_t[0]]
-prb.t = prb.t[prb.t >= vect_t[0]]
+elif prb['t'][-1] > vect['t'][-1]:
+    prb['Ux'] = prb['Ux'][prb['t'] <= vect['t'][-1]]
+    prb['Uy'] = prb['Uz'][prb['t'] <= vect['t'][-1]]
+    prb['Uz'] = prb['Uz'][prb['t']<= vect['t'][-1]]
+    prb['ayaw'] = prb['ayaw'][prb['t'] <= vect['t'][-1]]
+    prb['apitch'] = prb['apitch'][prb['t'] <= vect['t'][-1]]
+    prb['t'] = prb['t'][prb['t'] <= vect['t'][-1]]
 
-if vect_start < 0:
-    vect_Ux = vect_Ux[vect_t >= prb.t[0]]
-    vect_Uy = vect_Uy[vect_t >= prb.t[0]]
-    vect_Uz = vect_Uz[vect_t >= prb.t[0]]
-    vect_t = vect_t[vect_t >= prb.t[0]]
+prb['Ux'] = prb['Ux'][prb['t'] >= vect['t'][0]]
+prb['Uy'] = prb['Uy'][prb['t'] >= vect['t'][0]]
+prb['Uz'] = prb['Uz'][prb['t'] >= vect['t'][0]]
+prb['ayaw'] = prb['ayaw'][prb['t'] >= vect['t'][0]]
+prb['apitch'] = prb['apitch'][prb['t'] >= vect['t'][0]]
+prb['t'] = prb['t'][prb['t']>= vect['t'][0]]
+
+
+#if vect['start'] < 0:
+    #vect['Ux'] = vect['Ux'][vect['t'] >= prb['t'][0]]
+    #vect['Uy'] = vect['Uy'][vect['t'] >= prb['t'][0]]
+   # vect['Uz'] = vect['Uz'][vect['t'] >= prb['t'][0]]
+    #vect['t'] = vect['t'][vect['t'] >= prb['t'][0]]
+
+
+
 
 fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(prb.t, prb.Ux, 'k')
-axs[0, 0].plot(vect_t, vect_Ux, 'r')
-axs[0, 1].plot(prb.t, prb.Uy, 'k')
-axs[0, 1].plot(vect_t, vect_Uy, 'r')
-axs[1, 0].plot(prb.t, prb.Uz, 'k')
+axs[0, 0].plot(prb['t'], prb['Ux'], 'k')
+axs[0, 0].plot(vect['t'],  vect['Ux'] , 'r')
 
+axs[0, 1].plot(prb['t'], prb['Uy'], 'k')
+axs[0, 1].plot(vect['t'], vect['Uy'], 'r')
+
+axs[1, 0].plot(prb['t'], prb['Uz'], 'k')
+axs[1, 0].plot(vect['t'], vect['Uz'], 'r')
+
+print(len(vect['Ux']))
+print(len(prb['Ux']))
+
+plt.show()
