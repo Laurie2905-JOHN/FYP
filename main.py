@@ -110,39 +110,37 @@ vect['apitch']  = np.arcsin(vect['Uz'] / vect['U1'])
 vect['ayaw']  = np.arctan(vect['Uy'] / vect['Ux'])
 
 
-
-# cut data so that each file is the same length
 if vect['t'][-1] > prb['t'][-1]:
-    vect['Ux'][vect['t'] >= prb['t'][-1]] = []
-    vect['Uy'][vect['t'] >= prb['t'][-1]] = []
-    vect['Uz'][vect['t'] >= prb['t'][-1]] = []
-    vect['ayaw'][vect['t'] >= prb['t'][-1]] = []
-    vect['apitch'][vect['t'] >= prb['t'][-1]] = []
-    vect['t'][vect['t'] >= prb['t'][-1]] = []
+    mask = vect['t'] >= prb['t'][-1]
+    vect['Ux'] = np.delete(vect['Ux'], np.where(mask))
+    vect['Uy'] = np.delete(vect['Uy'], np.where(mask))
+    vect['Uz'] = np.delete(vect['Uz'], np.where(mask))
+    vect['ayaw'] = np.delete(vect['ayaw'], np.where(mask))
+    vect['apitch'] = np.delete(vect['apitch'], np.where(mask))
+    vect['t'] = np.delete(vect['t'], np.where(mask))
 
 elif prb['t'][-1] > vect['t'][-1]:
-    prb['Ux'][prb['t'] >= vect['t'][-1]] = []
-    prb['Uz'][prb['t'] >= vect['t'][-1]] = []
-    prb['Uz'][prb['t'] >= vect['t'][-1]] = []
-    prb['ayaw'][prb['t'] >= vect['t'][-1]] = []
-    prb['apitch'][prb['t'] >= vect['t'][-1]] = []
-    prb['t'][prb['t'] >= vect['t'][-1]] = []
+    mask = prb['t'] >= vect['t'][-1]
+    prb['Ux'] = np.delete(prb['Ux'], np.where(mask))
+    prb['Uy'] = np.delete(prb['Uy'], np.where(mask))
+    prb['Uz'] = np.delete(prb['Uz'], np.where(mask))
+    prb['ayaw'] = np.delete(prb['ayaw'], np.where(mask))
+    prb['apitch'] = np.delete(prb['apitch'], np.where(mask))
+    prb['t'] = np.delete(prb['t'], np.where(mask))
 
-prb['Ux'][prb['t'] <= vect['t'][0]] = []
-prb['Uy'][prb['t'] <= vect['t'][0]] = []
-prb['Uz'][prb['t'] <= vect['t'][0]] = []
-prb['ayaw'][prb['t'] <= vect['t'][0]] = []
-prb['apitch'][prb['t'] <= vect['t'][0]] = []
-prb['t'][prb['t'] <= vect['t'][0]] = []
+mask = prb['t'] <= vect['t'][0]
+prb['Ux'] = np.delete(prb['Ux'], np.where(mask))
+prb['Uy'] = np.delete(prb['Uy'], np.where(mask))
+prb['Uz'] = np.delete(prb['Uz'], np.where(mask))
+prb['ayaw'] = np.delete(prb['ayaw'], np.where(mask))
+prb['apitch'] = np.delete(prb['apitch'], np.where(mask))
+prb['t'] = np.delete(prb['t'], np.where(mask))
 
-
-if vect['start'] < 0:
-    vect['Ux'][vect['t'] <= prb['t'][0]] = []
-    vect['Uy'][vect['t'] <= prb['t'][0]] = []
-    vect['Uz'][vect['t'] <= prb['t'][0]] = []
-    vect['t'][vect['t'] <= prb['t'][0]] = []
-
-
+mask = vect['t'] <= prb['t'][0]
+vect['Ux'] = np.delete(vect['Ux'], np.where(mask))
+vect['Uy'] = np.delete(vect['Uy'], np.where(mask))
+vect['Uz'] = np.delete(vect['Uz'], np.where(mask))
+vect['t'] = np.delete(vect['t'], np.where(mask))
 
 fig, axs = plt.subplots(3, 1)
 axs[0].plot(prb['t'], prb['Ux'], 'k')
