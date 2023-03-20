@@ -65,9 +65,9 @@ prb['ayaw'] = ayaw_interp(prb['Lyaw'])
 prb['apitch'] = apitch_interp(prb['Lpitch'])
 
 
-#plt.scatter(yawcal[:, 1], yawcal[:, 0])
-#plt.scatter(prb['Lyaw'], prb['ayaw'])
-#plt.show()
+plt.scatter(yawcal[:, 1], yawcal[:, 0])
+plt.scatter(prb['Lyaw'], prb['ayaw'])
+plt.show()
 
 
 #plt.scatter(yawcal[:, 1], yawcal[:, 0])
@@ -78,8 +78,9 @@ prb['apitch'] = apitch_interp(prb['Lpitch'])
 prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
 prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
 
-interp1 = interpolate.interp1d(yawcal[:, 0], dyncal, kind = 'linear' ,fill_value = 'extrapolate')
+interp1 = interpolate.interp1d(dyncal,yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
 prb['ldyn'] = interp1(prb['amax'])
+
 
 #plt.scatter(yawcal[:, 0], dyncal)
 #plt.scatter(prb['amax'], prb['ldyn'] )
@@ -96,7 +97,6 @@ prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(pr
 prb['Uz'] = prb['U1'] * np.sin(np.deg2rad(prb['apitch']))
 
 prb['t'] = np.linspace(0,prb['raw'].shape[0]/fs,prb['raw'].shape[0]);
-
 
 
 
