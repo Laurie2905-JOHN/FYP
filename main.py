@@ -10,6 +10,9 @@ fs = 16  # sample rate
 
 def cal_velocity(folder):
 
+    import numpy as np
+    import scipy.io as sio
+
     # File retrieving
     logfolder = folder
     ZeroFolder = logfolder
@@ -122,7 +125,6 @@ def cal_velocity(folder):
     vect['t'] = np.delete(vect['t'], np.where(mask))
 
     return vect, prb
-
 
 values = cal_velocity("C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/")
 
