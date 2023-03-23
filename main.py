@@ -128,3 +128,4 @@ axs[2].plot(prb['t'], prb['Uz'], 'k')
 axs[2].plot(vect['t'], vect['Uz'], 'r')
 
 plt.show()
+

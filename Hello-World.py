@@ -1,6 +1,6 @@
 
 from dash import Dash, dcc, Output, Input  # pip install dash
-import dash.bootstrap.components as dbc    # pip install dash-bootstrap-components
+import dash_bootstrap_components as dbc    # pip install dash-bootstrap-components
 import plotly.express as px
 
 # Build your components
