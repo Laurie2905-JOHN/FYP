@@ -1,25 +1,9 @@
-from dash import Dash, dcc, Output, Input  # pip install dash
-import dash_bootstrap_components as dbc    # pip install dash-bootstrap-components
+from dash import Dash, dcc, Output, Input
+import dash_bootstrap_components as dbc
+from dash import dcc
+from dash import html
+from dash.dependencies import Input, Output
 import plotly.express as px
-
-
-
-# Build your components
-app = Dash(__name__, external_stylesheets=[dbc.themes.VAPOR])
-mytitle = dcc.Markdown(children='# BARNACLE SENSOR ANALYSIS')
-mygraph = dcc.Graph(figure={})
-dropdown = dcc.Dropdown(options=['Ux', 'Uy', 'Uz'],
-                        value='Ux',  # initial value displayed when page first loads
-                        clearable=False)
-
-# Customize your own Layout
-app.layout = dbc.Container([mytitle, mygraph, dropdown])
-
-# Callback allows components to interact
-@app.callback(
-    Output(mygraph, component_property='figure'),
-    Input(dropdown, component_property='value')
-)
 
 def cal_velocity(folder):
     import numpy as np
@@ -147,7 +131,38 @@ values = cal_velocity("C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/S
 vect = values[0]
 prb = values[1]
 
-def update_graph(user_input):  # function arguments come from the component property of the Input
+
+app = Dash(__name__)
+
+app.layout = html.Div([
+
+    html.H1("BARNACLE SENSOR ANALYSIS", style={'text-align': 'center'}),
+
+    dcc.Dropdown( id = "Vect",
+                        options = ['Ux', 'Uy', 'Uz'],
+                        multi=False,
+                        value ='Ux',
+                        style={'width': "40%"}
+                        ),
+
+    html.Div(id='output_container', children=[]),
+    html.Br(),
+
+    dcc.Graph(id='Velocity_Graph', figure={}),
+
+])
+
+@app.callback(
+    [Output(component_id = 'output_container', component_property = 'children')],
+    [Output(component_id = 'Velocity_Graph', component_property = 'figure')],
+    [Input(component_id = 'Vect', component_property = 'value')]
+)
+
+def update_graph(user_input):
+
+    container = "The data shown is: {}".format(user_input)
+
+
 
     if user_input == 'Ux':
         fig = px.line(x=prb['t'], y=prb['Ux'])
@@ -158,8 +173,8 @@ def update_graph(user_input):  # function arguments come from the component prop
     elif user_input == 'Uz':
         fig = px.line(x=prb['t'], y=prb['Uz'])
 
-    return fig  # returned objects are assigned to the component property of the Output
+    return container, fig  # returned objects are assigned to the component property of the Output
 
 # Run app
-if __name__=='__main__':
-    app.run_server(port=8053)
+if __name__== '__main__':
+    app.run_server(debug=True)
