@@ -150,13 +150,20 @@ app.layout = html.Div([
 
     dcc.Graph(id='Velocity_Graph', figure={}),
 
+    dcc.Slider(0, 20, 5,,
+                 value=10,
+                 id='my-slider')
+
+    html.Div(id='slider-output-container')
 ])
 
 @app.callback(
     [Output(component_id = 'output_container', component_property = 'children')],
+    [Output('slider-output-container', 'children')],
     [Output(component_id = 'Velocity_Graph', component_property = 'figure')],
-    [Input(component_id = 'Vect', component_property = 'value')]
-)
+    [Input(component_id = 'Vect', component_property = 'value')],
+    [Input('my-slider', 'value')],
+    )
 
 def update_graph(user_input):
 
@@ -166,6 +173,12 @@ def update_graph(user_input):
 
     if user_input == 'Ux':
         fig = px.line(x=prb['t'], y=prb['Ux'])
+
+        fig.update_layout(
+        title="Plot Title",
+        xaxis_title="Time (s) ",
+        yaxis_title="Velocity (m/s)")
+
 
     elif user_input == 'Uy':
         fig = px.line(x=prb['t'], y=prb['Uy'])
