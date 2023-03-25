@@ -146,57 +146,67 @@ app.layout = html.Div([
                         value ='Ux',
                         style={'width': "40%"}
                         ),
-
     html.Div(id='output_container', children=[]),
     html.Br(),
 
+
     dcc.Graph(id='Velocity_Graph', figure={}),
 
-    dcc.RangeSlider(0, 20, 1,
-               value = [3, 10],
-               id='my-slider',
-                marks=None,
-               tooltip={"placement": "bottom", "always_visible": True},
-                ),
+    dcc.RangeSlider(
+            id='time-range',
+            min=round(prb['t'].min()),
+            max=round(prb['t'].max()),
+            value=[prb['t'].min(), prb['t'].max()],
+            tooltip={"placement": "bottom", "always_visible": True},
+            ),
 ])
 
+
+
+
+
+# marks = {int(timestamp): {'label': date.strftime('%Y-%m-%d')}
+                   # for timestamp, date in,
+                        #df.set_index('date').resample('M').mean().reset_index().to_dict('split')['data']},
 @app.callback(
     [Output(component_id = 'output_container', component_property = 'children')],
     [Output(component_id = 'Velocity_Graph', component_property = 'figure')],
     [Input(component_id = 'Vect', component_property = 'value')],
-    [Input(component_id = 'my-slider',component_property = 'value')],
+    [Input(component_id = 'time-range',component_property = 'value')],
     )
 
-def update_graph(user_input):
+def update_graph(user_input, time_input):
+    print(time_input)
+    def plot_graph(V,time_input):
+        import numpy as np
+        mask = prb['t'] < time_input[0]
+        prb['t1'] = np.delete(prb['t'], np.where(mask))
+        V1 = np.delete(V, np.where(mask))
+        mask = prb['t1'] > time_input[1]
+        prb['t12'] = np.delete(prb['t1'], np.where(mask))
+        V2 = np.delete(V1, np.where(mask))
+        fig = px.line(x=prb['t12'], y=V2)
+        fig.update_layout(
+            title="Plot Title",
+            xaxis_title="Time (s) ",
+            yaxis_title="Velocity (m/s)")
+        return fig
 
     container = "The data shown is: {}".format(user_input)
 
-
-
     if user_input == 'Ux':
         V = prb['Ux']
+        return container, plot_graph(V,time_input)
 
-        def plot_graph(V):
-            fig = px.line(x=prb['t'], y=V)
-            fig.update_layout(
-            title="Plot Title",
-            xaxis_title="Time (s) ",
-            yaxis_title="Velocity (m/s)")
 
 
     elif user_input == 'Uy':
-        fig = px.line(x=prb['t'], y=prb['Uy'])
-        fig.update_layout(
-            title="Plot Title",
-            xaxis_title="Time (s) ",
-            yaxis_title="Velocity (m/s)")
+        V = prb['Uy']
+        return container, plot_graph(V, time_input)
 
     elif user_input == 'Uz':
-        fig = px.line(x=prb['t'], y=prb['Uz'])
-        fig.update_layout(
-            title="Plot Title",
-            xaxis_title="Time (s) ",
-            yaxis_title="Velocity (m/s)")
+        V = prb['Uz']
+        return container, plot_graph(V, time_input)
 
     return container, fig  # returned objects are assigned to the component property of the Output
 
