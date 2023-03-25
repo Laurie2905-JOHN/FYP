@@ -4,6 +4,8 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
+import pandas as pd
+import plotly.graph_objects as go
 
 def cal_velocity(folder):
     import numpy as np
@@ -150,19 +152,19 @@ app.layout = html.Div([
 
     dcc.Graph(id='Velocity_Graph', figure={}),
 
-    dcc.Slider(0, 20, 5,,
-                 value=10,
-                 id='my-slider')
-
-    html.Div(id='slider-output-container')
+    dcc.RangeSlider(0, 20, 1,
+               value = [3, 10],
+               id='my-slider',
+                marks=None,
+               tooltip={"placement": "bottom", "always_visible": True},
+                ),
 ])
 
 @app.callback(
     [Output(component_id = 'output_container', component_property = 'children')],
-    [Output('slider-output-container', 'children')],
     [Output(component_id = 'Velocity_Graph', component_property = 'figure')],
     [Input(component_id = 'Vect', component_property = 'value')],
-    [Input('my-slider', 'value')],
+    [Input(component_id = 'my-slider',component_property = 'value')],
     )
 
 def update_graph(user_input):
@@ -172,19 +174,29 @@ def update_graph(user_input):
 
 
     if user_input == 'Ux':
-        fig = px.line(x=prb['t'], y=prb['Ux'])
+        V = prb['Ux']
 
-        fig.update_layout(
-        title="Plot Title",
-        xaxis_title="Time (s) ",
-        yaxis_title="Velocity (m/s)")
+        def plot_graph(V):
+            fig = px.line(x=prb['t'], y=V)
+            fig.update_layout(
+            title="Plot Title",
+            xaxis_title="Time (s) ",
+            yaxis_title="Velocity (m/s)")
 
 
     elif user_input == 'Uy':
         fig = px.line(x=prb['t'], y=prb['Uy'])
+        fig.update_layout(
+            title="Plot Title",
+            xaxis_title="Time (s) ",
+            yaxis_title="Velocity (m/s)")
 
     elif user_input == 'Uz':
         fig = px.line(x=prb['t'], y=prb['Uz'])
+        fig.update_layout(
+            title="Plot Title",
+            xaxis_title="Time (s) ",
+            yaxis_title="Velocity (m/s)")
 
     return container, fig  # returned objects are assigned to the component property of the Output
 
