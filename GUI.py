@@ -176,7 +176,7 @@ app.layout = html.Div([
     )
 
 def update_graph(user_input, time_input):
-    print(time_input)
+
     def plot_graph(V,time_input):
         import numpy as np
         mask = prb['t'] < time_input[0]
@@ -197,8 +197,6 @@ def update_graph(user_input, time_input):
     if user_input == 'Ux':
         V = prb['Ux']
         return container, plot_graph(V,time_input)
-
-
 
     elif user_input == 'Uy':
         V = prb['Uy']
