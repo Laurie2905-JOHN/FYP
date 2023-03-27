@@ -145,7 +145,6 @@ for i, file_name in enumerate(file_names):
 prb = cal_velocity(file_paths)
 
 
-
 app = Dash(__name__)
 
 app.layout = html.Div([
@@ -155,61 +154,68 @@ app.layout = html.Div([
     dcc.Dropdown(id="File",
                  options=drop_options,
                  multi=False,
-                 value='Example 1.txt',
+                 value=file_names[0],
                  style={'width': "40%"}
                  ),
+    html.Br(),
 
-    # dcc.Dropdown( id = "Vect",
-    #                     options = ['Ux', 'Uy', 'Uz'],
-    #                     multi=False,
-    #                     value ='Ux',
-    #                     style={'width': "40%"}
-    #                     ),
+    dcc.Dropdown( id = "Vect",
+                        options = ['Ux', 'Uy', 'Uz'],
+                        multi=False,
+                        value ='Ux',
+                        style={'width': "40%"}
+                        ),
 
 
     dcc.Graph(id='Velocity_Graph', figure={}),
 
-    # dcc.RangeSlider(
-    #         id='time-range',
-    #         min=round(prb[['t'].min()),
-    #         max=round(prb['t'].max()),
-    #         value=[prb['t'].min(), prb['t'].max()],
-    #         tooltip={"placement": "bottom", "always_visible": True},
-    #         ),
+
+        dcc.RangeSlider(
+            id='time-range',
+            min=round(prb[file_names[0]]['t'].min()),
+            max=round(prb[file_names[0]]['t'].max()),
+            value=[round(prb[file_names[0]]['t'].min()), round(prb[file_names[0]]['t'].max()) ],
+            tooltip={"placement": "bottom", "always_visible": True},
+            )
 ])
 
 
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure')],
+    [Output(component_id = 'time-range', component_property = 'min'),
+    Output(component_id = 'time-range', component_property = 'max')],
     [Input(component_id = 'File', component_property = 'value')],
-    #[Input(component_id = 'Vect',component_property = 'value')],
+    [Input(component_id = 'Vect',component_property = 'value')],
+    [Input(component_id = 'time-range',component_property = 'value')]
     )
 
 
 
-def update_graph(user_input):
-    user_input1 ='Ux'
-    # time_input = (20, 200)
-    # import numpy as np
-    # t = prb[user_input]['t']
-    # V = prb[user_input][user_input1]
-    # mask = t < time_input[0]
-    # t1 = np.delete(t, np.where(mask))
-    # V1 = np.delete(V, np.where(mask))
-    # mask = t1 > time_input[1]
-    # t2 = np.delete(t1, np.where(mask))
-    # V2 = np.delete(V1, np.where(mask))
 
-    t2 = prb[user_input]['t']
-    V2 = prb[user_input][user_input1]
+def update_graph(user_input,user_input1,time_input):
+    import numpy as np
+    t = prb[user_input]['t']
+    V = prb[user_input][user_input1]
+    mask = t < time_input[0]
+    t1 = np.delete(t, np.where(mask))
+    V1 = np.delete(V, np.where(mask))
+    mask = t1 > time_input[1]
+    t2 = np.delete(t1, np.where(mask))
+    V2 = np.delete(V1, np.where(mask))
     fig = px.line(x=t2, y=V2)
     fig.update_layout(
-        title= "Data",
+        title= (user_input + " " + user_input1 + " Data"),
         xaxis_title="Time (s) ",
         yaxis_title="Velocity (m/s)")
-    return [fig]
+    min = round(min(t)),
+    print(type(min))
+    max = round(t['t'].max()),
+    # value = [prb[user_input]['t'].min(), prb[user_input]['t'].max()],
+    return [fig], min, max
+
 
 
 # Run app
 if __name__== '__main__':
     app.run_server(debug=True)
+
