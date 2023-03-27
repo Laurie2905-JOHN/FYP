@@ -60,7 +60,6 @@ def cal_velocity(BarnFilePath):
     fs = 16  # sample rate
 
     # File retrieving
-    BarnFilePath = ('r' + file_paths)
     ZeroFolder = "C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/"
     ZeroFile = 'Mon1527.txt'
     CalFolder = ZeroFolder
@@ -88,62 +87,47 @@ def cal_velocity(BarnFilePath):
 
     # Loading actual Barnacle data
     prb = {}
-    prb['raw'] = np.loadtxt(BarnFilePath, delimiter=',')
-    prb['raw'] -= zeros['pr_mean']
+    for i, file_path in enumerate(file_paths):
+        file_name = file_path.split("/")[-1]
+        prb[file_name] = {'raw': {}}
+        prb[file_name]['raw'] = np.loadtxt(file_path, delimiter=',')
+        prb[file_name]['raw'] -= zeros['pr_mean']
+        # Data analysis
+        prb[file_name]['denom'] = np.mean(prb[file_name]['raw'][:, :4], axis=1)
+        prb[file_name]['Lyaw'] = (prb[file_name]['raw'][:, 1] - prb[file_name]['raw'][:, 3]) / prb[file_name]['denom']
+        prb[file_name]['Lpitch'] = (prb[file_name]['raw'][:, 0] - prb[file_name]['raw'][:, 2]) / prb[file_name]['denom']
 
-    # Data analysis
-    prb['denom'] = np.mean(prb['raw'][:, :4], axis=1)
-    prb['Lyaw'] = (prb['raw'][:, 1] - prb['raw'][:, 3]) / prb['denom']
-    prb['Lpitch'] = (prb['raw'][:, 0] - prb['raw'][:, 2]) / prb['denom']
+        from scipy import interpolate
 
-    from scipy import interpolate
+        ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
+        apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
+        prb[file_name]['ayaw'] = ayaw_interp(prb[file_name]['Lyaw'])
+        prb[file_name]['apitch'] = apitch_interp(prb[file_name]['Lpitch'])
+        prb[file_name]['pitchbigger'] = np.abs(prb[file_name]['apitch']) > np.abs(prb[file_name]['ayaw'])
+        prb[file_name]['amax'] = prb[file_name]['pitchbigger'] * prb[file_name]['apitch'] + (1 - prb[file_name]['pitchbigger']) * prb[file_name]['ayaw']
+        ldyn_interp = interpolate.interp1d(yawcal[:, 0], dyncal, kind='linear', fill_value='extrapolate')
+        prb[file_name]['ldyn'] = ldyn_interp(prb[file_name]['amax'])
 
-    ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
-    apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
-    prb['ayaw'] = ayaw_interp(prb['Lyaw'])
-    prb['apitch'] = apitch_interp(prb['Lpitch'])
-    prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
-    prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
-    ldyn_interp = interpolate.interp1d(yawcal[:, 0], dyncal, kind='linear', fill_value='extrapolate')
-    prb['ldyn'] = ldyn_interp(prb['amax'])
-
-    # Splitting into velocities
-    prb['U1'] = np.sqrt(2 * -prb['ldyn'] * np.mean(prb['raw'][:, :4], axis=1) / rho)
-    prb['U1'][np.imag(prb['U1']) > 0] = 0
-    prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
-    prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
-    prb['Uz'] = prb['U1'] * np.sin(np.deg2rad(prb['apitch']))
-    prb['t'] = np.linspace(0, prb['raw'].shape[0] / fs, prb['raw'].shape[0]);
+        # Splitting into velocities
+        prb[file_name]['U1'] = np.sqrt(2 * -prb[file_name]['ldyn'] * np.mean(prb[file_name]['raw'][:, :4], axis=1) / rho)
+        prb[file_name]['U1'][np.imag(prb[file_name]['U1']) > 0] = 0
+        prb[file_name]['Ux'] = prb[file_name]['U1'] * np.cos(np.deg2rad(prb[file_name]['apitch'])) * np.cos(np.deg2rad(prb[file_name]['ayaw']))
+        prb[file_name]['Uy'] = prb[file_name]['U1'] * np.cos(np.deg2rad(prb[file_name]['apitch'])) * np.sin(np.deg2rad(prb[file_name]['ayaw']))
+        prb[file_name]['Uz'] = prb[file_name]['U1'] * np.sin(np.deg2rad(prb[file_name]['apitch']))
+        prb[file_name]['t'] = np.linspace(0, prb[file_name]['raw'].shape[0] / fs, prb[file_name]['raw'].shape[0]);
 
     return prb
 
 
-# file_chooser()
+file_chooser()
 
 # print(file_names)
 # print(file_paths)
 
+prb = cal_velocity(file_paths)
 
 
-file_names = ['Mon1501.txt', 'Mon1507.txt', 'Mon1527.txt']
-file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Mon1501.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Mon1507.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Mon1527.txt']
 
-for file_path in file_paths:
-    prb = np.loadtxt(file_path, delimiter=',')
-    print(prb)
-
-
-#x = cal_velocity(file_paths[0])
-#print(x)
-
-#
-# prb = []
-# df = {}
-# for file_path in selected_files:
-#     prb1 = cal_velocity(file_path)
-#     prb.append(prb1)
-#     file_name = os.path.basename(file_path)
-#     df[file_name] = prb
 
 
 
