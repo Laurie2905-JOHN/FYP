@@ -207,6 +207,10 @@ app.layout = html.Div([
 
 def update_graph(user_input,user_input1,time_input):
     import numpy as np
+    if user_input == [] or user_input1 == 0:
+        t2 = 0
+        V2 = 0
+
     t = prb[user_input]['t']
     V = prb[user_input][user_input1]
     # While only one data set is available
