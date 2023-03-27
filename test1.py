@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import ttk
 import tkinter.filedialog as fd
+import numpy as np
+import scipy.io as sio
 from pathlib import Path, PureWindowsPath
 
 
@@ -24,8 +26,6 @@ def file_chooser():
         files = fd.askopenfilenames(parent=win, title='Choose a File')
         global file_paths
         file_paths = list(win.splitlist(files))
-        for file_path in file_paths:
-            file_paths.append(Path(file_path))
         # Clear the Treeview widget before inserting new file names
         tree.delete(*tree.get_children())
         # Update the table with the selected file names
@@ -60,6 +60,7 @@ def cal_velocity(BarnFilePath):
     fs = 16  # sample rate
 
     # File retrieving
+    BarnFilePath = ('r' + file_paths)
     ZeroFolder = "C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/"
     ZeroFile = 'Mon1527.txt'
     CalFolder = ZeroFolder
@@ -117,25 +118,27 @@ def cal_velocity(BarnFilePath):
     return prb
 
 
+# file_chooser()
 
-
-file_chooser()
-
-print(file_names)
-#print(file_paths)
-
+# print(file_names)
+# print(file_paths)
 
 
 
-print(file_paths)
+file_names = ['Mon1501.txt', 'Mon1507.txt', 'Mon1527.txt']
+file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Mon1501.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Mon1507.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Mon1527.txt']
+
+for file_path in file_paths:
+    prb = np.loadtxt(file_path, delimiter=',')
+    print(prb)
 
 
-BarnFilePath = file_paths
+#x = cal_velocity(file_paths[0])
+#print(x)
 
-#=cal_velocity(file_paths)
-
-prb = []
-df = {}
+#
+# prb = []
+# df = {}
 # for file_path in selected_files:
 #     prb1 = cal_velocity(file_path)
 #     prb.append(prb1)
