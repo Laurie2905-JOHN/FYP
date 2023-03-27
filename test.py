@@ -1,6 +1,7 @@
-from main import cal_velocity
+file_names = ['Example 1.txt', 'Example 2.txt']
 
-values = cal_velocity("C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/")
+drop_options = []
+for i, file_name in enumerate(file_names):
+    drop_options.append({'label': file_name})
 
-vect = values[0]
-prb = values[1]
+print(drop_options)
