@@ -151,21 +151,6 @@ app.layout = html.Div([
 
     html.H1("BARNACLE SENSOR ANALYSIS", style={'text-align': 'center'}),
 
-    dcc.Dropdown(id="File",
-                 options=drop_options,
-                 multi=False,
-                 value=file_names[0],
-                 style={'width': "40%"}
-                 ),
-    html.Br(),
-
-    dcc.Dropdown( id = "Vect",
-                        options = ['Ux', 'Uy', 'Uz'],
-                        multi=False,
-                        value ='Ux',
-                        style={'width': "40%"}
-                        ),
-
 
     dcc.Graph(id='Velocity_Graph', figure={}),
 
@@ -176,9 +161,26 @@ app.layout = html.Div([
             max=round(prb[file_names[0]]['t'].max()),
             value=[round(prb[file_names[0]]['t'].min()), round(prb[file_names[0]]['t'].max()) ],
             tooltip={"placement": "bottom", "always_visible": True},
-            )
-])
+            ),
 
+    html.Div(dcc.Dropdown(id="File",
+                 options=drop_options,
+                 multi=False,
+                 value=file_names[0],
+                 style={'width': "40%"}
+                 )),
+
+    #html.Br(),
+
+    html.Div(dcc.Dropdown(id="Vect",
+                 options=['Ux', 'Uy', 'Uz'],
+                 multi=False,
+                 value='Ux',
+                 style={'width': "40%"}
+                 ))
+
+
+])
 
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure')],
@@ -194,8 +196,15 @@ app.layout = html.Div([
 
 def update_graph(user_input,user_input1,time_input):
     import numpy as np
+    import random
     t = prb[user_input]['t']
     V = prb[user_input][user_input1]
+    # While only one data set is available
+    if user_input == 'Example 2.txt':
+        V = (prb[user_input][user_input1]*0.3)
+        t = prb[user_input]['t'] -50
+
+
     mask = t < time_input[0]
     t1 = np.delete(t, np.where(mask))
     V1 = np.delete(V, np.where(mask))
@@ -204,14 +213,15 @@ def update_graph(user_input,user_input1,time_input):
     V2 = np.delete(V1, np.where(mask))
     fig = px.line(x=t2, y=V2)
     fig.update_layout(
-        title= (user_input + " " + user_input1 + " Data"),
+        title = (user_input + " " + user_input1 + " Data"),
         xaxis_title="Time (s) ",
         yaxis_title="Velocity (m/s)")
-    min = round(min(t)),
-    print(type(min))
-    max = round(t['t'].max()),
+
+    min = np.round(np.amin(t))
+    max = np.round(np.amax(t))
+
     # value = [prb[user_input]['t'].min(), prb[user_input]['t'].max()],
-    return [fig], min, max
+    return fig, min, max
 
 
 
