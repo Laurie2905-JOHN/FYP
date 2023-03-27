@@ -210,16 +210,16 @@ def update_graph(user_input,user_input1,time_input):
 
     import numpy as np
 
-    if not user_input or not user_input1:
+    if not user_input and not user_input1:
         fig = {}
         min = 1
         max = 2
 
-    return fig, min, max
 
-    #else:
-    #
-    #     t = prb[user_input]['t']
+
+    else:
+
+        t = prb[user_input]['t']
     #     V = prb[user_input][user_input1]
     #     min = np.round(np.amin(t))
     #     max = np.round(np.amax(t))
@@ -236,8 +236,7 @@ def update_graph(user_input,user_input1,time_input):
     #         xaxis_title="Time (s) ",
     #         yaxis_title="Velocity (m/s)")
 
-
-
+    return fig, min, max
     # value = [prb[user_input]['t'].min(), prb[user_input]['t'].max()],
 
 
