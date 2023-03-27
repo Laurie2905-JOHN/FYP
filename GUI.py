@@ -154,6 +154,9 @@ app.layout = html.Div([
 
     dcc.Graph(id='Velocity_Graph', figure={}),
 
+    html.Label("Choose Time",
+               style={'text-align': 'center'}
+),
 
         dcc.RangeSlider(
             id='time-range',
@@ -163,21 +166,29 @@ app.layout = html.Div([
             tooltip={"placement": "bottom", "always_visible": True},
             ),
 
-    html.Div(dcc.Dropdown(id="File",
+    html.Div(children = [
+        html.Br(),
+        html.Label("Choose DataSet"),
+        dcc.Dropdown(id="File",
                  options=drop_options,
-                 multi=False,
-                 value=file_names[0],
-                 style={'width': "40%"}
-                 )),
-
+                 multi=True,
+                 value=[],
+                 placeholder="Select a dataset",
+                 clearable=False,
+                 style={'width': "40%"})
+             ]),
     #html.Br(),
 
-    html.Div(dcc.Dropdown(id="Vect",
+    html.Div(children = [
+        html.Label("Choose Velocity"),
+        dcc.Dropdown(id="Vect",
                  options=['Ux', 'Uy', 'Uz'],
-                 multi=False,
-                 value='Ux',
-                 style={'width': "40%"}
-                 ))
+                 multi=True,
+                 value=[],
+                 placeholder="Select a velocity",
+                 clearable=False,
+                 style={'width': "40%"})
+             ])
 
 
 ])
@@ -196,7 +207,6 @@ app.layout = html.Div([
 
 def update_graph(user_input,user_input1,time_input):
     import numpy as np
-    import random
     t = prb[user_input]['t']
     V = prb[user_input][user_input1]
     # While only one data set is available
