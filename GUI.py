@@ -160,9 +160,9 @@ app.layout = html.Div([
 
         dcc.RangeSlider(
             id='time-range',
-            min=round(prb[file_names[0]]['t'].min()),
-            max=round(prb[file_names[0]]['t'].max()),
-            value=[round(prb[file_names[0]]['t'].min()), round(prb[file_names[0]]['t'].max()) ],
+            min= 1,
+            max= 10,
+            value= [1, 10],
             tooltip={"placement": "bottom", "always_visible": True},
             ),
 
@@ -174,19 +174,16 @@ app.layout = html.Div([
                  multi=True,
                  value=[],
                  placeholder="Select a dataset",
-                 clearable=False,
                  style={'width': "40%"})
              ]),
-    #html.Br(),
 
     html.Div(children = [
         html.Label("Choose Velocity"),
         dcc.Dropdown(id="Vect",
                  options=['Ux', 'Uy', 'Uz'],
                  multi=True,
-                 value=[],
+                 value=[''],
                  placeholder="Select a velocity",
-                 clearable=False,
                  style={'width': "40%"})
              ])
 
@@ -194,48 +191,56 @@ app.layout = html.Div([
 ])
 
 @app.callback(
-    [Output(component_id = 'Velocity_Graph', component_property = 'figure')],
-    [Output(component_id = 'time-range', component_property = 'min'),
+    [Output(component_id = 'Velocity_Graph', component_property = 'figure'),
+    Output(component_id = 'time-range', component_property = 'min'),
     Output(component_id = 'time-range', component_property = 'max')],
-    [Input(component_id = 'File', component_property = 'value')],
-    [Input(component_id = 'Vect',component_property = 'value')],
-    [Input(component_id = 'time-range',component_property = 'value')]
+    [Input(component_id = 'File', component_property = 'value'),
+    Input(component_id = 'Vect',component_property = 'value'),
+    Input(component_id = 'time-range',component_property = 'value')]
     )
 
+
+# if user_input == 'Example 2.txt':
+#     V = (prb[user_input][user_input1] * 0.3)
+#     t = prb[user_input]['t'] - 50
 
 
 
 def update_graph(user_input,user_input1,time_input):
+
     import numpy as np
-    if user_input == [] or user_input1 == 0:
-        t2 = 0
-        V2 = 0
 
-    t = prb[user_input]['t']
-    V = prb[user_input][user_input1]
-    # While only one data set is available
-    if user_input == 'Example 2.txt':
-        V = (prb[user_input][user_input1]*0.3)
-        t = prb[user_input]['t'] -50
+    if not user_input or not user_input1:
+        fig = {}
+        min = 1
+        max = 2
+
+    return fig, min, max
+
+    #else:
+    #
+    #     t = prb[user_input]['t']
+    #     V = prb[user_input][user_input1]
+    #     min = np.round(np.amin(t))
+    #     max = np.round(np.amax(t))
+    #     # While only one data set is available
+    #     mask = t < time_input[0]
+    #     t1 = np.delete(t, np.where(mask))
+    #     V1 = np.delete(V, np.where(mask))
+    #     mask = t1 > time_input[1]
+    #     t2 = np.delete(t1, np.where(mask))
+    #     V2 = np.delete(V1, np.where(mask))
+    #     fig = px.line(x=t2, y=V2)
+    #     fig.update_layout(
+    #         title = (user_input + " " + user_input1 + " Data"),
+    #         xaxis_title="Time (s) ",
+    #         yaxis_title="Velocity (m/s)")
 
 
-    mask = t < time_input[0]
-    t1 = np.delete(t, np.where(mask))
-    V1 = np.delete(V, np.where(mask))
-    mask = t1 > time_input[1]
-    t2 = np.delete(t1, np.where(mask))
-    V2 = np.delete(V1, np.where(mask))
-    fig = px.line(x=t2, y=V2)
-    fig.update_layout(
-        title = (user_input + " " + user_input1 + " Data"),
-        xaxis_title="Time (s) ",
-        yaxis_title="Velocity (m/s)")
-
-    min = np.round(np.amin(t))
-    max = np.round(np.amax(t))
 
     # value = [prb[user_input]['t'].min(), prb[user_input]['t'].max()],
-    return fig, min, max
+
+
 
 
 

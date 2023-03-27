@@ -1,7 +1,7 @@
-file_names = ['Example 1.txt', 'Example 2.txt']
+user_input = 'gg'
+user_input1 = ''
 
-drop_options = []
-for i, file_name in enumerate(file_names):
-    drop_options.append({'label': file_name})
 
-print(drop_options)
+if not user_input or not user_input1:
+    print('firjjfwr')
+
