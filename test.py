@@ -144,21 +144,21 @@ for i, file_name in enumerate(file_names):
 
 prb = cal_velocity(file_paths)
 
-print(type(prb['Example 1.txt']))
+#print(type(prb['Example 1.txt']))
 
-print((prb.keys()))
+#print((prb.keys()))
 
-user_inputs = ('Example 1.txt', 'Example 2.txt')
+
 #user_inputs = ('Example 1.txt',)
-print(len(user_inputs))
+#user_inputs1 = ('Ux',)
+user_inputs = ('Example 1.txt', 'Example 2.txt')
+user_inputs1 = ('Ux', 'Uy', 'Uz')
+
 df = {}
 
-if len(user_inputs) <= 1:
-    df[user_inputs[0]] = prb[user_inputs[0]]
-    print('true')
-else:
-    for user_input in user_inputs:
-        df[user_input] = prb[user_input]
+for user_input in user_inputs:
+    df[user_input] = {}  # Create a nested dictionary for each user_input
+    for user_input1 in user_inputs1:
+        df[user_input][user_input1] = prb[user_input][user_input1]
 
-
-print(df['Example 2.txt'])
+print(df)
