@@ -13,6 +13,7 @@ import tkinter.filedialog as fd
 import numpy as np
 import scipy.io as sio
 from pathlib import Path, PureWindowsPath
+import plotly.graph_objects as go
 
 
 
@@ -138,11 +139,20 @@ file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 
 file_names = ['Example 1.txt', 'Example 2.txt']
 
 
+
+
 drop_options = []
 for i, file_name in enumerate(file_names):
     drop_options.append({'label': file_name, 'value': file_name})
 
 prb = cal_velocity(file_paths)
+
+# While data is the same changing example 2 data
+prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
+                             'Uy': prb['Example 2.txt']['Uy'] * 0.3,
+                             'Uz': prb['Example 2.txt']['Uz'] * 0.3})
+prb['Example 2.txt']['t'] -= 50
+
 
 
 app = Dash(__name__)
@@ -172,7 +182,7 @@ app.layout = html.Div([
         dcc.Dropdown(id="File",
                  options=drop_options,
                  multi=True,
-                 value=[],
+                 value=[file_names[0]],
                  placeholder="Select a dataset",
                  style={'width': "40%"})
              ]),
@@ -182,7 +192,7 @@ app.layout = html.Div([
         dcc.Dropdown(id="Vect",
                  options=['Ux', 'Uy', 'Uz'],
                  multi=True,
-                 value=[''],
+                 value=['Ux'],
                  placeholder="Select a velocity",
                  style={'width': "40%"})
              ])
@@ -200,26 +210,69 @@ app.layout = html.Div([
     )
 
 
-# if user_input == 'Example 2.txt':
-#     V = (prb[user_input][user_input1] * 0.3)
-#     t = prb[user_input]['t'] - 50
 
 
 
-def update_graph(user_input,user_input1,time_input):
 
-    import numpy as np
+def update_graph(user_inputs,user_inputs1,time_input):
 
-    if not user_input and not user_input1:
+    user_inputs = tuple(user_inputs)
+    user_inputs1 = tuple(user_inputs1)
+
+    if user_inputs == [] or user_inputs1 == []:
+        min_sl = 1
+        max_sl = 2
         fig = {}
-        min = 1
-        max = 2
-
-
 
     else:
+        df = {}
+        max1 = []
+        min1 = []
+        #(user_inputs)
+        #print(user_inputs1)
+        #print(type(user_inputs))
+        #print(type(user_inputs))
 
-        t = prb[user_input]['t']
+        for user_input in user_inputs:
+            df[user_input] = {}  # Create a nested dictionary for each user_input
+            for user_input1 in user_inputs1:
+                df[user_input][user_input1] = prb[user_input][user_input1]
+                df[user_input]['t'] = prb[user_input]['t']
+                max1.append(np.round(np.amax(df[user_input]['t'])))
+                min1.append(np.round(np.amin(df[user_input]['t'])))
+
+                fig = px.line(df[user_input]['t'], df[user_input][user_inputs1])
+
+        min_sl = min(min1)
+        max_sl = max(max1)
+        print(df)
+        print(min_sl)
+        print(max_sl)
+
+
+
+
+
+
+
+    #print(df)
+
+
+
+
+
+
+    # if not user_input and not user_input1:
+
+
+
+    return fig, min_sl, max_sl
+    # value = [prb[user_input]['t'].min(), prb[user_input]['t'].max()],
+
+
+    #else:
+
+        #t = prb[user_input]['t']
     #     V = prb[user_input][user_input1]
     #     min = np.round(np.amin(t))
     #     max = np.round(np.amax(t))
@@ -236,8 +289,7 @@ def update_graph(user_input,user_input1,time_input):
     #         xaxis_title="Time (s) ",
     #         yaxis_title="Velocity (m/s)")
 
-    return fig, min, max
-    # value = [prb[user_input]['t'].min(), prb[user_input]['t'].max()],
+
 
 
 

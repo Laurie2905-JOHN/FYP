@@ -148,11 +148,12 @@ prb = cal_velocity(file_paths)
 
 #print((prb.keys()))
 
-
-#user_inputs = ('Example 1.txt',)
-#user_inputs1 = ('Ux',)
-user_inputs = ('Example 1.txt', 'Example 2.txt')
-user_inputs1 = ('Ux', 'Uy', 'Uz')
+#user_inputs = []
+#user_inputs1 = []
+user_inputs = ('Example 1.txt',)
+user_inputs1 = ('Ux',)
+#user_inputs = ('Example 1.txt', 'Example 2.txt')
+#user_inputs1 = ('Ux', 'Uy', 'Uz')
 
 df = {}
 
@@ -162,3 +163,9 @@ for user_input in user_inputs:
         df[user_input][user_input1] = prb[user_input][user_input1]
 
 print(df)
+c =[2]
+print(max(c))
+
+l = [4,5,6]
+tuple(l)
+print(tuple(l))
