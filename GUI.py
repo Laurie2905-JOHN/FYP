@@ -138,18 +138,34 @@ file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 
 
 file_names = ['Example 1.txt', 'Example 2.txt']
 
+prb = cal_velocity(file_paths)
+
+prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
+                             'Uy': prb['Example 2.txt']['Uy'] * 0.3,
+                             'Uz': prb['Example 2.txt']['Uz'] * 0.3})
+
+max2 = []
+min2 = []
+dff = {}
+
+for file_name in file_names:
+    dff[file_name] = {}  # Create a nested dictionary for each user_input
+    dff[file_name]['t'] = prb[file_name]['t']
+    max2.append(np.round(np.amax(dff[file_name]['t'])))
+    min2.append(np.round(np.amin(dff[file_name]['t'])))
+
+max_sl2 = max(max2)
+min_sl2 = min(min2)
 
 drop_options = []
 for i, file_name in enumerate(file_names):
     drop_options.append({'label': file_name, 'value': file_name})
 
-prb = cal_velocity(file_paths)
+
 
 # While data is the same changing example 2 data
 
-prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
-                             'Uy': prb['Example 2.txt']['Uy'] * 0.3,
-                             'Uz': prb['Example 2.txt']['Uz'] * 0.3})
+
 
 prb['Example 2.txt']['t'] -= 50
 
@@ -168,9 +184,9 @@ app.layout = html.Div([
 
         dcc.RangeSlider(
             id='time-range',
-            min= 1,
-            max= 10,
-            value= [1, 10],
+            min= min_sl2,
+            max= max_sl2,
+            value= [min_sl2, max_sl2],
             tooltip={"placement": "bottom", "always_visible": True},
             ),
 
@@ -180,9 +196,9 @@ app.layout = html.Div([
         dcc.Dropdown(id="File",
                  options=drop_options,
                  multi=True,
-                 value=[],
+                 value=[file_names[0]],
                  placeholder="Select a dataset",
-                 style={'width': "40%"})
+                 style={'width': "50%"})
              ]),
 
     html.Div(children = [
@@ -190,9 +206,9 @@ app.layout = html.Div([
         dcc.Dropdown(id="Vect",
                  options=['Ux', 'Uy', 'Uz'],
                  multi=True,
-                 value=[],
+                 value=['Ux'],
                  placeholder="Select a velocity",
-                 style={'width': "40%"})
+                 style={'width': "50%"})
              ])
 
 
@@ -201,8 +217,7 @@ app.layout = html.Div([
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure'),
     Output(component_id = 'time-range', component_property = 'min'),
-    Output(component_id = 'time-range', component_property = 'max'),
-    Output(component_id = 'time-range', component_property = 'value')],
+    Output(component_id = 'time-range', component_property = 'max')],
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect',component_property = 'value'),
     Input(component_id = 'time-range',component_property = 'value')]
@@ -213,88 +228,60 @@ app.layout = html.Div([
 
 def update_graph(user_inputs,user_inputs1,time_input):
 
-
-    # print(user_inputs)
-    # print((user_inputs1))
-
     if user_inputs == [] or user_inputs1 == []:
-        min_sl = 1
-        max_sl = 10
-        slider_value = [min_sl, max_sl]
+        min_sl = min_sl2
+        max_sl = max_sl2
         fig = {}
-        #print('no data')
 
     else:
+
         fig = go.Figure()
-        # user_inputs = tuple(user_inputs)
-        # user_inputs1 = tuple(user_inputs1)
-
-        # if len(user_inputs1) == 1:
-        #     tp = user_inputs1
-        #     # Creating an empty Python string
-        #     user_inputs1 = ''
-        #     # Using the Python for loop to convert the tuple to a string
-        #     for item in tp:
-        #         user_inputs1 = user_inputs1 + item
-
-
-
         df = {}
         max1 = []
         min1 = []
-            # print(user_inputs)
-            # print(user_inputs1)
-        print(type(user_inputs))
-        print(type(user_inputs))
 
         for user_input in user_inputs:
             for user_input1 in user_inputs1:
-                print(user_input)
-                print(user_input1)
-
-
                 df[user_input] = {}  # Create a nested dictionary for each user_input
                 df[user_input][user_input1] = prb[user_input][user_input1]
                 df[user_input]['t'] = prb[user_input]['t']
                 max1.append(np.round(np.amax(df[user_input]['t'])))
                 min1.append(np.round(np.amin(df[user_input]['t'])))
-                fig.add_trace(go.Scatter(x=prb[user_input]['t'], y=prb[user_input][user_input1], mode='lines',
+                t = df[user_input]['t']
+                V = prb[user_input][user_input1]
+                mask = t < time_input[0]
+                t1 = np.delete(t, np.where(mask))
+                V1 = np.delete(V, np.where(mask))
+                mask = t1 > time_input[1]
+                t2 = np.delete(t1, np.where(mask))
+                V2 = np.delete(V1, np.where(mask))
+                fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
                                          name=f"{user_input}_{user_input1}"))
 
-
-
-
-
+        fig.update_layout(
+                     title = (user_input + " " + user_input1 + " Data"),
+                     xaxis_title="Time (s) ",
+                     yaxis_title="Velocity (m/s)")
         min_sl = min(min1)
         max_sl = max(max1)
-        slider_value = [min_sl, max_sl]
-        # print(df)
-        # print(min_sl)
-        # print(max_sl)
 
 
-    return fig, min_sl, max_sl, slider_value
+
+    return fig, min_sl, max_sl
 
 
 
     #else:
 
-        #t = prb[user_input]['t']
-    #     V = prb[user_input][user_input1]
-    #     min = np.round(np.amin(t))
-    #     max = np.round(np.amax(t))
+
+
     #     # While only one data set is available
-    #     mask = t < time_input[0]
-    #     t1 = np.delete(t, np.where(mask))
-    #     V1 = np.delete(V, np.where(mask))
-    #     mask = t1 > time_input[1]
-    #     t2 = np.delete(t1, np.where(mask))
-    #     V2 = np.delete(V1, np.where(mask))
+    #
+    #
+    #
+    #
     #     fig = px.line(x=t2, y=V2)
-    #     fig.update_layout(
-    #         title = (user_input + " " + user_input1 + " Data"),
-    #         xaxis_title="Time (s) ",
-    #         yaxis_title="Velocity (m/s)")
+    #
 
 
 
