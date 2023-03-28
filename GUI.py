@@ -244,8 +244,8 @@ def update_graph(user_inputs,user_inputs1,time_input):
         df = {}
         max1 = []
         min1 = []
-        #(user_inputs)
-        #print(user_inputs1)
+        print(user_inputs)
+        print(user_inputs1)
         #print(type(user_inputs))
         #print(type(user_inputs))
 
