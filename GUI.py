@@ -211,12 +211,8 @@ app.layout = html.Div([
 
 
 
-
-
 def update_graph(user_inputs,user_inputs1,time_input):
 
-    user_inputs = tuple(user_inputs)
-    user_inputs1 = tuple(user_inputs1)
 
     # print(user_inputs)
     # print((user_inputs1))
@@ -225,10 +221,12 @@ def update_graph(user_inputs,user_inputs1,time_input):
         min_sl = 1
         max_sl = 10
         slider_value = [min_sl, max_sl]
-        fig = go.Scatter(x=[0], y=[0])
+        fig = {}
         print('no data')
 
     else:
+        user_inputs = tuple(user_inputs)
+        user_inputs1 = tuple(user_inputs1)
 
         if len(user_inputs1) == 1:
 
