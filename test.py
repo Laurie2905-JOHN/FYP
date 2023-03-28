@@ -166,6 +166,15 @@ print(df)
 c =[2]
 print(max(c))
 
-l = [4,5,6]
-tuple(l)
-print(tuple(l))
+# Defining a Python tuple
+tp = ('Ux',)
+
+# Creating an empty Python string
+st = ''
+
+# Using the Python for loop to convert the tuple to a string
+for item in tp:
+    st = st + item
+
+print(st)
+

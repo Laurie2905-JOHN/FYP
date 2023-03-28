@@ -219,6 +219,22 @@ def update_graph(user_inputs,user_inputs1,time_input):
     user_inputs = tuple(user_inputs)
     user_inputs1 = tuple(user_inputs1)
 
+    print(user_inputs)
+    print((user_inputs1))
+
+    if len(user_inputs1) == 1:
+
+        tp = user_inputs1
+
+        # Creating an empty Python string
+        user_inputs1 = ''
+
+        # Using the Python for loop to convert the tuple to a string
+        for item in tp:
+            user_inputs1 = user_inputs1 + item
+
+        print(user_inputs1)
+
     if user_inputs == [] or user_inputs1 == []:
         min_sl = 1
         max_sl = 2
