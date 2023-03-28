@@ -150,17 +150,35 @@ prb = cal_velocity(file_paths)
 
 #user_inputs = []
 #user_inputs1 = []
-user_inputs = ('Example 1.txt',)
-user_inputs1 = ('Ux',)
-#user_inputs = ('Example 1.txt', 'Example 2.txt')
-#user_inputs1 = ('Ux', 'Uy', 'Uz')
+#user_inputs = ('Example 1.txt',)
+#user_inputs1 = ('Ux',)
+user_inputs = ('Example 1.txt', 'Example 2.txt')
+user_inputs1 = ('Ux', 'Uy', 'Uz')
+
 
 df = {}
+max1 = []
+min1 = []
+print(user_inputs)
+print(user_inputs1)
+#print(type(user_inputs))
+#print(type(user_inputs))
 
 for user_input in user_inputs:
     df[user_input] = {}  # Create a nested dictionary for each user_input
-    for user_input1 in user_inputs1:
-        df[user_input][user_input1] = prb[user_input][user_input1]
+    df[user_input]['Ux'] = prb[user_input]['Ux']
+    df[user_input]['t'] = prb[user_input]['t']
+    max1.append(np.round(np.amax(df[user_input]['t'])))
+    min1.append(np.round(np.amin(df[user_input]['t'])))
+
+
+
+fig = px.line(df, x = df[user_input[0]]['t'], y = df[user_input[0]]['Ux'] )
+fig = px.line(df, x = df[user_input[1]]['t'], y = df[user_input[1]]['Ux'] )
+
+
+
+fig.show()
 
 print(df)
 c =[2]

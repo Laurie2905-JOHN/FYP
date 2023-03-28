@@ -139,8 +139,6 @@ file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 
 file_names = ['Example 1.txt', 'Example 2.txt']
 
 
-
-
 drop_options = []
 for i, file_name in enumerate(file_names):
     drop_options.append({'label': file_name, 'value': file_name})
@@ -148,11 +146,12 @@ for i, file_name in enumerate(file_names):
 prb = cal_velocity(file_paths)
 
 # While data is the same changing example 2 data
+
 prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
                              'Uy': prb['Example 2.txt']['Uy'] * 0.3,
                              'Uz': prb['Example 2.txt']['Uz'] * 0.3})
-prb['Example 2.txt']['t'] -= 50
 
+prb['Example 2.txt']['t'] -= 50
 
 
 app = Dash(__name__)
@@ -160,7 +159,6 @@ app = Dash(__name__)
 app.layout = html.Div([
 
     html.H1("BARNACLE SENSOR ANALYSIS", style={'text-align': 'center'}),
-
 
     dcc.Graph(id='Velocity_Graph', figure={}),
 
@@ -182,7 +180,7 @@ app.layout = html.Div([
         dcc.Dropdown(id="File",
                  options=drop_options,
                  multi=True,
-                 value=[file_names[0]],
+                 value=[],
                  placeholder="Select a dataset",
                  style={'width': "40%"})
              ]),
@@ -192,7 +190,7 @@ app.layout = html.Div([
         dcc.Dropdown(id="Vect",
                  options=['Ux', 'Uy', 'Uz'],
                  multi=True,
-                 value=['Ux'],
+                 value=[],
                  placeholder="Select a velocity",
                  style={'width': "40%"})
              ])
@@ -203,7 +201,8 @@ app.layout = html.Div([
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure'),
     Output(component_id = 'time-range', component_property = 'min'),
-    Output(component_id = 'time-range', component_property = 'max')],
+    Output(component_id = 'time-range', component_property = 'max'),
+    Output(component_id = 'time-range', component_property = 'value')],
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect',component_property = 'value'),
     Input(component_id = 'time-range',component_property = 'value')]
@@ -219,71 +218,58 @@ def update_graph(user_inputs,user_inputs1,time_input):
     user_inputs = tuple(user_inputs)
     user_inputs1 = tuple(user_inputs1)
 
-    print(user_inputs)
-    print((user_inputs1))
-
-    if len(user_inputs1) == 1:
-
-        tp = user_inputs1
-
-        # Creating an empty Python string
-        user_inputs1 = ''
-
-        # Using the Python for loop to convert the tuple to a string
-        for item in tp:
-            user_inputs1 = user_inputs1 + item
-
-        print(user_inputs1)
+    # print(user_inputs)
+    # print((user_inputs1))
 
     if user_inputs == [] or user_inputs1 == []:
         min_sl = 1
-        max_sl = 2
-        fig = {}
+        max_sl = 10
+        slider_value = [min_sl, max_sl]
+        fig = go.Scatter(x=[0], y=[0])
+        print('no data')
 
     else:
-        df = {}
-        max1 = []
-        min1 = []
-        print(user_inputs)
-        print(user_inputs1)
-        #print(type(user_inputs))
-        #print(type(user_inputs))
 
-        for user_input in user_inputs:
-            df[user_input] = {}  # Create a nested dictionary for each user_input
-            for user_input1 in user_inputs1:
-                df[user_input][user_input1] = prb[user_input][user_input1]
+        if len(user_inputs1) == 1:
+
+            tp = user_inputs1
+
+            # Creating an empty Python string
+            user_inputs1 = ''
+
+            # Using the Python for loop to convert the tuple to a string
+            for item in tp:
+                user_inputs1 = user_inputs1 + item
+
+            print(user_inputs1)
+
+            df = {}
+            max1 = []
+            min1 = []
+            # print(user_inputs)
+            # print(user_inputs1)
+            #print(type(user_inputs))
+            #print(type(user_inputs))
+
+            for user_input in user_inputs:
+                df[user_input] = {}  # Create a nested dictionary for each user_input
+                df[user_input]['Ux'] = prb[user_input]['Ux']
                 df[user_input]['t'] = prb[user_input]['t']
                 max1.append(np.round(np.amax(df[user_input]['t'])))
                 min1.append(np.round(np.amin(df[user_input]['t'])))
 
-                fig = px.line(df[user_input]['t'], df[user_input][user_inputs1])
+                fig = px.line(x = df[user_input]['t'],y = df[user_input]['Ux'])
 
-        min_sl = min(min1)
-        max_sl = max(max1)
-        print(df)
-        print(min_sl)
-        print(max_sl)
-
-
-
+                min_sl = min(min1)
+                max_sl = max(max1)
+                slider_value = [min_sl, max_sl]
+                # print(df)
+                # print(min_sl)
+                # print(max_sl)
 
 
+    return fig, min_sl, max_sl, slider_value
 
-
-    #print(df)
-
-
-
-
-
-
-    # if not user_input and not user_input1:
-
-
-
-    return fig, min_sl, max_sl
-    # value = [prb[user_input]['t'].min(), prb[user_input]['t'].max()],
 
 
     #else:
