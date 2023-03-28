@@ -156,43 +156,23 @@ user_inputs = ('Example 1.txt', 'Example 2.txt')
 user_inputs1 = ('Ux', 'Uy', 'Uz')
 
 
-df = {}
+df = prb
 max1 = []
 min1 = []
 print(user_inputs)
 print(user_inputs1)
-#print(type(user_inputs))
-#print(type(user_inputs))
+
+
+fig = go.Figure()
 
 for user_input in user_inputs:
-    df[user_input] = {}  # Create a nested dictionary for each user_input
-    df[user_input]['Ux'] = prb[user_input]['Ux']
-    df[user_input]['t'] = prb[user_input]['t']
-    max1.append(np.round(np.amax(df[user_input]['t'])))
-    min1.append(np.round(np.amin(df[user_input]['t'])))
-
-
-
-fig = px.line(df, x = df[user_input[0]]['t'], y = df[user_input[0]]['Ux'] )
-fig = px.line(df, x = df[user_input[1]]['t'], y = df[user_input[1]]['Ux'] )
-
-
-
+    for input1 in user_inputs1:
+        fig.add_trace(go.Scatter( x=prb[user_input]['t'], y=prb[user_input][input1], mode='lines', name=f"{user_input}_{input1}"))
 fig.show()
 
-print(df)
-c =[2]
-print(max(c))
 
-# Defining a Python tuple
-tp = ('Ux',)
+#print(type(user_inputs))
+#print(type(user_inputs))
 
-# Creating an empty Python string
-st = ''
-
-# Using the Python for loop to convert the tuple to a string
-for item in tp:
-    st = st + item
-
-print(st)
+import plotly.express as px
 

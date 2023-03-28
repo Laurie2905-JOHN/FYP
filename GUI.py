@@ -222,48 +222,55 @@ def update_graph(user_inputs,user_inputs1,time_input):
         max_sl = 10
         slider_value = [min_sl, max_sl]
         fig = {}
-        print('no data')
+        #print('no data')
 
     else:
-        user_inputs = tuple(user_inputs)
-        user_inputs1 = tuple(user_inputs1)
+        fig = go.Figure()
+        # user_inputs = tuple(user_inputs)
+        # user_inputs1 = tuple(user_inputs1)
 
-        if len(user_inputs1) == 1:
+        # if len(user_inputs1) == 1:
+        #     tp = user_inputs1
+        #     # Creating an empty Python string
+        #     user_inputs1 = ''
+        #     # Using the Python for loop to convert the tuple to a string
+        #     for item in tp:
+        #         user_inputs1 = user_inputs1 + item
 
-            tp = user_inputs1
 
-            # Creating an empty Python string
-            user_inputs1 = ''
 
-            # Using the Python for loop to convert the tuple to a string
-            for item in tp:
-                user_inputs1 = user_inputs1 + item
-
-            print(user_inputs1)
-
-            df = {}
-            max1 = []
-            min1 = []
+        df = {}
+        max1 = []
+        min1 = []
             # print(user_inputs)
             # print(user_inputs1)
-            #print(type(user_inputs))
-            #print(type(user_inputs))
+        print(type(user_inputs))
+        print(type(user_inputs))
 
-            for user_input in user_inputs:
+        for user_input in user_inputs:
+            for user_input1 in user_inputs1:
+                print(user_input)
+                print(user_input1)
+
+
                 df[user_input] = {}  # Create a nested dictionary for each user_input
-                df[user_input]['Ux'] = prb[user_input]['Ux']
+                df[user_input][user_input1] = prb[user_input][user_input1]
                 df[user_input]['t'] = prb[user_input]['t']
                 max1.append(np.round(np.amax(df[user_input]['t'])))
                 min1.append(np.round(np.amin(df[user_input]['t'])))
+                fig.add_trace(go.Scatter(x=prb[user_input]['t'], y=prb[user_input][user_input1], mode='lines',
+                                         name=f"{user_input}_{user_input1}"))
 
-                fig = px.line(x = df[user_input]['t'],y = df[user_input]['Ux'])
 
-                min_sl = min(min1)
-                max_sl = max(max1)
-                slider_value = [min_sl, max_sl]
-                # print(df)
-                # print(min_sl)
-                # print(max_sl)
+
+
+
+        min_sl = min(min1)
+        max_sl = max(max1)
+        slider_value = [min_sl, max_sl]
+        # print(df)
+        # print(min_sl)
+        # print(max_sl)
 
 
     return fig, min_sl, max_sl, slider_value
