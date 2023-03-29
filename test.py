@@ -2,7 +2,7 @@ from dash import Dash, dcc, Output, Input
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
@@ -13,8 +13,7 @@ import tkinter.filedialog as fd
 import numpy as np
 import scipy.io as sio
 from pathlib import Path, PureWindowsPath
-
-
+import plotly.graph_objects as go
 
 # Create an instance of tkinter frame or window
 def file_chooser():
@@ -46,12 +45,12 @@ def file_chooser():
             tree.insert('', 'end', text=str(i + 1), values=(file_name,))
         return file_paths, file_names
 
+    def close_window():
+        win.destroy()
+
     # Add a Button Widget
     ttk.Button(win, text="Select a File", command=open_file).pack()
     # Add a Close Button Widget
-
-    def close_window():
-        win.destroy()
 
     # Add a Label widget for close button
     label = Label(win, text="Close window once files are added", font=('Aerial 11'))
@@ -59,6 +58,8 @@ def file_chooser():
     ttk.Button(win, text="Close", command=close_window).pack()
 
     win.mainloop()
+
+    return file_paths, file_names
 
 def cal_velocity(BarnFilePath):
     import numpy as np
@@ -127,52 +128,132 @@ def cal_velocity(BarnFilePath):
 
     return prb
 
-#file_chooser()
-
 # print(file_names)
 # print(file_paths)
 
+#file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
 
-file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
-
-file_names = ['Example 1.txt', 'Example 2.txt']
-
-
-drop_options = []
-for i, file_name in enumerate(file_names):
-    drop_options.append({'label': file_name, 'value': file_name})
-
-prb = cal_velocity(file_paths)
-
-#print(type(prb['Example 1.txt']))
-
-#print((prb.keys()))
-
-#user_inputs = []
-#user_inputs1 = []
-#user_inputs = ('Example 1.txt',)
-#user_inputs1 = ('Ux',)
-user_inputs = ('Example 1.txt', 'Example 2.txt')
-user_inputs1 = ('Ux', 'Uy', 'Uz')
+#file_names = ['Example 1.txt', 'Example 2.txt']
 
 
-df = prb
-max1 = []
-min1 = []
-print(user_inputs)
-print(user_inputs1)
+app = Dash(__name__)
 
 
-fig = go.Figure()
+app.layout = html.Div([
 
-for user_input in user_inputs:
-    for input1 in user_inputs1:
-        fig.add_trace(go.Scatter( x=prb[user_input]['t'], y=prb[user_input][input1], mode='lines', name=f"{user_input}_{input1}"))
-fig.show()
+    html.H1("BARNACLE SENSOR ANALYSIS", style={'text-align': 'center'}),
+
+    dcc.Graph(id='Velocity_Graph', figure={}),
+
+    html.Label("Choose Time",
+               style={'text-align': 'center'}
+),
+
+    html.Div(children = [
+
+        html.Br(),
+
+        html.Button("Select Files", id='submit_files', n_clicks=0),
+
+        html.Br(),
+
+        html.Button("Clear Files", id='clear_files', n_clicks=0),
+
+        html.Br(),
+
+        html.Label("Choose DataSet"),
+
+        dcc.Dropdown(id="File",
+                 options=[],
+                 multi=True,
+                 value=[],
+                 placeholder="Select a dataset",
+                 style={'width': "50%"})
+             ]),
+
+    html.Div(children = [
+        html.Label("Choose Velocity"),
+        dcc.Dropdown(id="Vect",
+                 options=['Ux', 'Uy', 'Uz'],
+                 multi=True,
+                 value=['Ux'],
+                 placeholder="Select a velocity",
+                 style={'width': "50%"}),
+
+             ])
+
+])
 
 
-#print(type(user_inputs))
-#print(type(user_inputs))
+@app.callback(
+    [Output(component_id = 'Velocity_Graph', component_property = 'figure'),
+    Output(component_id = "File", component_property = 'options'),
+    Output(component_id = 'File', component_property = 'value'),
+    Output(component_id = 'submit_files', component_property = 'n_clicks'),
+    Output(component_id = 'clear_files', component_property = 'n_clicks')],
+    [Input(component_id = 'submit_files', component_property = 'n_clicks'),
+    Input(component_id = 'clear_files', component_property = 'n_clicks'),
+    Input(component_id = 'File', component_property = 'value'),
+    Input(component_id = 'Vect', component_property = 'value')],
+    )
 
-import plotly.express as px
+
+def update_graph(n_clicks,n_clicks1, user_inputs,user_inputs1):
+
+    if n_clicks == 0 or n_clicks1 > 0:
+
+        print('no data')
+
+        fig = {}
+        file_dropdown_options = []
+        file_dropdown_value = []
+        n_clicks = 0
+        n_clicks1 = 0
+
+    else:
+
+        print('Clicks now equal' + str(n_clicks))
+
+        n_clicks = 1
+
+        print('Clicks now equal' + str(n_clicks))
+
+        data = file_chooser()
+
+        file_paths = data[0]
+
+        file_names = data[1]
+
+
+
+
+        prb = cal_velocity(file_paths)
+
+        # While data is the same
+        prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
+                                     'Uy': prb['Example 2.txt']['Uy'] * 0.3,
+                                     'Uz': prb['Example 2.txt']['Uz'] * 0.3})
+
+        prb['Example 2.txt']['t'] -= 50
+
+
+        file_dropdown_options = file_names
+        file_dropdown_value = file_names[0]
+
+        print(file_dropdown_options)
+        print(file_dropdown_value)
+
+
+
+        fig = px.line(x = prb['Example 2.txt']['t'],y = prb['Example 2.txt']['Ux'])
+
+
+    return fig, file_dropdown_options, file_dropdown_value, n_clicks, n_clicks1
+
+
+
+    # Run app
+if __name__== '__main__':
+    app.run_server(debug=True)
+
 
