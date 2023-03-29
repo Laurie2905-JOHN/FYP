@@ -135,7 +135,7 @@ def cal_velocity(BarnFilePath):
 
 #file_names = ['Example 1.txt', 'Example 2.txt']
 
-
+file_names = {}
 app = Dash(__name__)
 
 
@@ -211,6 +211,7 @@ app.layout = html.Div([
 
 def update_dropdowns(n_clicks, n_clicks1, user_inputs, user_inputs1,time_input):
 
+    file_names = []
 
     if "clear_files" == ctx.triggered_id:
 
@@ -252,6 +253,8 @@ def update_dropdowns(n_clicks, n_clicks1, user_inputs, user_inputs1,time_input):
 
         print('no data')
 
+        fig = go.Figure()
+
         vect_options = []
 
         file_dropdown_options = []
@@ -263,32 +266,29 @@ def update_dropdowns(n_clicks, n_clicks1, user_inputs, user_inputs1,time_input):
         max_sl = 10
 
     else:
-
-        if user_inputs == [] or user_inputs1 == []:
-
-            print('no in')
+            file_dropdown_options = file_names
 
             vect_options = ['Ux', 'Uy', 'Uz']
 
-            file_dropdown_options = file_names
+            fig = go.Figure()
 
-            fig = {}
+            print('no in')
 
-            min_sl = 1
+            df = {}
+            max1 = []
+            min1 = []
 
-            max_sl = 10
+            print(user_inputs1)
+            print(user_inputs)
 
-        else:
 
-                print('yes')
-                fig = go.Figure()
+            if user_inputs == [] and user_inputs1 != []:
 
-                df = {}
-                max1 = []
-                min1 = []
+                fig ={}
+                min_sl = 1
+                max_sl =10
 
-                print(user_inputs1)
-                print(user_inputs)
+            else:
 
                 for user_input in user_inputs:
                     for user_input1 in user_inputs1:
@@ -309,21 +309,19 @@ def update_dropdowns(n_clicks, n_clicks1, user_inputs, user_inputs1,time_input):
                                                  name=f"{user_input}{' '}{user_input1}"))
 
                 fig.update_layout(
-                    title=(user_input + " " + user_input1 + " Data"),
-                    xaxis_title="Time (s) ",
-                    yaxis_title="Velocity (m/s)")
+                        title=(user_input + " " + user_input1 + " Data"),
+                        xaxis_title="Time (s) ",
+                        yaxis_title="Velocity (m/s)")
 
                 min_sl = min(min1)
                 max_sl = max(max1)
 
-                print(file_names)
-
-                vect_options = ['Ux', 'Uy', 'Uz']
-
-                file_dropdown_options = file_names
 
 
-        return fig, min_sl, max_sl, file_dropdown_options, vect_options
+
+
+
+    return fig, min_sl, max_sl, file_dropdown_options, vect_options
 
 
 
