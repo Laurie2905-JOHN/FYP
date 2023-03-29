@@ -47,12 +47,12 @@ def file_chooser():
             tree.insert('', 'end', text=str(i + 1), values=(file_name,))
         return file_paths, file_names
 
+    def close_window():
+        win.quit()
+
     # Add a Button Widget
     ttk.Button(win, text="Select a File", command=open_file).pack()
     # Add a Close Button Widget
-
-    def close_window():
-        win.destroy()
 
     # Add a Label widget for close button
     label = Label(win, text="Close window once files are added", font=('Aerial 11'))
@@ -128,21 +128,38 @@ def cal_velocity(BarnFilePath):
 
     return prb
 
-#file_chooser()
+
 
 # print(file_names)
 # print(file_paths)
 
 
-file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
+#file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
 
-file_names = ['Example 1.txt', 'Example 2.txt']
+#file_names = ['Example 1.txt', 'Example 2.txt']
+
+
+
+
+
+# While data is the same changing example 2 data
+
+
+
+
+
+
+app = Dash(__name__)
+
+file_chooser()
 
 prb = cal_velocity(file_paths)
 
 prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
                              'Uy': prb['Example 2.txt']['Uy'] * 0.3,
                              'Uz': prb['Example 2.txt']['Uz'] * 0.3})
+
+prb['Example 2.txt']['t'] -= 50
 
 max2 = []
 min2 = []
@@ -161,16 +178,6 @@ drop_options = []
 for i, file_name in enumerate(file_names):
     drop_options.append({'label': file_name, 'value': file_name})
 
-
-
-# While data is the same changing example 2 data
-
-
-
-prb['Example 2.txt']['t'] -= 50
-
-
-app = Dash(__name__)
 
 app.layout = html.Div([
 
@@ -224,8 +231,6 @@ app.layout = html.Div([
     )
 
 
-
-
 def update_graph(user_inputs,user_inputs1,time_input):
 
     if user_inputs == [] or user_inputs1 == []:
@@ -256,7 +261,8 @@ def update_graph(user_inputs,user_inputs1,time_input):
                 t2 = np.delete(t1, np.where(mask))
                 V2 = np.delete(V1, np.where(mask))
                 fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
-                                         name=f"{user_input}_{user_input1}"))
+                                         name=f"{user_input}{' '}{user_input1}"))
+
 
         fig.update_layout(
                      title = (user_input + " " + user_input1 + " Data"),
@@ -266,26 +272,7 @@ def update_graph(user_inputs,user_inputs1,time_input):
         max_sl = max(max1)
 
 
-
     return fig, min_sl, max_sl
-
-
-
-    #else:
-
-
-
-    #     # While only one data set is available
-    #
-    #
-    #
-    #
-    #     fig = px.line(x=t2, y=V2)
-    #
-
-
-
-
 
 
 
