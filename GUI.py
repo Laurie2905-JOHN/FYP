@@ -248,14 +248,13 @@ def update_dropdowns(n_clicks, n_clicks1, user_inputs, user_inputs1,time_input):
         prb['Example 2.txt']['t'] -= 50
 
 
+    if file_names == []:
 
-    if user_inputs == [] or user_inputs1 == []:
+        print('no data')
 
-        print('no in')
+        vect_options = []
 
-        vect_options = ['Ux', 'Uy', 'Uz']
-
-        file_dropdown_options = ['Ux']
+        file_dropdown_options = []
 
         fig = {}
 
@@ -265,50 +264,66 @@ def update_dropdowns(n_clicks, n_clicks1, user_inputs, user_inputs1,time_input):
 
     else:
 
-            print('yes')
-            fig = go.Figure()
+        if user_inputs == [] or user_inputs1 == []:
 
-            df = {}
-            max1 = []
-            min1 = []
-
-            print(user_inputs1)
-            print(user_inputs)
-
-            for user_input in user_inputs:
-                for user_input1 in user_inputs1:
-                    df[user_input] = {}  # Create a nested dictionary for each user_input
-                    df[user_input][user_input1] = prb[user_input][user_input1]
-                    df[user_input]['t'] = prb[user_input]['t']
-                    max1.append(np.round(np.amax(df[user_input]['t'])))
-                    min1.append(np.round(np.amin(df[user_input]['t'])))
-                    t = df[user_input]['t']
-                    V = prb[user_input][user_input1]
-                    mask = t < time_input[0]
-                    t1 = np.delete(t, np.where(mask))
-                    V1 = np.delete(V, np.where(mask))
-                    mask = t1 > time_input[1]
-                    t2 = np.delete(t1, np.where(mask))
-                    V2 = np.delete(V1, np.where(mask))
-                    fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
-                                             name=f"{user_input}{' '}{user_input1}"))
-
-            fig.update_layout(
-                title=(user_input + " " + user_input1 + " Data"),
-                xaxis_title="Time (s) ",
-                yaxis_title="Velocity (m/s)")
-
-            min_sl = min(min1)
-            max_sl = max(max1)
-
-            print(file_names)
+            print('no in')
 
             vect_options = ['Ux', 'Uy', 'Uz']
 
             file_dropdown_options = file_names
 
+            fig = {}
 
-    return fig, min_sl, max_sl, file_dropdown_options, vect_options
+            min_sl = 1
+
+            max_sl = 10
+
+        else:
+
+                print('yes')
+                fig = go.Figure()
+
+                df = {}
+                max1 = []
+                min1 = []
+
+                print(user_inputs1)
+                print(user_inputs)
+
+                for user_input in user_inputs:
+                    for user_input1 in user_inputs1:
+                        df[user_input] = {}  # Create a nested dictionary for each user_input
+                        df[user_input][user_input1] = prb[user_input][user_input1]
+                        df[user_input]['t'] = prb[user_input]['t']
+                        max1.append(np.round(np.amax(df[user_input]['t'])))
+                        min1.append(np.round(np.amin(df[user_input]['t'])))
+                        t = df[user_input]['t']
+                        V = prb[user_input][user_input1]
+                        mask = t < time_input[0]
+                        t1 = np.delete(t, np.where(mask))
+                        V1 = np.delete(V, np.where(mask))
+                        mask = t1 > time_input[1]
+                        t2 = np.delete(t1, np.where(mask))
+                        V2 = np.delete(V1, np.where(mask))
+                        fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
+                                                 name=f"{user_input}{' '}{user_input1}"))
+
+                fig.update_layout(
+                    title=(user_input + " " + user_input1 + " Data"),
+                    xaxis_title="Time (s) ",
+                    yaxis_title="Velocity (m/s)")
+
+                min_sl = min(min1)
+                max_sl = max(max1)
+
+                print(file_names)
+
+                vect_options = ['Ux', 'Uy', 'Uz']
+
+                file_dropdown_options = file_names
+
+
+        return fig, min_sl, max_sl, file_dropdown_options, vect_options
 
 
 
