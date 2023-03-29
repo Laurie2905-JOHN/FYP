@@ -2,6 +2,7 @@ from dash import Dash, dcc, Output, Input, ctx, State
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
+import dash_daq as daq
 
 
 import plotly.express as px
@@ -146,9 +147,8 @@ app.layout = html.Div([
 
         html.Br(),
 
-        html.Button("Select Files", id='submit_files',
-                        type = 'button',
-                        n_clicks = 0),
+        daq.ToggleSwitch("Select Files", id='submit_files',
+                        value = False),
 
 
         html.Br(),
@@ -162,15 +162,16 @@ app.layout = html.Div([
         dcc.Dropdown(id="File",
                  options=[],
                  multi=True,
-                 value=[],
+                 value=[''],
                  placeholder="Select a dataset",
                  style={'width': "50%"}),
 
         html.Label("Choose Velocity"),
+
         dcc.Dropdown(id="Vect",
                  options=[],
                  multi=True,
-                 value=[],
+                 value=[''],
                  placeholder="Select a velocity",
                  style={'width': "50%"})
         ]),
@@ -182,35 +183,27 @@ app.layout = html.Div([
     Output(component_id='Vect', component_property='value'),
     [Input(component_id='submit_files', component_property='n_clicks')],
 )
-def update_graph(n_clicks, ctx):
+def update_dropdowns(n_clicks):
 
-    print(ctx.triggered_id)
+    if "submit_files" == ctx.triggered_id:
 
-    if 'submit_files' == ctx.triggered_id:
-
+        print('button pressed')
+        # This block of code will run when the user clicks the submit button
         data = file_chooser()
 
-        print('data was selected')
-
-        file_paths = data[0]
-
         file_names = data[1]
-
-
 
         vect_options = ['Ux', 'Uy', 'Uz']
 
         file_dropdown_options = file_names
 
-        print(file_dropdown_options)
-
     else:
+        print('button not pressed')
 
         vect_options = []
 
         file_dropdown_options = []
 
-        print('ffs')
 
     return file_dropdown_options, vect_options
 
