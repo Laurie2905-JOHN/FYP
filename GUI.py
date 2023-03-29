@@ -151,9 +151,9 @@ app.layout = html.Div([
 
         dcc.RangeSlider(
             id='time-range',
-            min= [],
-            max= [],
-            value= [],
+            min= 1,
+            max= 10,
+            value= [1, 10],
             tooltip={"placement": "bottom", "always_visible": True},
             ),
 
@@ -179,44 +179,62 @@ app.layout = html.Div([
                  style={'width': "50%"})
              ]),
 
-    html.Div(children = [
-        html.Label("Choose Velocity"),
-        dcc.Dropdown(id="Vect",
-                 options=['Ux', 'Uy', 'Uz'],
-                 multi=True,
-                 value=['Ux'],
-                 placeholder="Select a velocity",
-                 style={'width': "50%"})
-             ])
+        html.Div(children = [
+            html.Label("Choose Velocity"),
+            dcc.Dropdown(id="Vect",
+                     options=[],
+                     multi=True,
+                     value=[],
+                     placeholder="Select a velocity",
+                     style={'width': "50%"})]),
 
 ])
 
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure'),
     Output(component_id = "File", component_property = 'options'),
-    Output(component_id = 'File', component_property = 'value'),
+    #Output(component_id = 'File', component_property = 'value'),
     Output(component_id = 'time-range', component_property = 'min'),
     Output(component_id = 'time-range', component_property = 'max'),
-    Output(component_id = 'submit_files', component_property = 'n_clicks')],
+    Output(component_id = 'Vect', component_property = 'options')],
+    #Output(component_id = 'Vect', component_property = 'value'),
+    #Output(component_id = 'submit_files', component_property = 'n_clicks'),
+    #Output(component_id = 'clear_files', component_property = 'n_clicks')],
     [Input(component_id = 'submit_files', component_property = 'n_clicks'),
+    Input(component_id = 'clear_files', component_property = 'n_clicks'),
     Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
     Input(component_id = 'time-range', component_property = 'value')],
 )
 
 
-def update_graph(n_clicks, user_inputs,user_inputs1,time_input):
 
 
-    if n_clicks == 1:
+def update_graph(n_clicks, n_clicks1, user_inputs,user_inputs1,time_input):
 
-        print(n_clicks)
+    print('1= ' + str(n_clicks))
+    print('1= ' + str(n_clicks1))
+    print('1= ' + str(user_inputs))
+    print('1= ' + str(user_inputs1))
 
-        files = file_chooser()
+    if n_clicks == 0 or n_clicks1 > 0:
 
-        file_paths = files[0]
+        print('no data')
 
-        file_names = files[1]
+        fig = {}
+        file_dropdown_options = []
+        vect_opt = []
+        min_sl = 1
+        max_sl = 10
+
+    else:
+
+
+        data = file_chooser()
+
+        file_paths = data[0]
+
+        file_names = data[1]
 
         prb = cal_velocity(file_paths)
 
@@ -227,63 +245,63 @@ def update_graph(n_clicks, user_inputs,user_inputs1,time_input):
 
         prb['Example 2.txt']['t'] -= 50
 
+        file_dropdown_options = file_names
+        vect_opt = ['Ux', 'Uy', 'Uz']
 
-        drop_options = []
-
-        for i, file_name in enumerate(file_names):
-            drop_options.append({'label': file_name, 'value': file_name})
-
-
-        n_clicks = 0
-
-        print('Clicks now equal'+ str(n_clicks))
-
-    file_dropdown_options = drop_options
-    file_dropdown_value = file_names[0]
-
-    if user_inputs == [] or user_inputs1 == []:
-
-        # min_sl = min_sl2
-        # max_sl = max_sl2
-        # fig = {}
-
-        return None
-
-    else:
-
-        fig = go.Figure()
-        df = {}
-        max1 = []
-        min1 = []
-
-        for user_input in user_inputs:
-            for user_input1 in user_inputs1:
-                df[user_input] = {}  # Create a nested dictionary for each user_input
-                df[user_input][user_input1] = prb[user_input][user_input1]
-                df[user_input]['t'] = prb[user_input]['t']
-                max1.append(np.round(np.amax(df[user_input]['t'])))
-                min1.append(np.round(np.amin(df[user_input]['t'])))
-                t = df[user_input]['t']
-                V = prb[user_input][user_input1]
-                mask = t < time_input[0]
-                t1 = np.delete(t, np.where(mask))
-                V1 = np.delete(V, np.where(mask))
-                mask = t1 > time_input[1]
-                t2 = np.delete(t1, np.where(mask))
-                V2 = np.delete(V1, np.where(mask))
-                fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
-                                         name=f"{user_input}{' '}{user_input1}"))
+        print('2= ' + str(n_clicks))
+        print('2= ' + str(n_clicks1))
+        print('2= ' + str(user_inputs))
+        print('2= ' + str(user_inputs1))
 
 
-        fig.update_layout(
-                     title = (user_input + " " + user_input1 + " Data"),
-                     xaxis_title="Time (s) ",
-                     yaxis_title="Velocity (m/s)")
-        min_sl = min(min1)
-        max_sl = max(max1)
+
+        if user_inputs != [] and user_inputs1 != []:
+
+            fig = go.Figure()
+            df = {}
+            max1 = []
+            min1 = []
+
+            for user_input in user_inputs:
+                for user_input1 in user_inputs1:
+                    df[user_input] = {}  # Create a nested dictionary for each user_input
+                    df[user_input][user_input1] = prb[user_input][user_input1]
+                    df[user_input]['t'] = prb[user_input]['t']
+                    max1.append(np.round(np.amax(df[user_input]['t'])))
+                    min1.append(np.round(np.amin(df[user_input]['t'])))
+                    t = df[user_input]['t']
+                    V = prb[user_input][user_input1]
+                    mask = t < time_input[0]
+                    t1 = np.delete(t, np.where(mask))
+                    V1 = np.delete(V, np.where(mask))
+                    mask = t1 > time_input[1]
+                    t2 = np.delete(t1, np.where(mask))
+                    V2 = np.delete(V1, np.where(mask))
+                    fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
+                                             name=f"{user_input}{' '}{user_input1}"))
 
 
-    return fig, file_dropdown_options, file_dropdown_value, min_sl, max_sl, n_clicks
+            fig.update_layout(
+                         title = (user_input + " " + user_input1 + " Data"),
+                         xaxis_title="Time (s) ",
+                         yaxis_title="Velocity (m/s)")
+            min_sl = min(min1)
+            max_sl = max(max1)
+
+            print('wrong')
+
+        else:
+            min_sl = 1
+            max_sl = 10
+            fig = {}
+
+    print('3= ' + str(n_clicks))
+    print('3= ' + str(n_clicks1))
+    print('3= ' + str(user_inputs))
+    print('3= ' + str(user_inputs1))
+
+
+    return fig, file_dropdown_options, min_sl, max_sl, vect_opt
 
 
 
