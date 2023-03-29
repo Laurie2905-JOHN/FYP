@@ -2,7 +2,7 @@ from dash import Dash, dcc, Output, Input
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
@@ -14,8 +14,6 @@ import numpy as np
 import scipy.io as sio
 from pathlib import Path, PureWindowsPath
 import plotly.graph_objects as go
-
-
 
 # Create an instance of tkinter frame or window
 def file_chooser():
@@ -48,7 +46,7 @@ def file_chooser():
         return file_paths, file_names
 
     def close_window():
-        win.quit()
+        win.destroy()
 
     # Add a Button Widget
     ttk.Button(win, text="Select a File", command=open_file).pack()
@@ -60,6 +58,8 @@ def file_chooser():
     ttk.Button(win, text="Close", command=close_window).pack()
 
     win.mainloop()
+
+    return file_paths, file_names
 
 def cal_velocity(BarnFilePath):
     import numpy as np
@@ -128,55 +128,15 @@ def cal_velocity(BarnFilePath):
 
     return prb
 
-
-
 # print(file_names)
 # print(file_paths)
-
 
 #file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
 
 #file_names = ['Example 1.txt', 'Example 2.txt']
 
 
-
-
-
-# While data is the same changing example 2 data
-
-
-
-
-
-
 app = Dash(__name__)
-
-file_chooser()
-
-prb = cal_velocity(file_paths)
-
-prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
-                             'Uy': prb['Example 2.txt']['Uy'] * 0.3,
-                             'Uz': prb['Example 2.txt']['Uz'] * 0.3})
-
-prb['Example 2.txt']['t'] -= 50
-
-max2 = []
-min2 = []
-dff = {}
-
-for file_name in file_names:
-    dff[file_name] = {}  # Create a nested dictionary for each user_input
-    dff[file_name]['t'] = prb[file_name]['t']
-    max2.append(np.round(np.amax(dff[file_name]['t'])))
-    min2.append(np.round(np.amin(dff[file_name]['t'])))
-
-max_sl2 = max(max2)
-min_sl2 = min(min2)
-
-drop_options = []
-for i, file_name in enumerate(file_names):
-    drop_options.append({'label': file_name, 'value': file_name})
 
 
 app.layout = html.Div([
@@ -191,19 +151,30 @@ app.layout = html.Div([
 
         dcc.RangeSlider(
             id='time-range',
-            min= min_sl2,
-            max= max_sl2,
-            value= [min_sl2, max_sl2],
+            min= [],
+            max= [],
+            value= [],
             tooltip={"placement": "bottom", "always_visible": True},
             ),
 
     html.Div(children = [
+
         html.Br(),
+
+        html.Button("Select Files", id='submit_files', n_clicks=0),
+
+        html.Br(),
+
+        html.Button("Clear Files", id='clear_files', n_clicks=0),
+
+        html.Br(),
+
         html.Label("Choose DataSet"),
+
         dcc.Dropdown(id="File",
-                 options=drop_options,
+                 options=[],
                  multi=True,
-                 value=[file_names[0]],
+                 value=[],
                  placeholder="Select a dataset",
                  style={'width': "50%"})
              ]),
@@ -218,25 +189,65 @@ app.layout = html.Div([
                  style={'width': "50%"})
              ])
 
-
 ])
 
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure'),
+    Output(component_id = "File", component_property = 'options'),
+    Output(component_id = 'File', component_property = 'value'),
     Output(component_id = 'time-range', component_property = 'min'),
-    Output(component_id = 'time-range', component_property = 'max')],
-    [Input(component_id = 'File', component_property = 'value'),
-    Input(component_id = 'Vect',component_property = 'value'),
-    Input(component_id = 'time-range',component_property = 'value')]
-    )
+    Output(component_id = 'time-range', component_property = 'max'),
+    Output(component_id = 'submit_files', component_property = 'n_clicks')],
+    [Input(component_id = 'submit_files', component_property = 'n_clicks'),
+    Input(component_id = 'File', component_property = 'value'),
+    Input(component_id = 'Vect', component_property = 'value'),
+    Input(component_id = 'time-range', component_property = 'value')],
+)
 
 
-def update_graph(user_inputs,user_inputs1,time_input):
+def update_graph(n_clicks, user_inputs,user_inputs1,time_input):
+
+
+    if n_clicks == 1:
+
+        print(n_clicks)
+
+        files = file_chooser()
+
+        file_paths = files[0]
+
+        file_names = files[1]
+
+        prb = cal_velocity(file_paths)
+
+        # While data is the same
+        prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
+                                     'Uy': prb['Example 2.txt']['Uy'] * 0.3,
+                                     'Uz': prb['Example 2.txt']['Uz'] * 0.3})
+
+        prb['Example 2.txt']['t'] -= 50
+
+
+        drop_options = []
+
+        for i, file_name in enumerate(file_names):
+            drop_options.append({'label': file_name, 'value': file_name})
+
+
+        n_clicks = 0
+
+        print('Clicks now equal'+ str(n_clicks))
+
+    file_dropdown_options = drop_options
+    file_dropdown_value = file_names[0]
 
     if user_inputs == [] or user_inputs1 == []:
-        min_sl = min_sl2
-        max_sl = max_sl2
-        fig = {}
+
+        # min_sl = min_sl2
+        # max_sl = max_sl2
+        # fig = {}
+
+        return None
 
     else:
 
@@ -272,7 +283,7 @@ def update_graph(user_inputs,user_inputs1,time_input):
         max_sl = max(max1)
 
 
-    return fig, min_sl, max_sl
+    return fig, file_dropdown_options, file_dropdown_value, min_sl, max_sl, n_clicks
 
 
 
