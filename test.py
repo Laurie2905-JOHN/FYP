@@ -1,8 +1,9 @@
-from dash import Dash, dcc, Output, Input
+from dash import Dash, dcc, Output, Input, ctx, State
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
-from dash.dependencies import Input, Output, State
+
+
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
@@ -141,19 +142,14 @@ app = Dash(__name__)
 
 app.layout = html.Div([
 
-    html.H1("BARNACLE SENSOR ANALYSIS", style={'text-align': 'center'}),
-
-    dcc.Graph(id='Velocity_Graph', figure={}),
-
-    html.Label("Choose Time",
-               style={'text-align': 'center'}
-),
-
     html.Div(children = [
 
         html.Br(),
 
-        html.Button("Select Files", id='submit_files', n_clicks=0),
+        html.Button("Select Files", id='submit_files',
+                        type = 'button',
+                        n_clicks = 0),
+
 
         html.Br(),
 
@@ -168,57 +164,33 @@ app.layout = html.Div([
                  multi=True,
                  value=[],
                  placeholder="Select a dataset",
-                 style={'width': "50%"})
-             ]),
-
-    html.Div(children = [
-        html.Label("Choose Velocity"),
-        dcc.Dropdown(id="Vect",
-                 options=['Ux', 'Uy', 'Uz'],
-                 multi=True,
-                 value=['Ux'],
-                 placeholder="Select a velocity",
                  style={'width': "50%"}),
 
-             ])
-
-])
-
+        html.Label("Choose Velocity"),
+        dcc.Dropdown(id="Vect",
+                 options=[],
+                 multi=True,
+                 value=[],
+                 placeholder="Select a velocity",
+                 style={'width': "50%"})
+        ]),
+],
+)
 
 @app.callback(
-    [Output(component_id = 'Velocity_Graph', component_property = 'figure'),
-    Output(component_id = "File", component_property = 'options'),
-    Output(component_id = 'File', component_property = 'value'),
-    Output(component_id = 'submit_files', component_property = 'n_clicks'),
-    Output(component_id = 'clear_files', component_property = 'n_clicks')],
-    [Input(component_id = 'submit_files', component_property = 'n_clicks'),
-    Input(component_id = 'clear_files', component_property = 'n_clicks'),
-    Input(component_id = 'File', component_property = 'value'),
-    Input(component_id = 'Vect', component_property = 'value')],
-    )
+    Output(component_id='File', component_property='value'),
+    Output(component_id='Vect', component_property='value'),
+    [Input(component_id='submit_files', component_property='n_clicks')],
+)
+def update_graph(n_clicks, ctx):
 
+    print(ctx.triggered_id)
 
-def update_graph(n_clicks,n_clicks1, user_inputs,user_inputs1):
-
-    if n_clicks == 0 or n_clicks1 > 0:
-
-        print('no data')
-
-        fig = {}
-        file_dropdown_options = []
-        file_dropdown_value = []
-        n_clicks = 0
-        n_clicks1 = 0
-
-    else:
-
-        print('Clicks now equal' + str(n_clicks))
-
-        n_clicks = 1
-
-        print('Clicks now equal' + str(n_clicks))
+    if 'submit_files' == ctx.triggered_id:
 
         data = file_chooser()
+
+        print('data was selected')
 
         file_paths = data[0]
 
@@ -226,30 +198,21 @@ def update_graph(n_clicks,n_clicks1, user_inputs,user_inputs1):
 
 
 
-
-        prb = cal_velocity(file_paths)
-
-        # While data is the same
-        prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
-                                     'Uy': prb['Example 2.txt']['Uy'] * 0.3,
-                                     'Uz': prb['Example 2.txt']['Uz'] * 0.3})
-
-        prb['Example 2.txt']['t'] -= 50
-
+        vect_options = ['Ux', 'Uy', 'Uz']
 
         file_dropdown_options = file_names
-        file_dropdown_value = file_names[0]
 
         print(file_dropdown_options)
-        print(file_dropdown_value)
 
+    else:
 
+        vect_options = []
 
-        fig = px.line(x = prb['Example 2.txt']['t'],y = prb['Example 2.txt']['Ux'])
+        file_dropdown_options = []
 
+        print('ffs')
 
-    return fig, file_dropdown_options, file_dropdown_value, n_clicks, n_clicks1
-
+    return file_dropdown_options, vect_options
 
 
     # Run app
