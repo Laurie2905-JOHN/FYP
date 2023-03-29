@@ -2,7 +2,7 @@ from dash import Dash, dcc, Output, Input, ctx, State
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
-import dash_daq as daq
+
 
 
 import plotly.express as px
@@ -147,8 +147,9 @@ app.layout = html.Div([
 
         html.Br(),
 
-        daq.ToggleSwitch("Select Files", id='submit_files',
-                        value = False),
+        html.Button("Select Files", id='submit_files',
+                        n_clicks = 0,
+                    type = 'button'),
 
 
         html.Br(),
@@ -179,30 +180,41 @@ app.layout = html.Div([
 )
 
 @app.callback(
-    Output(component_id='File', component_property='value'),
-    Output(component_id='Vect', component_property='value'),
-    [Input(component_id='submit_files', component_property='n_clicks')],
+    Output(component_id='File', component_property='options'),
+    Output(component_id='Vect', component_property='options'),
+    [Input(component_id='submit_files', component_property='n_clicks'),
+     Input(component_id='clear_files', component_property='n_clicks')],
 )
-def update_dropdowns(n_clicks):
+def update_dropdowns(n_clicks, n_clicks1):
 
-    if "submit_files" == ctx.triggered_id:
-
-        print('button pressed')
-        # This block of code will run when the user clicks the submit button
-        data = file_chooser()
-
-        file_names = data[1]
-
-        vect_options = ['Ux', 'Uy', 'Uz']
-
-        file_dropdown_options = file_names
-
-    else:
-        print('button not pressed')
+    if "clear_files" == ctx.triggered_id:
 
         vect_options = []
 
         file_dropdown_options = []
+
+    else:
+
+
+        if "submit_files" == ctx.triggered_id:
+
+            print('button pressed')
+            # This block of code will run when the user clicks the submit button
+            data = file_chooser()
+
+            file_names = data[1]
+
+            vect_options = ['Ux', 'Uy', 'Uz']
+
+            file_dropdown_options = file_names
+
+        else:
+
+            print('button not pressed')
+
+            vect_options = []
+
+            file_dropdown_options = []
 
 
     return file_dropdown_options, vect_options

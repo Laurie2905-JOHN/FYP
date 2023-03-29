@@ -1,4 +1,4 @@
-from dash import Dash, dcc, Output, Input
+from dash import Dash, dcc, Output, Input, ctx, State
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
@@ -157,49 +157,48 @@ app.layout = html.Div([
             tooltip={"placement": "bottom", "always_visible": True},
             ),
 
-    html.Div(children = [
+    html.Div(children=[
 
         html.Br(),
 
-        html.Button("Select Files", id='submit_files', n_clicks=0),
+        html.Button("Select Files", id='submit_files',
+                    n_clicks=0,
+                    type='button'),
 
         html.Br(),
 
-        html.Button("Clear Files", id='clear_files', n_clicks=0, type = 'button'),
+        html.Button("Clear Files", id='clear_files', n_clicks=0),
 
         html.Br(),
 
         html.Label("Choose DataSet"),
 
         dcc.Dropdown(id="File",
-                 options=[],
-                 multi=True,
-                 value=[],
-                 placeholder="Select a dataset",
-                 style={'width': "50%"})
-             ]),
+                     options=[],
+                     multi=True,
+                     value=[],
+                     placeholder="Select a dataset",
+                     style={'width': "50%"}),
 
-        html.Div(children = [
-            html.Label("Choose Velocity"),
-            dcc.Dropdown(id="Vect",
+        html.Label("Choose Velocity"),
+
+        dcc.Dropdown(id="Vect",
                      options=[],
                      multi=True,
                      value=[],
                      placeholder="Select a velocity",
-                     style={'width': "50%"})]),
+                     style={'width': "50%"})
+    ]),
+],
+)
 
-])
 
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure'),
-    Output(component_id = "File", component_property = 'options'),
-    Output(component_id = 'File', component_property = 'value'),
     Output(component_id = 'time-range', component_property = 'min'),
     Output(component_id = 'time-range', component_property = 'max'),
-    Output(component_id = 'Vect', component_property = 'options'),
-    Output(component_id = 'Vect', component_property = 'value')],
-    #Output(component_id = 'submit_files', component_property = 'n_clicks'),
-    #Output(component_id = 'clear_files', component_property = 'n_clicks')],
+    Output(component_id = "File", component_property = 'options'),
+    Output(component_id = 'Vect', component_property = 'options')],
     [Input(component_id = 'submit_files', component_property = 'n_clicks'),
     Input(component_id = 'clear_files', component_property = 'n_clicks'),
     Input(component_id = 'File', component_property = 'value'),
@@ -210,38 +209,34 @@ app.layout = html.Div([
 
 
 
-def update_graph(n_clicks, n_clicks1, user_inputs,user_inputs1,time_input):
+def update_dropdowns(n_clicks, n_clicks1, user_inputs, user_inputs1,time_input):
 
-    print('1= ' + str(n_clicks))
-    print('1= ' + str(n_clicks1))
-    print('1= ' + str(user_inputs))
-    print('1= ' + str(user_inputs1))
 
-    if n_clicks == 0 or n_clicks1 == 1:
+    if "clear_files" == ctx.triggered_id:
 
-        print('no data')
+        vect_options = []
+
+        file_dropdown_options = []
 
         fig = {}
-        file_dropdown_options = []
-        file_val = []
-        vect_opt = []
-        vect_val =[]
+
         min_sl = 1
+
         max_sl = 10
 
-        print('2= ' + str(n_clicks))
-        print('2= ' + str(n_clicks1))
-        print('2= ' + str(user_inputs))
-        print('2= ' + str(user_inputs1))
+    if "submit_files" == ctx.triggered_id:
 
-    else:
-
-
+        print('button pressed')
+        # This block of code will run when the user clicks the submit button
         data = file_chooser()
 
         file_paths = data[0]
 
         file_names = data[1]
+
+        vect_options = ['Ux', 'Uy', 'Uz']
+
+        file_dropdown_options = file_names
 
         prb = cal_velocity(file_paths)
 
@@ -253,39 +248,67 @@ def update_graph(n_clicks, n_clicks1, user_inputs,user_inputs1,time_input):
         prb['Example 2.txt']['t'] -= 50
 
 
-        fig = go.Figure()
 
-        df = {}
-        max1 = []
-        min1 = []
-    if
-        for user_input in user_inputs:
-            for user_input1 in user_inputs1:
-                df[user_input] = {}  # Create a nested dictionary for each user_input
-                df[user_input][user_input1] = prb[user_input][user_input1]
-                df[user_input]['t'] = prb[user_input]['t']
-                max1.append(np.round(np.amax(df[user_input]['t'])))
-                min1.append(np.round(np.amin(df[user_input]['t'])))
-                t = df[user_input]['t']
-                V = prb[user_input][user_input1]
-                mask = t < time_input[0]
-                t1 = np.delete(t, np.where(mask))
-                V1 = np.delete(V, np.where(mask))
-                mask = t1 > time_input[1]
-                t2 = np.delete(t1, np.where(mask))
-                V2 = np.delete(V1, np.where(mask))
-                fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
-                                         name=f"{user_input}{' '}{user_input1}"))
+    if user_inputs == [] or user_inputs1 == []:
+
+        print('no in')
+
+        vect_options = ['Ux', 'Uy', 'Uz']
+
+        file_dropdown_options = ['Ux']
+
+        fig = {}
+
+        min_sl = 1
+
+        max_sl = 10
+
+    else:
+
+            print('yes')
+            fig = go.Figure()
+
+            df = {}
+            max1 = []
+            min1 = []
+
+            print(user_inputs1)
+            print(user_inputs)
+
+            for user_input in user_inputs:
+                for user_input1 in user_inputs1:
+                    df[user_input] = {}  # Create a nested dictionary for each user_input
+                    df[user_input][user_input1] = prb[user_input][user_input1]
+                    df[user_input]['t'] = prb[user_input]['t']
+                    max1.append(np.round(np.amax(df[user_input]['t'])))
+                    min1.append(np.round(np.amin(df[user_input]['t'])))
+                    t = df[user_input]['t']
+                    V = prb[user_input][user_input1]
+                    mask = t < time_input[0]
+                    t1 = np.delete(t, np.where(mask))
+                    V1 = np.delete(V, np.where(mask))
+                    mask = t1 > time_input[1]
+                    t2 = np.delete(t1, np.where(mask))
+                    V2 = np.delete(V1, np.where(mask))
+                    fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
+                                             name=f"{user_input}{' '}{user_input1}"))
+
+            fig.update_layout(
+                title=(user_input + " " + user_input1 + " Data"),
+                xaxis_title="Time (s) ",
+                yaxis_title="Velocity (m/s)")
+
+            min_sl = min(min1)
+            max_sl = max(max1)
+
+            print(file_names)
+
+            vect_options = ['Ux', 'Uy', 'Uz']
+
+            file_dropdown_options = file_names
 
 
-        fig.update_layout(
-                     title = (user_input + " " + user_input1 + " Data"),
-                     xaxis_title="Time (s) ",
-                     yaxis_title="Velocity (m/s)")
-        min_sl = min(min1)
-        max_sl = max(max1)
-
-    return fig, file_dropdown_options, file_val, min_sl, max_sl, vect_opt, vect_val
+    return fig, min_sl, max_sl, file_dropdown_options, vect_options
 
 
 
