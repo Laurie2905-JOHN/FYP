@@ -279,30 +279,65 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
 
 @app.callback(
-     [Output(component_id="file_checklist", component_property='value'),
-     Output(component_id='vel_checklist', component_property='value')],
+     [Output(component_id="file_checklist", component_property='options'),
+     Output(component_id='vel_checklist', component_property='options')],
      [Input(component_id="File", component_property='options'),
      Input(component_id='Vect', component_property='options')],
-    prevent_initial_call=True
+     prevent_initial_call=True
 )
 
 def checklist(file_dropdown_options, vect_options):
 
-    if file_dropdown_options == [] or vect_options == []:
-
-        print('bye')
-
-        file_checklist = []
-
-        vel_checklist = []
-
-    else:
-        print('hello')
         file_checklist = file_dropdown_options
 
         vel_checklist = vect_options
 
         return file_checklist, vel_checklist
+
+
+@app.callback(
+     [Output(component_id="file_checklist", component_property='value'),
+     Output(component_id='all_file_checklist', component_property='value'),
+     Output(component_id="vel_checklist", component_property='value'),
+     Output(component_id='all_vel_checklist', component_property='value'),
+      Output(component_id="type_checklist", component_property='value'),
+      Output(component_id='all_type_checklist', component_property='value')],
+      [Input(component_id="file_checklist", component_property='value'),
+      Input(component_id='all_file_checklist', component_property='value'),
+    Input(component_id="vel_checklist", component_property='value'),
+     Input(component_id='all_vel_checklist', component_property='value'),
+     Input(component_id="type_checklist", component_property='value'),
+     Input(component_id='all_type_checklist', component_property='value'),
+     Input(component_id="File", component_property='options'),
+      Input(component_id='Vect', component_property='options')],
+     prevent_initial_call=True
+)
+
+def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_checklist,type_checklist, all_type_checklist, file_dropdown_options, vect_options ):
+
+    if file_dropdown_options != [] or vect_options != []:
+
+        input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        if input_id == "file_checklist":
+            all_file_checklist = ["All"] if set(file_checklist) == set(file_dropdown_options) else []
+        else:
+            file_checklist = file_dropdown_options if all_file_checklist else []
+
+        if input_id == "vel_checklist":
+            all_vel_checklist = ["All"] if set(vect_options) == set(file_dropdown_options) else []
+        else:
+            vel_checklist = vect_options if all_vel_checklist else []
+
+        file_type = ['CSV', 'Excel', '.txt']
+
+        if input_id == "type_checklist":
+            all_type_checklist = ["All"] if set(type_checklist) == set(file_type) else []
+        else:
+            type_checklist = file_type if all_type_checklist else []
+
+        return file_checklist, all_file_checklist, vel_checklist, all_vel_checklist, type_checklist, all_type_checklist
+
 
 
 @app.callback(
