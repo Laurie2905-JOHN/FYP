@@ -284,9 +284,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
 
             if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
 
-
-                #print('data and input')
-
                 for user_input in user_inputs:
                     for user_input1 in user_inputs1:
                         df[user_input] = {}  # Create a nested dictionary for each user_input
@@ -324,8 +321,9 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
                                                  name=f"{user_input}{' '}{user_input1}"))
 
 
-                value = time_input
 
+                value = time_input
+            #fig.update_xaxes(rangeslider_visible=True)
 
             min_sl = min(min1)
             max_sl = max(max1)
@@ -336,6 +334,15 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
                         title=(user_input + " " + user_input1 + " Data"),
                         xaxis_title="Time (s) ",
                         yaxis_title="Velocity (m/s)")
+            else:
+
+                fig.update_layout(legend=dict(
+                    y = 1,
+                    x = 0.5,
+                    orientation="h",
+                    yanchor="bottom",
+                    xanchor="center",
+                ))
 
 
 
@@ -343,6 +350,12 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
     return fig, min_sl, max_sl, value
 
 
+# newnames = {'col1':'hello', 'col2': 'hi'}
+# fig.for_each_trace(lambda t: t.update(name = newnames[t.name],
+#                                       legendgroup = newnames[t.name],
+#                                       hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
+#                                      )
+#                   )
 
 
 @app.callback(
