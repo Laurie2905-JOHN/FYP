@@ -274,8 +274,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
 
     else:
 
-        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
-
             df = {}
 
             max1 = []
@@ -284,45 +282,60 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
 
             fig = go.Figure()
 
-            #print('data and input')
+            if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
 
-            for user_input in user_inputs:
-                for user_input1 in user_inputs1:
-                    df[user_input] = {}  # Create a nested dictionary for each user_input
-                    df[user_input][user_input1] = prb[user_input][user_input1]
-                    df[user_input]['t'] = prb[user_input]['t']
-                    max1.append(np.round(np.amax(df[user_input]['t'])))
-                    min1.append(np.round(np.amin(df[user_input]['t'])))
-                    t = df[user_input]['t']
-                    V = prb[user_input][user_input1]
-                    mask = t < time_input[0]
-                    t1 = np.delete(t, np.where(mask))
-                    V1 = np.delete(V, np.where(mask))
-                    mask = t1 > time_input[1]
-                    t2 = np.delete(t1, np.where(mask))
-                    V2 = np.delete(V1, np.where(mask))
-                    fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
-                                             name=f"{user_input}{' '}{user_input1}"))
+
+                #print('data and input')
+
+                for user_input in user_inputs:
+                    for user_input1 in user_inputs1:
+                        df[user_input] = {}  # Create a nested dictionary for each user_input
+                        df[user_input][user_input1] = prb[user_input][user_input1]
+                        df[user_input]['t'] = prb[user_input]['t']
+                        max1.append(np.round(np.amax(df[user_input]['t'])))
+                        min1.append(np.round(np.amin(df[user_input]['t'])))
+                        t = df[user_input]['t']
+                        V = prb[user_input][user_input1]
+                        fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
+                                                 name=f"{user_input}{' '}{user_input1}"))
+
+                min_sl = min(min1)
+                max_sl = max(max1)
+                value = [min_sl, max_sl]
+                print('hello')
+
+            else:
+
+                for user_input in user_inputs:
+                    for user_input1 in user_inputs1:
+                        df[user_input] = {}  # Create a nested dictionary for each user_input
+                        df[user_input][user_input1] = prb[user_input][user_input1]
+                        df[user_input]['t'] = prb[user_input]['t']
+                        max1.append(np.round(np.amax(df[user_input]['t'])))
+                        min1.append(np.round(np.amin(df[user_input]['t'])))
+                        t = df[user_input]['t']
+                        V = prb[user_input][user_input1]
+                        mask = t < time_input[0]
+                        t1 = np.delete(t, np.where(mask))
+                        V1 = np.delete(V, np.where(mask))
+                        mask = t1 > time_input[1]
+                        t2 = np.delete(t1, np.where(mask))
+                        V2 = np.delete(V1, np.where(mask))
+                        fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
+                                                 name=f"{user_input}{' '}{user_input1}"))
+
+
+                value = time_input
+
 
             min_sl = min(min1)
             max_sl = max(max1)
-            value = [min_sl, max_sl]
-
-        else:
-
-            value = time_input
-            print(time_min)
-            print(time_max)
-            min_sl = time_min
-            max_sl = time_max
 
 
-
-
-        fig.update_layout(
-                title=(user_input + " " + user_input1 + " Data"),
-                xaxis_title="Time (s) ",
-                yaxis_title="Velocity (m/s)")
+            fig.update_layout(
+                    title=(user_inputs + " " + user_inputs1 + " Data"),
+                    xaxis_title="Time (s) ",
+                    yaxis_title="Velocity (m/s)")
 
 
     return fig, min_sl, max_sl, value
