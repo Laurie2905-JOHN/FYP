@@ -191,10 +191,58 @@ app.layout = html.Div([
                      multi=True,
                      value=[],
                      placeholder="Select a velocity",
-                     style={'width': "50%"})
-    ]),
-],
+                     style={'width': "50%"}),
+
+html.Div([
+
+    html.Br(),
+
+    html.Label("Download Data"),
+
+    html.Label("Select File Type"),
+
+    html.Div(
+
+        [
+            dcc.Checklist(["All"], [], id="all_type_checklist", inline=True),
+            dcc.Checklist(value=[], id="type_checklist", inline=True),
+        ],
+
+        html.Label("Download Data"),
+
+        html.Label("Select Data File"),
+
+        html.Div(
+
+            [
+                dcc.Checklist(["All"], [], id="all_file_checklist", inline=True),
+                dcc.Checklist(value=[], id="file_checklist", inline=True),
+            ],
+
+            html.Label("Select Velocity"),
+
+            html.Div(
+
+                [
+                    dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
+                    dcc.Checklist(value=[], id="all_vel_checklist", inline=True),
+                ],
+
+                html.Button("Download", id="btn_download"),
+
+                dcc.Download(id="download")
+
+            )))])
+
+
+
+    ],
+)],
+
 )
+
+
+
 
 
 @app.callback(
@@ -350,7 +398,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
 
     return fig, min_sl, max_sl, value
 
-
+# code to change legend names could be possible
 # newnames = {'col1':'hello', 'col2': 'hi'}
 # fig.for_each_trace(lambda t: t.update(name = newnames[t.name],
 #                                       legendgroup = newnames[t.name],

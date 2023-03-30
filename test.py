@@ -2,9 +2,7 @@ from dash import Dash, dcc, Output, Input, ctx, State
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
-
-
-
+from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
@@ -16,6 +14,7 @@ import numpy as np
 import scipy.io as sio
 from pathlib import Path, PureWindowsPath
 import plotly.graph_objects as go
+
 
 # Create an instance of tkinter frame or window
 def file_chooser():
@@ -137,20 +136,38 @@ def cal_velocity(BarnFilePath):
 
 #file_names = ['Example 1.txt', 'Example 2.txt']
 
+#file_names = {}
 
 app = Dash(__name__)
 
 
+
 app.layout = html.Div([
 
-    html.Div(children = [
+    html.H1("BARNACLE SENSOR ANALYSIS", style={'text-align': 'center'}),
+
+    dcc.Graph(id='Velocity_Graph', figure={}),
+
+    html.Label("Choose Time",
+               style={'text-align': 'center'}
+),
+
+        dcc.RangeSlider(
+            id='time-range',
+            min= 1,
+            max= 10,
+            value= [1, 10],
+            tooltip={"placement": "bottom", "always_visible": True},
+            updatemode = 'drag',
+            ),
+
+    html.Div(children=[
 
         html.Br(),
 
         html.Button("Select Files", id='submit_files',
-                        n_clicks = 0,
-                    type = 'button'),
-
+                    n_clicks=0,
+                    type='button'),
 
         html.Br(),
 
@@ -161,67 +178,225 @@ app.layout = html.Div([
         html.Label("Choose DataSet"),
 
         dcc.Dropdown(id="File",
-                 options=[],
-                 multi=True,
-                 value=[''],
-                 placeholder="Select a dataset",
-                 style={'width': "50%"}),
+                     options=[],
+                     multi=True,
+                     value=[],
+                     placeholder="Select a dataset",
+                     style={'width': "50%"}),
 
         html.Label("Choose Velocity"),
 
         dcc.Dropdown(id="Vect",
-                 options=[],
-                 multi=True,
-                 value=[''],
-                 placeholder="Select a velocity",
-                 style={'width': "50%"})
-        ]),
-],
+                     options=[],
+                     multi=True,
+                     value=[],
+                     placeholder="Select a velocity",
+                     style={'width': "50%"}),
+
+
+
+    ],
+)],
+
 )
+
+
+
+
 
 @app.callback(
-    Output(component_id='File', component_property='options'),
-    Output(component_id='Vect', component_property='options'),
+     [Output(component_id="File", component_property='options'),
+     Output(component_id='Vect', component_property='options'),
+      ],
     [Input(component_id='submit_files', component_property='n_clicks'),
-     Input(component_id='clear_files', component_property='n_clicks')],
+     Input(component_id="File", component_property='options'),
+     Input(component_id='Vect', component_property='options')],
+    prevent_initial_call=True
+
 )
-def update_dropdowns(n_clicks, n_clicks1):
 
-    if "clear_files" == ctx.triggered_id:
+def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
-        vect_options = []
-
-        file_dropdown_options = []
-
-    else:
-
+    if file_dropdown_options == [] or vect_options == []:
 
         if "submit_files" == ctx.triggered_id:
 
-            print('button pressed')
             # This block of code will run when the user clicks the submit button
-            data = file_chooser()
+            data1 = file_chooser()
 
-            file_names = data[1]
+            file_paths1 = data1[0]
+
+            file_names1 = data1[1]
 
             vect_options = ['Ux', 'Uy', 'Uz']
 
             file_dropdown_options = file_names
 
-        else:
+            global prb
+            prb = cal_velocity(file_paths)
 
-            print('button not pressed')
+            # While data is the same
+            prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
+                                         'Uy': prb['Example 2.txt']['Uy'] * 0.3,
+                                         'Uz': prb['Example 2.txt']['Uz'] * 0.3})
 
-            vect_options = []
-
-            file_dropdown_options = []
+            prb['Example 2.txt']['t'] -= 50
 
 
     return file_dropdown_options, vect_options
 
 
-    # Run app
+
+@app.callback(
+    [Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+    Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
+    Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
+    Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
+     ],
+    [
+    Input(component_id = 'File', component_property = 'value'),
+    Input(component_id = 'Vect', component_property = 'value'),
+    Input(component_id = 'time-range', component_property = 'value'),
+    Input(component_id='time-range', component_property='min'),
+    Input(component_id='time-range', component_property='max')
+    ],
+    prevent_initial_call=True
+)
+
+
+def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
+
+
+    if user_inputs == [] or user_inputs1 == []:
+
+        fig = go.Figure()
+
+        fig = {}
+
+        min_sl = 1
+
+        max_sl = 10
+
+        value =[1, 10]
+
+    else:
+
+            df = {}
+
+            max1 = []
+
+            min1 = []
+
+            fig = go.Figure()
+
+            if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
+
+                for user_input in user_inputs:
+                    for user_input1 in user_inputs1:
+                        df[user_input] = {}  # Create a nested dictionary for each user_input
+                        df[user_input][user_input1] = prb[user_input][user_input1]
+                        df[user_input]['t'] = prb[user_input]['t']
+                        max1.append(np.round(np.amax(df[user_input]['t'])))
+                        min1.append(np.round(np.amin(df[user_input]['t'])))
+                        t = df[user_input]['t']
+                        V = prb[user_input][user_input1]
+                        fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
+                                                 name=f"{user_input}{' '}{user_input1}"))
+
+                min_sl = min(min1)
+                max_sl = max(max1)
+                value = [min_sl, max_sl]
+
+            else:
+
+                for user_input in user_inputs:
+                    for user_input1 in user_inputs1:
+                        df[user_input] = {}  # Create a nested dictionary for each user_input
+                        df[user_input][user_input1] = prb[user_input][user_input1]
+                        df[user_input]['t'] = prb[user_input]['t']
+                        max1.append(np.round(np.amax(df[user_input]['t'])))
+                        min1.append(np.round(np.amin(df[user_input]['t'])))
+                        t = df[user_input]['t']
+                        V = prb[user_input][user_input1]
+                        mask = t < time_input[0]
+                        t1 = np.delete(t, np.where(mask))
+                        V1 = np.delete(V, np.where(mask))
+                        mask = t1 > time_input[1]
+                        t2 = np.delete(t1, np.where(mask))
+                        V2 = np.delete(V1, np.where(mask))
+                        fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
+                                                 name=f"{user_input}{' '}{user_input1}"))
+
+
+
+                value = time_input
+
+            # fig.update_xaxes(rangeslider_visible=True), option for range slider
+
+            min_sl = min(min1)
+            max_sl = max(max1)
+
+            if len(user_inputs) == 1 and len(user_inputs1) == 1:
+
+                fig.update_layout(
+                        title=(user_input + " " + user_input1 + " Data"),
+                        xaxis_title="Time (s) ",
+                        yaxis_title="Velocity (m/s)")
+            else:
+
+                fig.update_layout(legend=dict(
+                    y = 1,
+                    x = 0.5,
+                    orientation="h",
+                    yanchor="bottom",
+                    xanchor="center",
+                ))
+
+
+
+
+    return fig, min_sl, max_sl, value
+
+# code to change legend names could be possible
+# newnames = {'col1':'hello', 'col2': 'hi'}
+# fig.for_each_trace(lambda t: t.update(name = newnames[t.name],
+#                                       legendgroup = newnames[t.name],
+#                                       hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
+#                                      )
+#                   )
+
+
+@app.callback(
+     [Output(component_id="File", component_property='value', allow_duplicate=True),
+     Output(component_id='Vect', component_property='value', allow_duplicate=True),
+     Output(component_id="File", component_property='options', allow_duplicate=True),
+     Output(component_id='Vect', component_property='options', allow_duplicate=True),
+    Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True)],
+    [Input(component_id='clear_files', component_property='n_clicks')],
+    prevent_initial_call=True
+)
+
+
+
+def clear_files(n_clicks):
+
+    if "clear_files" == ctx.triggered_id:
+
+        vect_val = []
+
+        file_val = []
+
+        file_dropdown_options = []
+
+        vect_options = []
+
+        fig = {}
+
+
+        return file_val, vect_val, file_dropdown_options, vect_options, fig
+
+
+# Run app
 if __name__== '__main__':
     app.run_server(debug=True)
-
 
