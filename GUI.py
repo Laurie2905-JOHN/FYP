@@ -323,7 +323,8 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
 
 
                 value = time_input
-            #fig.update_xaxes(rangeslider_visible=True)
+
+            # fig.update_xaxes(rangeslider_visible=True), option for range slider
 
             min_sl = min(min1)
             max_sl = max(max1)
