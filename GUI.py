@@ -240,7 +240,9 @@ app.layout = html.Div([
 
 @app.callback(
      [Output(component_id="File", component_property='options'),
-     Output(component_id='Vect', component_property='options')],
+     Output(component_id='Vect', component_property='options'),
+     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
     [Input(component_id="submit_files", component_property='n_clicks'),
     Input(component_id="File", component_property='options'),
      Input(component_id='Vect', component_property='options')],
@@ -275,30 +277,15 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
             prb['Example 2.txt']['t'] -= 50
 
-    return file_dropdown_options, vect_options
+            file_checklist = file_dropdown_options
+
+            print(file_checklist)
+
+            vel_checklist = vect_options
 
 
-@app.callback(
-     [Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
-     Output(component_id="vel_checklist", component_property='value', allow_duplicate=True),
-     Input(component_id="File", component_property='options'),
-      Input(component_id='Vect', component_property='options')],
-     prevent_initial_call=True,
+    return file_dropdown_options, vect_options,  file_checklist, vel_checklist
 
-)
-
-
-def checklist(file_dropdown_options, vect_options):
-
-    if file_dropdown_options != [] and vect_options != []:
-
-        file_checklist = file_dropdown_options
-
-        print(file_checklist)
-
-        vel_checklist = vect_options
-
-    return file_checklist, vel_checklist
 
 
 @app.callback(
@@ -315,38 +302,34 @@ def checklist(file_dropdown_options, vect_options):
      Input(component_id="type_checklist", component_property='value'),
      Input(component_id='all_type_checklist', component_property='value'),
      Input(component_id="File", component_property='options'),
-      Input(component_id='Vect', component_property='options'),
-       Input(component_id='clear_files', component_property='n_clicks')],
+      Input(component_id='Vect', component_property='options')],
      prevent_initial_call=True,
 
 )
 
 
-def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_checklist,type_checklist, all_type_checklist, file_dropdown_options, vect_options,n_clicks ):
+def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_checklist,type_checklist, all_type_checklist, file_dropdown_options, vect_options ):
 
-    if ctx.triggered != clear_files:
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-        input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    if input_id == "file_checklist":
+        all_file_checklist = ["All"] if set(file_checklist) == set(file_dropdown_options) else []
+    else:
+        file_checklist = file_dropdown_options if all_file_checklist else []
 
-        if input_id == "file_checklist":
-            all_file_checklist = ["All"] if set(file_checklist) == set(file_dropdown_options) else []
-        else:
-            file_checklist = file_dropdown_options if all_file_checklist else []
+    if input_id == "vel_checklist":
+        all_vel_checklist = ["All"] if set(vect_options) == set(file_dropdown_options) else []
+    else:
+        vel_checklist = vect_options if all_vel_checklist else []
 
-        if input_id == "vel_checklist":
-            all_vel_checklist = ["All"] if set(vect_options) == set(file_dropdown_options) else []
-        else:
-            vel_checklist = vect_options if all_vel_checklist else []
+    file_type = ['CSV', 'Excel', '.txt']
 
-        file_type = ['CSV', 'Excel', '.txt']
+    if input_id == "type_checklist":
+        all_type_checklist = ["All"] if set(type_checklist) == set(file_type) else []
+    else:
+        type_checklist = file_type if all_type_checklist else []
 
-        if input_id == "type_checklist":
-            all_type_checklist = ["All"] if set(type_checklist) == set(file_type) else []
-        else:
-            type_checklist = file_type if all_type_checklist else []
-
-
-    return file_checklist, all_file_checklist, vel_checklist, all_vel_checklist, type_checklist, all_type_checklist
+    return file_checklist, all_file_checklist, vel_checklist, all_vel_checklist,type_checklist, all_type_checklist,
 
 
 
@@ -356,8 +339,7 @@ def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_ch
     Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
     Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
      ],
-    [
-    Input(component_id = 'File', component_property = 'value'),
+    [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
     Input(component_id = 'time-range', component_property = 'value'),
     ],
@@ -475,8 +457,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
     Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
-     Output(component_id="vel_checklist", component_property='value', allow_duplicate=True),
       ],
     [Input(component_id='clear_files', component_property='n_clicks')],
     prevent_initial_call=True
@@ -498,15 +478,12 @@ def clear_files(n_clicks):
 
         fig = {}
 
-        file_checklist_opt = []
+        file_checklist = []
 
-        vel_checklist_opt = []
+        vel_checklist = []
 
-        file_checklist_val = []
 
-        vel_checklist_val = []
-
-        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist_opt, vel_checklist_opt, file_checklist_val, vel_checklist_val
+        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist
 
 
 # Run app
