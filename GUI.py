@@ -297,57 +297,64 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
 
 @app.callback(
-     [Output(component_id="file_checklist", component_property='value'),
-     Output(component_id='all_file_checklist', component_property='value'),
-     Output(component_id="vel_checklist", component_property='value'),
-     Output(component_id='all_vel_checklist', component_property='value'),
-      Output(component_id="type_checklist", component_property='value'),
-      Output(component_id='all_type_checklist', component_property='value')],
-      [Input(component_id="file_checklist", component_property='value'),
-      Input(component_id='all_file_checklist', component_property='value'),
-    Input(component_id="vel_checklist", component_property='value'),
-     Input(component_id='all_vel_checklist', component_property='value'),
-     Input(component_id="type_checklist", component_property='value'),
-     Input(component_id='all_type_checklist', component_property='value'),
-     Input(component_id="File", component_property='options'),
-      Input(component_id='Vect', component_property='options')],
-     prevent_initial_call=True,
+        Output(component_id="file_checklist", component_property='value'),
+        Output(component_id='all_file_checklist', component_property='value'),
+        Input(component_id="file_checklist", component_property='value'),
+        Input(component_id='all_file_checklist', component_property='value'),
+        Input(component_id="File", component_property='options'),
+        prevent_initial_call= True)
 
-)
-
-
-def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_checklist,type_checklist, all_type_checklist, file_dropdown_options, vect_options ):
+def file_sync_checklist(file_checklist, all_file_checklist, file_dropdown_options):
 
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if input_id == "file_checklist":
         all_file_checklist = ["All"] if set(file_checklist) == set(file_dropdown_options) else []
-        print(all_file_checklist)
     else:
         file_checklist = file_dropdown_options if all_file_checklist else []
-        print(file_checklist)
+
+    return file_checklist, all_file_checklist,
+
+@app.callback(
+        Output(component_id="vel_checklist", component_property='value'),
+        Output(component_id='all_vel_checklist', component_property='value'),
+        Input(component_id="vel_checklist", component_property='value'),
+        Input(component_id='all_vel_checklist', component_property='value'),
+        Input(component_id='Vect', component_property='options'),
+             prevent_initial_call=True)
+
+def vel_sync_checklist(vel_checklist, all_vel_checklist, vect_options ):
+
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if input_id == "vel_checklist":
         all_vel_checklist = ["All"] if set(vel_checklist) == set(vect_options) else []
-        print(all_vel_checklist)
     else:
         vel_checklist = vect_options if all_vel_checklist else []
-        print(vel_checklist)
+
+
+    return vel_checklist, all_vel_checklist,
+
+@app.callback(
+    Output(component_id="type_checklist", component_property='value'),
+    Output(component_id='all_type_checklist', component_property='value'),
+    Input(component_id="type_checklist", component_property='value'),
+    Input(component_id='all_type_checklist', component_property='value'),
+     prevent_initial_call=True)
+
+def type_sync_checklist(type_checklist, all_type_checklist ):
+
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     file_type = ['CSV', 'Excel', '.txt']
 
     if input_id == "type_checklist":
         all_type_checklist = ["All"] if set(type_checklist) == set(file_type) else []
-        print(all_type_checklist)
     else:
 
         type_checklist = file_type if all_type_checklist else []
-        print(type_checklist)
 
-
-    print('end')
-
-    return file_checklist, all_file_checklist, vel_checklist, all_vel_checklist, type_checklist, all_type_checklist,
+    return type_checklist, all_type_checklist,
 
 
 
