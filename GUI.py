@@ -228,6 +228,17 @@ app.layout = html.Div([
         dcc.Checklist(["All"], [], id="all_type_checklist", inline=True),
         dcc.Checklist(['CSV','Excel','.txt'],id="type_checklist", inline=True),
 
+
+            html.I(
+                "Input the maximum and minimum time values for download"),
+            html.Br(),
+            dcc.Input(id="small_t", type="number",min = 0, max = 1000, placeholder = "Minimum Time", style={'marginRight': '10px'}),
+            dcc.Input(id="big_t", type="number", min =0, max = 1000, placeholder="Maximum Time", debounce=True),
+
+        html.Br(),
+        html.Br(),
+
+
         # Create a button for downloading data
         html.Button("Download", id="btn_download"),
 
