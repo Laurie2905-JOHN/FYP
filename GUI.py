@@ -302,7 +302,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
                 min_sl = min(min1)
                 max_sl = max(max1)
                 value = [min_sl, max_sl]
-                print('hello')
 
             else:
 
@@ -331,11 +330,14 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
             min_sl = min(min1)
             max_sl = max(max1)
 
+            if len(user_inputs) == 1 and len(user_inputs1) == 1:
 
-            fig.update_layout(
-                    title=(user_inputs + " " + user_inputs1 + " Data"),
-                    xaxis_title="Time (s) ",
-                    yaxis_title="Velocity (m/s)")
+                fig.update_layout(
+                        title=(user_input + " " + user_input1 + " Data"),
+                        xaxis_title="Time (s) ",
+                        yaxis_title="Velocity (m/s)")
+
+
 
 
     return fig, min_sl, max_sl, value
