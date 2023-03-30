@@ -252,16 +252,17 @@ app.layout = html.Div([
 
 def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
+    file_checklist = []
+
+    vel_checklist = []
+
     if file_dropdown_options == [] or vect_options == []:
 
         if "submit_files" == ctx.triggered_id:
 
             # This block of code will run when the user clicks the submit button
-            data1 = file_chooser()
+            file_chooser()
 
-            file_paths1 = data1[0]
-
-            file_names1 = data1[1]
 
             vect_options = ['Ux', 'Uy', 'Uz']
 
@@ -279,13 +280,9 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
             file_checklist = file_dropdown_options
 
-            print(file_checklist)
-
             vel_checklist = vect_options
 
-
     return file_dropdown_options, vect_options,  file_checklist, vel_checklist
-
 
 
 @app.callback(
@@ -314,22 +311,32 @@ def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_ch
 
     if input_id == "file_checklist":
         all_file_checklist = ["All"] if set(file_checklist) == set(file_dropdown_options) else []
+        print(all_file_checklist)
     else:
         file_checklist = file_dropdown_options if all_file_checklist else []
+        print(file_checklist)
 
     if input_id == "vel_checklist":
-        all_vel_checklist = ["All"] if set(vect_options) == set(file_dropdown_options) else []
+        all_vel_checklist = ["All"] if set(vel_checklist) == set(vect_options) else []
+        print(all_vel_checklist)
     else:
         vel_checklist = vect_options if all_vel_checklist else []
+        print(vel_checklist)
 
     file_type = ['CSV', 'Excel', '.txt']
 
     if input_id == "type_checklist":
         all_type_checklist = ["All"] if set(type_checklist) == set(file_type) else []
+        print(all_type_checklist)
     else:
-        type_checklist = file_type if all_type_checklist else []
 
-    return file_checklist, all_file_checklist, vel_checklist, all_vel_checklist,type_checklist, all_type_checklist,
+        type_checklist = file_type if all_type_checklist else []
+        print(type_checklist)
+
+
+    print('end')
+
+    return file_checklist, all_file_checklist, vel_checklist, all_vel_checklist, type_checklist, all_type_checklist,
 
 
 
@@ -346,9 +353,10 @@ def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_ch
     prevent_initial_call=True
 )
 
-
 def update_dropdowns(user_inputs, user_inputs1,time_input):
 
+    global t
+    global V
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -361,6 +369,10 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
         max_sl = 10
 
         value =[1, 10]
+
+        t = []
+
+        V = []
 
     else:
 
@@ -399,18 +411,16 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
                         df[user_input]['t'] = prb[user_input]['t']
                         max1.append(np.round(np.amax(df[user_input]['t'])))
                         min1.append(np.round(np.amin(df[user_input]['t'])))
-                        t = df[user_input]['t']
-                        V = prb[user_input][user_input1]
-                        mask = t < time_input[0]
-                        t1 = np.delete(t, np.where(mask))
-                        V1 = np.delete(V, np.where(mask))
-                        mask = t1 > time_input[1]
+                        t1 = df[user_input]['t']
+                        V1 = prb[user_input][user_input1]
+                        mask = t1 < time_input[0]
                         t2 = np.delete(t1, np.where(mask))
                         V2 = np.delete(V1, np.where(mask))
-                        fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
+                        mask = t2 > time_input[1]
+                        t = np.delete(t1, np.where(mask))
+                        V = np.delete(V1, np.where(mask))
+                        fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
                                                  name=f"{user_input}{' '}{user_input1}"))
-
-
 
                 value = time_input
 
@@ -438,6 +448,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
 
 
 
+
     return fig, min_sl, max_sl, value
 
 # code to change legend names could be possible
@@ -447,6 +458,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
 #                                       hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
 #                                      )
 #                   )
+
 
 
 @app.callback(
@@ -485,6 +497,20 @@ def clear_files(n_clicks):
 
         return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist
 
+
+@app.callback(
+    Output(component_id="download", component_property='data'),
+    Input(component_id="btn_download", component_property='n_clicks'))
+
+def download(n_clicks):
+    global t
+    if "btn_download" == ctx.triggered_id:
+
+        print(t)
+        print('work')
+        text = dict(content='hello', filename="hello.txt")
+        print(text)
+        return text
 
 # Run app
 if __name__== '__main__':
