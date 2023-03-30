@@ -411,8 +411,14 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
                         df[user_input]['t'] = prb[user_input]['t']
                         max1.append(np.round(np.amax(df[user_input]['t'])))
                         min1.append(np.round(np.amin(df[user_input]['t'])))
-                        t = df[user_input]['t']
-                        V = prb[user_input][user_input1]
+                        t1 = df[user_input]['t']
+                        V1 = prb[user_input][user_input1]
+                        mask = t1 < time_input[0]
+                        t2 = np.delete(t1, np.where(mask))
+                        V2 = np.delete(V1, np.where(mask))
+                        mask = t2 > time_input[1]
+                        t = np.delete(t1, np.where(mask))
+                        V = np.delete(V1, np.where(mask))
                         fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
                                                  name=f"{user_input}{' '}{user_input1}"))
 
