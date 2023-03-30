@@ -138,119 +138,111 @@ def cal_velocity(BarnFilePath):
 
 #file_names = {}
 
-app = Dash(__name__)
+# Import necessary modules
 
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
+app = Dash(__name__, external_stylesheets=external_stylesheets)
 
+# Define layout of the app
 app.layout = html.Div([
 
+    # Create a heading
     html.H1("BARNACLE SENSOR ANALYSIS", style={'text-align': 'center'}),
 
+    # Create a graph component
     dcc.Graph(id='Velocity_Graph', figure={}),
 
-    html.Label("Choose Time",
-               style={'text-align': 'center'}
-),
+    # Create a range slider component
+    html.Label("Choose Time", style={'text-align': 'center'}),
 
-        dcc.RangeSlider(
-            id='time-range',
-            min= 1,
-            max= 10,
-            value= [1, 10],
-            tooltip={"placement": "bottom", "always_visible": True},
-            updatemode = 'drag',
-            ),
+    dcc.RangeSlider(
+        id='time-range',
+        min=1,
+        max=10,
+        value=[1, 10],
+        tooltip={"placement": "bottom", "always_visible": True},
+        updatemode='drag',
+    ),
 
+    # Create a div component
     html.Div(children=[
 
+        # Create a button to select files
+        html.Br(),
+        html.Button("Select Files", id='submit_files', n_clicks=0, type='button'),
+        html.Br(),
         html.Br(),
 
-        html.Button("Select Files", id='submit_files',
-                    n_clicks=0,
-                    type='button'),
 
-        html.Br(),
-
+        # Create a button to clear files
         html.Button("Clear Files", id='clear_files', n_clicks=0),
-
+        html.Br(),
         html.Br(),
 
+        # Create a dropdown for selecting a dataset
         html.Label("Choose DataSet"),
+        dcc.Dropdown(
+            id="File",
+            options=[],
+            multi=True,
+            value=[],
+            placeholder="Select a dataset",
+            style={'width': "50%"}
+        ),
 
-        dcc.Dropdown(id="File",
-                     options=[],
-                     multi=True,
-                     value=[],
-                     placeholder="Select a dataset",
-                     style={'width': "50%"}),
-
+        # Create a dropdown for selecting a velocity
         html.Label("Choose Velocity"),
+        dcc.Dropdown(
+            id="Vect",
+            options=[],
+            multi=True,
+            value=[],
+            placeholder="Select a velocity",
+            style={'width': "50%"}
+        ),
+        html.Br(),
 
-        dcc.Dropdown(id="Vect",
-                     options=[],
-                     multi=True,
-                     value=[],
-                     placeholder="Select a velocity",
-                     style={'width': "50%"}),
-
-html.Div([
-
-    html.Br(),
-
-    html.Label("Download Data"),
-
-    html.Label("Select File Type"),
-
-    html.Div(
-
-        [
-            dcc.Checklist(["All"], [], id="all_type_checklist", inline=True),
-            dcc.Checklist(value=[], id="type_checklist", inline=True),
-        ],
-
+        # Create a label for downloading data
         html.Label("Download Data"),
 
+        # Create a label for selecting a data file
         html.Label("Select Data File"),
 
-        html.Div(
+        # Create a checklist for selecting a data file
+            dcc.Checklist(["All"], [], id="all_file_checklist", inline=True),
+            dcc.Checklist(value=[], id="file_checklist", inline=True),
 
-            [
-                dcc.Checklist(["All"], [], id="all_file_checklist", inline=True),
-                dcc.Checklist(value=[], id="file_checklist", inline=True),
-            ],
 
-            html.Label("Select Velocity"),
+        # Create a label for selecting a velocity
+        html.Label("Select Velocity"),
 
-            html.Div(
-
-                [
-                    dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
-                    dcc.Checklist(value=[], id="all_vel_checklist", inline=True),
-                ],
-
-                html.Button("Download", id="btn_download"),
-
-                dcc.Download(id="download")
-
-            )))])
+        # Create a checklist for selecting a velocity
+            dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
+            dcc.Checklist(value=[], id="vel_checklist", inline=True),
 
 
 
-    ],
-)],
+        # Create a checklist for selecting a file type
+        html.Label("Select File Type"),
+        dcc.Checklist(["All"], [], id="all_type_checklist", inline=True),
+        dcc.Checklist(['CSV','Excel','.txt'],id="type_checklist", inline=True),
 
-)
+        # Create a button for downloading data
+        html.Button("Download", id="btn_download"),
 
-
+        # Create a component for downloading data
+        dcc.Download(id="download")
+    ])
+])
 
 
 
 @app.callback(
      [Output(component_id="File", component_property='options'),
-     Output(component_id='Vect', component_property='options'),
-      ],
-    [Input(component_id='submit_files', component_property='n_clicks'),
-     Input(component_id="File", component_property='options'),
+     Output(component_id='Vect', component_property='options')],
+    [Input(component_id="submit_files", component_property='n_clicks'),
+    Input(component_id="File", component_property='options'),
      Input(component_id='Vect', component_property='options')],
     prevent_initial_call=True
 
@@ -283,9 +275,34 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
             prb['Example 2.txt']['t'] -= 50
 
-
     return file_dropdown_options, vect_options
 
+
+@app.callback(
+     [Output(component_id="file_checklist", component_property='value'),
+     Output(component_id='vel_checklist', component_property='value')],
+     [Input(component_id="File", component_property='options'),
+     Input(component_id='Vect', component_property='options')],
+    prevent_initial_call=True
+)
+
+def checklist(file_dropdown_options, vect_options):
+
+    if file_dropdown_options == [] or vect_options == []:
+
+        print('bye')
+
+        file_checklist = []
+
+        vel_checklist = []
+
+    else:
+        print('hello')
+        file_checklist = file_dropdown_options
+
+        vel_checklist = vect_options
+
+        return file_checklist, vel_checklist
 
 
 @app.callback(
