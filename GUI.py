@@ -279,20 +279,26 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
 
 @app.callback(
-     [Output(component_id="file_checklist", component_property='options'),
-     Output(component_id='vel_checklist', component_property='options')],
-     [Input(component_id="File", component_property='options'),
-     Input(component_id='Vect', component_property='options')],
-     prevent_initial_call=True
+     [Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
+     Output(component_id="vel_checklist", component_property='value', allow_duplicate=True),
+     Input(component_id="File", component_property='options'),
+      Input(component_id='Vect', component_property='options')],
+     prevent_initial_call=True,
+
 )
+
 
 def checklist(file_dropdown_options, vect_options):
 
+    if file_dropdown_options != [] and vect_options != []:
+
         file_checklist = file_dropdown_options
+
+        print(file_checklist)
 
         vel_checklist = vect_options
 
-        return file_checklist, vel_checklist
+    return file_checklist, vel_checklist
 
 
 @app.callback(
@@ -309,13 +315,16 @@ def checklist(file_dropdown_options, vect_options):
      Input(component_id="type_checklist", component_property='value'),
      Input(component_id='all_type_checklist', component_property='value'),
      Input(component_id="File", component_property='options'),
-      Input(component_id='Vect', component_property='options')],
-     prevent_initial_call=True
+      Input(component_id='Vect', component_property='options'),
+       Input(component_id='clear_files', component_property='n_clicks')],
+     prevent_initial_call=True,
+
 )
 
-def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_checklist,type_checklist, all_type_checklist, file_dropdown_options, vect_options ):
 
-    if file_dropdown_options != [] or vect_options != []:
+def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_checklist,type_checklist, all_type_checklist, file_dropdown_options, vect_options,n_clicks ):
+
+    if ctx.triggered != clear_files:
 
         input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
@@ -336,7 +345,8 @@ def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_ch
         else:
             type_checklist = file_type if all_type_checklist else []
 
-        return file_checklist, all_file_checklist, vel_checklist, all_vel_checklist, type_checklist, all_type_checklist
+
+    return file_checklist, all_file_checklist, vel_checklist, all_vel_checklist, type_checklist, all_type_checklist
 
 
 
@@ -350,14 +360,12 @@ def sync_checklist(file_checklist, all_file_checklist, vel_checklist, all_vel_ch
     Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
     Input(component_id = 'time-range', component_property = 'value'),
-    Input(component_id='time-range', component_property='min'),
-    Input(component_id='time-range', component_property='max')
     ],
     prevent_initial_call=True
 )
 
 
-def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
+def update_dropdowns(user_inputs, user_inputs1,time_input):
 
 
     if user_inputs == [] or user_inputs1 == []:
@@ -464,7 +472,12 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, time_min, time_max):
      Output(component_id='Vect', component_property='value', allow_duplicate=True),
      Output(component_id="File", component_property='options', allow_duplicate=True),
      Output(component_id='Vect', component_property='options', allow_duplicate=True),
-    Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True)],
+    Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+    Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
+     Output(component_id="vel_checklist", component_property='value', allow_duplicate=True),
+      ],
     [Input(component_id='clear_files', component_property='n_clicks')],
     prevent_initial_call=True
 )
@@ -485,8 +498,15 @@ def clear_files(n_clicks):
 
         fig = {}
 
+        file_checklist_opt = []
 
-        return file_val, vect_val, file_dropdown_options, vect_options, fig
+        vel_checklist_opt = []
+
+        file_checklist_val = []
+
+        vel_checklist_val = []
+
+        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist_opt, vel_checklist_opt, file_checklist_val, vel_checklist_val
 
 
 # Run app
