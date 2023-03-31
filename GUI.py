@@ -280,6 +280,7 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
             file_dropdown_options = file_names
 
             global prb
+
             prb = cal_velocity(file_paths)
 
             # While data is the same
@@ -291,7 +292,7 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
             file_checklist = file_dropdown_options
 
-            vel_checklist = vect_options
+            vel_checklist = ['Ux','Uy','Uz','Time']
 
     return file_dropdown_options, vect_options,  file_checklist, vel_checklist
 
@@ -373,8 +374,8 @@ def type_sync_checklist(type_checklist, all_type_checklist ):
 
 def update_dropdowns(user_inputs, user_inputs1,time_input):
 
-    global t
-    global V
+    #global t
+    #global V
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -388,90 +389,70 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
 
         value =[1, 10]
 
-        t = []
-
-        V = []
-
     else:
 
-            df = {}
+        df = prb
 
-            max1 = []
+        max1 = []
 
-            min1 = []
+        min1 = []
 
-            fig = go.Figure()
+        fig = go.Figure()
 
-            if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
+        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
 
-                for user_input in user_inputs:
-                    for user_input1 in user_inputs1:
-                        df[user_input] = {}  # Create a nested dictionary for each user_input
-                        df[user_input][user_input1] = prb[user_input][user_input1]
-                        df[user_input]['t'] = prb[user_input]['t']
-                        max1.append(np.round(np.amax(df[user_input]['t'])))
-                        min1.append(np.round(np.amin(df[user_input]['t'])))
-                        t1 = df[user_input]['t']
-                        V1 = prb[user_input][user_input1]
-                        mask = t1 < time_input[0]
-                        t2 = np.delete(t1, np.where(mask))
-                        V2 = np.delete(V1, np.where(mask))
-                        mask = t2 > time_input[1]
-                        t = np.delete(t1, np.where(mask))
-                        V = np.delete(V1, np.where(mask))
-                        fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
-                                                 name=f"{user_input}{' '}{user_input1}"))
+            for user_input in user_inputs:
+                for user_input1 in user_inputs1:
+                    V = df[user_input][user_input1]
+                    t = df[user_input]['t']
+                    max1.append(np.round(np.amax(t)))
+                    min1.append(np.round(np.amin(V)))
+                    mask = (t >= time_input[0]) & (t < time_input[1])
+                    t2 = t[mask]
+                    V2 = V[mask]
+                    fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
+                                             name=f"{user_input}{' '}{user_input1}"))
 
-                min_sl = min(min1)
-                max_sl = max(max1)
-                value = [min_sl, max_sl]
+            min_sl = min(min1)
+            max_sl = max(max1)
+            value = [min_sl, max_sl]
 
-            else:
+        else:
 
-                for user_input in user_inputs:
-                    for user_input1 in user_inputs1:
-                        df[user_input] = {}  # Create a nested dictionary for each user_input
-                        df[user_input][user_input1] = prb[user_input][user_input1]
-                        df[user_input]['t'] = prb[user_input]['t']
-                        max1.append(np.round(np.amax(df[user_input]['t'])))
-                        min1.append(np.round(np.amin(df[user_input]['t'])))
-                        t1 = df[user_input]['t']
-                        V1 = prb[user_input][user_input1]
-                        mask = t1 < time_input[0]
-                        t2 = np.delete(t1, np.where(mask))
-                        V2 = np.delete(V1, np.where(mask))
-                        mask = t2 > time_input[1]
-                        t = np.delete(t1, np.where(mask))
-                        V = np.delete(V1, np.where(mask))
-                        fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
-                                                 name=f"{user_input}{' '}{user_input1}"))
+            for user_input in user_inputs:
+                for user_input1 in user_inputs1:
+                    V = df[user_input][user_input1]
+                    t = df[user_input]['t']
+                    max1.append(np.round(np.amax(t)))
+                    min1.append(np.round(np.amin(V)))
+                    mask = (t >= time_input[0]) & (t < time_input[1])
+                    t2 = t[mask]
+                    V2 = V[mask]
+                    fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
+                                             name=f"{user_input}{' '}{user_input1}"))
 
-                value = time_input
+            value = time_input
 
-            # fig.update_xaxes(rangeslider_visible=True), option for range slider
+        # fig.update_xaxes(rangeslider_visible=True), option for range slider
 
             min_sl = min(min1)
             max_sl = max(max1)
 
-            if len(user_inputs) == 1 and len(user_inputs1) == 1:
+        if len(user_inputs) == 1 and len(user_inputs1) == 1:
 
-                fig.update_layout(
-                        title=(user_input + " " + user_input1 + " Data"),
-                        xaxis_title="Time (s) ",
-                        yaxis_title="Velocity (m/s)")
-            else:
+            fig.update_layout(
+                    title=(user_input + " " + user_input1 + " Data"),
+                    xaxis_title="Time (s) ",
+                    yaxis_title="Velocity (m/s)")
+        else:
 
-                fig.update_layout(legend=dict(
-                    y = 1,
-                    x = 0.5,
-                    orientation="h",
-                    yanchor="bottom",
-                    xanchor="center",
-                ))
-
-
-
-
+            fig.update_layout(legend=dict(
+                y = 1,
+                x = 0.5,
+                orientation="h",
+                yanchor="bottom",
+                xanchor="center",
+            ))
 
     return fig, min_sl, max_sl, value
 
@@ -486,17 +467,17 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
 
 
 @app.callback(
-     [Output(component_id="File", component_property='value', allow_duplicate=True),
-     Output(component_id='Vect', component_property='value', allow_duplicate=True),
-     Output(component_id="File", component_property='options', allow_duplicate=True),
-     Output(component_id='Vect', component_property='options', allow_duplicate=True),
-    Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-    Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-      ],
-    [Input(component_id='clear_files', component_property='n_clicks')],
-    prevent_initial_call=True
-)
+        [Output(component_id="File", component_property='value', allow_duplicate=True),
+        Output(component_id='Vect', component_property='value', allow_duplicate=True),
+        Output(component_id="File", component_property='options', allow_duplicate=True),
+        Output(component_id='Vect', component_property='options', allow_duplicate=True),
+        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+        Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+        ],
+        [Input(component_id='clear_files', component_property='n_clicks')],
+        prevent_initial_call=True
+        )
 
 
 
@@ -521,20 +502,20 @@ def clear_files(n_clicks):
 
         return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist
 
-
-@app.callback(
-    Output(component_id="download", component_property='data'),
-    Input(component_id="btn_download", component_property='n_clicks'))
-
-def download(n_clicks):
-    global t
-    if "btn_download" == ctx.triggered_id:
-
-        print(t)
-        print('work')
-        text = dict(content='hello', filename="hello.txt")
-        print(text)
-        return text
+#
+# @app.callback(
+#     Output(component_id="download", component_property='data'),
+#     Input(component_id="btn_download", component_property='n_clicks'))
+#
+# def download(n_clicks):
+#     # global t
+#     # if "btn_download" == ctx.triggered_id:
+#     #
+#     #     print(t)
+#     #     print('work')
+#     #     text = dict(content='hello', filename="hello.txt")
+#     #     print(text)
+#     #     return text
 
 # Run app
 if __name__== '__main__':
