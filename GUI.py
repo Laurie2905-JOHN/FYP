@@ -273,31 +273,28 @@ def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, v
 
     vect_options = vect_options
 
-    if file_dropdown_options == [] and vect_options == []:
+    print(n_clicks)
 
-        if "submit_files" == ctx.triggered_id:
+    if n_clicks <= 1:
 
-            # This block of code will run when the user clicks the submit button
-            file_chooser()
+        if file_dropdown_options == [] and vect_options == []:
 
-            vect_options = ['Ux', 'Uy', 'Uz']
+            if "submit_files" == ctx.triggered_id:
 
-            file_dropdown_options = file_names
+                # This block of code will run when the user clicks the submit button
+                file_chooser()
 
-            global prb
+                vect_options = ['Ux', 'Uy', 'Uz']
 
-            prb = cal_velocity(file_paths)
+                file_dropdown_options = file_names
 
-            # While data is the same
-            prb['Example 2.txt'].update({'Ux': prb['Example 2.txt']['Ux'] * 0.3,
-                                         'Uy': prb['Example 2.txt']['Uy'] * 0.3,
-                                         'Uz': prb['Example 2.txt']['Uz'] * 0.3})
+                global prb
 
-            prb['Example 2.txt']['t'] -= 50
+                prb = cal_velocity(file_paths)
 
-            file_checklist = file_dropdown_options
+                file_checklist = file_dropdown_options
 
-            vel_checklist = ['Ux','Uy','Uz','Time']
+                vel_checklist = ['Ux','Uy','Uz','Time']
 
     return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
@@ -409,8 +406,7 @@ def update_In(Sin_val, Lin_val, n_clicks):
     Output(component_id="small_t", component_property ='min'),
      Output(component_id="small_t", component_property='max'),
     Output(component_id="big_t", component_property='min'),
-     Output(component_id="big_t", component_property='max'),
-     Output(component_id='submit_files', component_property='n_clicks')],
+     Output(component_id="big_t", component_property='max')],
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
     Input(component_id = 'time-range', component_property = 'value'),
@@ -510,9 +506,8 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
                 xanchor="center",
             ))
 
-    n_clicks = n_clicks
 
-    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, n_clicks
+    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in
 
 
 # code to change legend names could be possible
@@ -536,8 +531,9 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
             Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
             Output(component_id='all_type_checklist', component_property='value', allow_duplicate=True),
             Output(component_id="small_t", component_property='value'),
-            Output(component_id="big_t", component_property='value')],
-            [Input(component_id='clear_files', component_property='n_clicks')],
+            Output(component_id="big_t", component_property='value'),
+            Output(component_id="submit_files", component_property='n_clicks')],
+            Input(component_id='clear_files', component_property='n_clicks'),
             prevent_initial_call=True)
 
 def clear_files(n_clicks):
@@ -568,7 +564,9 @@ def clear_files(n_clicks):
         #
         in_val_L = "Maximum Time"
 
-        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_file_checklist, all_vel_checklist, all_type_checklist, in_val_S, in_val_L
+        n_clicks = 0
+
+        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_file_checklist, all_vel_checklist, all_type_checklist, in_val_S, in_val_L, n_clicks
 
 
 # @app.callback(
