@@ -273,8 +273,6 @@ def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, v
 
     vect_options = vect_options
 
-    print(n_clicks)
-
     if n_clicks <= 1:
 
         if file_dropdown_options == [] and vect_options == []:
@@ -446,11 +444,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
 
         fig = go.Figure()
 
-        print(n_clicks)
-
         if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and n_clicks >= 1:
-
-            print(ctx.triggered_id)
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
@@ -463,7 +457,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
 
             min_sl = min(min1)
             max_sl = max(max1)
-            print('occur')
 
             value = [min_sl, max_sl]
 
