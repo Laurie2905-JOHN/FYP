@@ -265,6 +265,8 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
     file_checklist = []
 
+    global vel_checklist
+
     vel_checklist = []
 
     if file_dropdown_options == [] or vect_options == []:
@@ -321,20 +323,19 @@ def file_sync_checklist(file_checklist, all_file_checklist, file_dropdown_option
         Output(component_id='all_vel_checklist', component_property='value'),
         Input(component_id="vel_checklist", component_property='value'),
         Input(component_id='all_vel_checklist', component_property='value'),
-        Input(component_id='Vect', component_property='options'),
              prevent_initial_call=True)
 
-def vel_sync_checklist(vel_checklist, all_vel_checklist, vect_options ):
+def vel_sync_checklist(vel_check, all_vel_checklist ):
 
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if input_id == "vel_checklist":
-        all_vel_checklist = ["All"] if set(vel_checklist) == set(vect_options) else []
+        all_vel_checklist = ["All"] if set(vel_check) == set(vel_checklist) else []
     else:
-        vel_checklist = vect_options if all_vel_checklist else []
+        vel_check = vel_checklist if all_vel_checklist else []
 
 
-    return vel_checklist, all_vel_checklist,
+    return vel_check, all_vel_checklist
 
 @app.callback(
     Output(component_id="type_checklist", component_property='value'),
@@ -373,9 +374,6 @@ def type_sync_checklist(type_checklist, all_type_checklist ):
 )
 
 def update_dropdowns(user_inputs, user_inputs1,time_input):
-
-    #global t
-    #global V
 
     if user_inputs == [] or user_inputs1 == []:
 
