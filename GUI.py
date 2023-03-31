@@ -265,8 +265,6 @@ def upload_data(n_clicks, file_dropdown_options, vect_options ):
 
     file_checklist = []
 
-    global vel_checklist
-
     vel_checklist = []
 
     if file_dropdown_options == [] or vect_options == []:
@@ -323,17 +321,22 @@ def file_sync_checklist(file_checklist, all_file_checklist, file_dropdown_option
         Output(component_id='all_vel_checklist', component_property='value'),
         Input(component_id="vel_checklist", component_property='value'),
         Input(component_id='all_vel_checklist', component_property='value'),
-             prevent_initial_call=True)
+        prevent_initial_call=True
+        )
 
-def vel_sync_checklist(vel_check, all_vel_checklist ):
+
+def vel_sync_checklist(vel_check, all_vel_checklist):
 
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    if input_id == "vel_checklist":
-        all_vel_checklist = ["All"] if set(vel_check) == set(vel_checklist) else []
-    else:
-        vel_check = vel_checklist if all_vel_checklist else []
+    vel_type = ['Ux','Uy','Uz','Time']
 
+    if input_id == "type_checklist":
+        all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
+        print('clear55')
+    else:
+
+        vel_check = vel_type if all_vel_checklist else []
 
     return vel_check, all_vel_checklist
 
@@ -352,11 +355,12 @@ def type_sync_checklist(type_checklist, all_type_checklist ):
 
     if input_id == "type_checklist":
         all_type_checklist = ["All"] if set(type_checklist) == set(file_type) else []
+        print('clear55')
     else:
 
         type_checklist = file_type if all_type_checklist else []
 
-    return type_checklist, all_type_checklist,
+    return type_checklist, all_type_checklist
 
 
 
@@ -431,8 +435,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
 
             value = time_input
 
-        # fig.update_xaxes(rangeslider_visible=True), option for range slider
-
             min_sl = min(min1)
             max_sl = max(max1)
 
@@ -472,11 +474,12 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
         Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
         Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
         Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-        ],
+         Output(component_id='all_file_checklist', component_property='value', allow_duplicate=True),
+         Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
+         Output(component_id='all_type_checklist', component_property='value', allow_duplicate=True)],
         [Input(component_id='clear_files', component_property='n_clicks')],
         prevent_initial_call=True
         )
-
 
 
 def clear_files(n_clicks):
@@ -497,8 +500,13 @@ def clear_files(n_clicks):
 
         vel_checklist = []
 
+        all_file_checklist = []
 
-        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist
+        all_vel_checklist = []
+
+        all_type_checklist = []
+
+        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_file_checklist, all_vel_checklist, all_type_checklist
 
 #
 # @app.callback(
