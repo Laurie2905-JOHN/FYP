@@ -22,6 +22,8 @@ def file_chooser():
     win = Tk()
     # Set the geometry of tkinter frame
     win.geometry("800x350")
+    # Make the window jump above all
+    win.attributes('-topmost', 1)
     # Add a Label widget
     label = Label(win, text="Select the Button to Open the File", font=('Aerial 11'))
     label.pack(pady=30)
