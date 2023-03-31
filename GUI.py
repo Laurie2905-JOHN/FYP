@@ -256,22 +256,28 @@ app.layout = html.Div([
      Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
     [Input(component_id="submit_files", component_property='n_clicks'),
     Input(component_id="File", component_property='options'),
-     Input(component_id='Vect', component_property='options')],
+     Input(component_id='Vect', component_property='options'),
+     Input(component_id="file_checklist", component_property='options'),
+     Input(component_id="vel_checklist", component_property='options')
+     ],
     prevent_initial_call=True
 
 )
 
-def upload_data(n_clicks, file_dropdown_options, vect_options ):
+def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
 
-    file_checklist = []
+    file_checklist = file_checklist
 
-    vel_checklist = []
+    vel_checklist = vel_checklist
 
     if file_dropdown_options == [] and vect_options == []:
 
+        # file_checklist = []
+        #
+        # vel_checklist = []
+
         if "submit_files" == ctx.triggered_id:
 
-            print('hello')
             # This block of code will run when the user clicks the submit button
             file_chooser()
 
@@ -404,10 +410,11 @@ def update_In(Sin_val, Lin_val, n_clicks):
      Output(component_id="big_t", component_property='max')],
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
-    Input(component_id = 'time-range', component_property = 'value')],
+    Input(component_id = 'time-range', component_property = 'value'),
+     Input(component_id="submit_files", component_property='n_clicks')],
     prevent_initial_call = True)
 
-def update_dropdowns(user_inputs, user_inputs1,time_input):
+def update_dropdowns(user_inputs, user_inputs1,time_input, n_clicks):
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -439,7 +446,8 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
 
         fig = go.Figure()
 
-        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
+        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and "submit_files" != ctx.triggered_id:
+
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
@@ -455,6 +463,8 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
             value = [min_sl, max_sl]
 
         else:
+
+            print('hu')
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
