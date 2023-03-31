@@ -232,8 +232,8 @@ app.layout = html.Div([
             html.I(
                 "Input the maximum and minimum time values for download"),
             html.Br(),
-            dcc.Input(id="small_t", type="number",min = 0, max = 1000, placeholder = "Minimum Time", style={'marginRight': '10px'}),
-            dcc.Input(id="big_t", type="number", min =0, max = 1000, placeholder="Maximum Time", debounce=True),
+            dcc.Input(id="small_t", type="number", placeholder = "Minimum Time", style={'marginRight': '10px'}),
+            dcc.Input(id="big_t", type="number", placeholder="Maximum Time"),
 
         html.Br(),
         html.Br(),
@@ -362,6 +362,24 @@ def type_sync_checklist(type_checklist, all_type_checklist ):
 
     return type_checklist, all_type_checklist
 
+@app.callback(
+        Output(component_id="big_t", component_property='value', allow_duplicate=True),
+        Output(component_id="small_t", component_property='value', allow_duplicate=True),
+        Input(component_id="small_t", component_property='value'),
+        Input(component_id="big_t", component_property='value'), prevent_initial_call = True)
+
+def update_In(Sin_val, Lin_val):
+
+    if Lin_val == 0:
+        Lin_val = Sin_val + 1
+
+    if Sin_val == 0:
+        Sin_val = Lin_val + 1
+
+    if Lin_val - Sin_val < 1:
+        Lin_val = Sin_val + 1
+
+    return Lin_val, Sin_val
 
 
 @app.callback(
@@ -369,13 +387,16 @@ def type_sync_checklist(type_checklist, all_type_checklist ):
     Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
     Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
     Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
-     ],
+    Output(component_id="small_t", component_property ='min'),
+     Output(component_id="small_t", component_property='max'),
+    Output(component_id="big_t", component_property='min'),
+     Output(component_id="big_t", component_property='max'),
+     Output(component_id="big_t", component_property='value'),
+     Output(component_id="small_t", component_property='value')],
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
-    Input(component_id = 'time-range', component_property = 'value'),
-    ],
-    prevent_initial_call=True
-)
+    Input(component_id = 'time-range', component_property = 'value')],
+    prevent_initial_call = True)
 
 def update_dropdowns(user_inputs, user_inputs1,time_input):
 
@@ -390,6 +411,14 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
         max_sl = 10
 
         value =[1, 10]
+
+        Smax_in = max_sl-1
+
+        Smin_in = min_sl
+
+        Lmax_in = max_sl
+
+        Lmin_in = min_sl+1
 
     else:
 
@@ -409,9 +438,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
                     t = df[user_input]['t']
                     max1.append(np.round(np.amax(t)))
                     min1.append(np.round(np.amin(V)))
-                    mask = (t >= time_input[0]) & (t < time_input[1])
-                    t2 = t[mask]
-                    V2 = V[mask]
                     fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
                                              name=f"{user_input}{' '}{user_input1}"))
 
@@ -438,6 +464,14 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
             min_sl = min(min1)
             max_sl = max(max1)
 
+
+
+        Smax_in = max_sl-1
+        Smin_in = min_sl
+        Lmax_in = max_sl
+        Lmin_in = min_sl+1
+
+
         if len(user_inputs) == 1 and len(user_inputs1) == 1:
 
             fig.update_layout(
@@ -454,7 +488,9 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
                 xanchor="center",
             ))
 
-    return fig, min_sl, max_sl, value
+
+    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, Sin_val,Lin_val
+
 
 # code to change legend names could be possible
 # newnames = {'col1':'hello', 'col2': 'hi'}
@@ -476,7 +512,11 @@ def update_dropdowns(user_inputs, user_inputs1,time_input):
         Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
          Output(component_id='all_file_checklist', component_property='value', allow_duplicate=True),
          Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
-         Output(component_id='all_type_checklist', component_property='value', allow_duplicate=True)],
+         Output(component_id='all_type_checklist', component_property='value', allow_duplicate=True),
+         Output(component_id="small_t", component_property='value', allow_duplicate=True),
+         Output(component_id="big_t", component_property='value', allow_duplicate=True),
+
+],
         [Input(component_id='clear_files', component_property='n_clicks')],
         prevent_initial_call=True
         )
@@ -506,12 +546,22 @@ def clear_files(n_clicks):
 
         all_type_checklist = []
 
-        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_file_checklist, all_vel_checklist, all_type_checklist
+        in_val_S = ''
 
-#
+        in_val_L = ''
+
+        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_file_checklist, all_vel_checklist, all_type_checklist, in_val_S, in_val_L
+
+
 # @app.callback(
 #     Output(component_id="download", component_property='data'),
-#     Input(component_id="btn_download", component_property='n_clicks'))
+#     Input(component_id="btn_download", component_property='n_clicks'),
+#         Input(component_id="small_t", component_property='value'),
+# Input(component_id="big_t", component_property='value'),
+
+
+
+
 #
 # def download(n_clicks):
 #     # global t
