@@ -203,6 +203,49 @@ app.layout = html.Div([
             placeholder="Select a velocity",
             style={'width': "50%"}
         ),
+
+        html.Br(),
+
+        html.Label("Graph Options", style={'text-align': 'left'}),
+
+        html.Label("Line Thickness", style={'text-align': 'left'}),
+
+        dcc.Input(
+            id="line_thick",
+            type='number',
+            placeholder="Enter line thickness",
+        ),
+
+        html.Div(children = [
+
+        html.Label("Legend", style={'text-align': 'left'}),
+
+        dcc.RadioItems(['On', 'Off']),
+
+        ]),
+
+        html.Div(children=[
+
+            html.Label("Title", style={'text-align': 'left'}),
+
+            dcc.RadioItems(['On', 'Off']),
+
+        ]),
+
+        html.Label("Use this text box and selector to input new legend names or title", style={'text-align': 'left'}),
+
+        dcc.RadioItems(['Legend', 'Title'], inline=True),
+
+
+        dcc.Input(
+            id="New_name",
+            type='text',
+            placeholder="When entering seperate values with a comma",
+            debounce = True,
+        ),
+
+        html.Br(),
+
         html.Br(),
 
         # Create a label for downloading data
@@ -483,33 +526,38 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
         Lmax_in = max_sl
         Lmin_in = min_sl+1
 
-        if len(user_inputs) == 1 and len(user_inputs1) == 1:
+        if len(user_inputs) + len(user_inputs1) == 2:
 
             fig.update_layout(
                     title=(user_input + " " + user_input1 + " Data"),
+                    title_x = 0.5,
                     xaxis_title="Time (s) ",
                     yaxis_title="Velocity (m/s)")
         else:
 
-            fig.update_layout(legend=dict(
+            fig.update_layout(
+                title="Barnacle Data",
+                xaxis_title="Time (s)",
+                yaxis_title="Velocity (m/s)",
+                legend= dict(
                 y = 1,
                 x = 0.5,
                 orientation="h",
                 yanchor="bottom",
-                xanchor="center",
-            ))
+                xanchor="center"),
+            )
 
+
+            newnames = {'Example 1.txt Ux': 'hello', 'Example 1.txt Uy': 'hi', 'col3': 'U'}
+            fig.for_each_trace(lambda t: t.update(name = newnames[t.name],
+                                                  # legendgroup = newnames[t.name],
+                                                  # hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
+                                                 )
+                              )
 
     return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in
 
 
-# code to change legend names could be possible
-# newnames = {'col1':'hello', 'col2': 'hi'}
-# fig.for_each_trace(lambda t: t.update(name = newnames[t.name],
-#                                       legendgroup = newnames[t.name],
-#                                       hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
-#                                      )
-#                   )
 
 
 @app.callback(
