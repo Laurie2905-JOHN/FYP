@@ -232,12 +232,12 @@ app.layout = html.Div([
             html.I(
                 "Input the maximum and minimum time values for download"),
             html.Br(),
-            dcc.Input(id="small_t", type="number", placeholder = "Minimum Time", style={'marginRight': '10px'}),
-            dcc.Input(id="big_t", type="number", placeholder="Maximum Time"),
+            dcc.Input(id="small_t", min = 0, type="number", placeholder = "Minimum Time", debounce = True, style={'marginRight': '10px'}),
+            dcc.Input(id="big_t", min = 0, type="number", placeholder="Maximum Time", debounce = True,),
 
         html.Br(),
-        html.Br(),
 
+        html.Br(),
 
         # Create a button for downloading data
         html.Button("Download", id="btn_download"),
@@ -259,10 +259,7 @@ app.layout = html.Div([
      Input(component_id='Vect', component_property='options'),
      Input(component_id="file_checklist", component_property='options'),
      Input(component_id="vel_checklist", component_property='options')
-     ],
-    prevent_initial_call=True
-
-)
+     ], prevent_initial_call=True)
 
 def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
 
@@ -270,17 +267,16 @@ def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, v
 
     vel_checklist = vel_checklist
 
-    if file_dropdown_options == [] and vect_options == []:
+    file_dropdown_options = file_dropdown_options
 
-        # file_checklist = []
-        #
-        # vel_checklist = []
+    vect_options = vect_options
+
+    if file_dropdown_options == [] and vect_options == []:
 
         if "submit_files" == ctx.triggered_id:
 
             # This block of code will run when the user clicks the submit button
             file_chooser()
-
 
             vect_options = ['Ux', 'Uy', 'Uz']
 
@@ -301,7 +297,7 @@ def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, v
 
             vel_checklist = ['Ux','Uy','Uz','Time']
 
-    return file_dropdown_options, vect_options,  file_checklist, vel_checklist
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
 
 @app.callback(
@@ -317,8 +313,11 @@ def file_sync_checklist(file_checklist, all_file_checklist, file_dropdown_option
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if input_id == "file_checklist":
+
         all_file_checklist = ["All"] if set(file_checklist) == set(file_dropdown_options) else []
+
     else:
+
         file_checklist = file_dropdown_options if all_file_checklist else []
 
     return file_checklist, all_file_checklist,
@@ -339,8 +338,10 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
     vel_type = ['Ux','Uy','Uz','Time']
 
     if input_id == "type_checklist":
+
         all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
-        print('clear55')
+
+
     else:
 
         vel_check = vel_type if all_vel_checklist else []
@@ -361,8 +362,9 @@ def type_sync_checklist(type_checklist, all_type_checklist ):
     file_type = ['CSV', 'Excel', '.txt']
 
     if input_id == "type_checklist":
+
         all_type_checklist = ["All"] if set(type_checklist) == set(file_type) else []
-        print('clear55')
+
     else:
 
         type_checklist = file_type if all_type_checklist else []
@@ -380,7 +382,6 @@ def type_sync_checklist(type_checklist, all_type_checklist ):
 
 def update_In(Sin_val, Lin_val, n_clicks):
 
-
     if "clear_files" != ctx.triggered_id:
 
         if Lin_val == None:
@@ -392,11 +393,10 @@ def update_In(Sin_val, Lin_val, n_clicks):
             Sin_val = Lin_val - 1
 
         if Lin_val - Sin_val < 1:
+
             Lin_val = Sin_val + 1
 
     return Lin_val, Sin_val
-
-
 
 
 @app.callback(
@@ -407,14 +407,16 @@ def update_In(Sin_val, Lin_val, n_clicks):
     Output(component_id="small_t", component_property ='min'),
      Output(component_id="small_t", component_property='max'),
     Output(component_id="big_t", component_property='min'),
-     Output(component_id="big_t", component_property='max')],
+     Output(component_id="big_t", component_property='max'),
+     Output(component_id='submit_files', component_property='n_clicks')],
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
     Input(component_id = 'time-range', component_property = 'value'),
-     Input(component_id="submit_files", component_property='n_clicks')],
+     Input(component_id='submit_files', component_property='n_clicks')
+     ],
     prevent_initial_call = True)
 
-def update_dropdowns(user_inputs, user_inputs1,time_input, n_clicks):
+def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -446,8 +448,11 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, n_clicks):
 
         fig = go.Figure()
 
-        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and "submit_files" != ctx.triggered_id:
+        print(n_clicks)
 
+        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and n_clicks >= 1:
+
+            print(ctx.triggered_id)
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
@@ -460,11 +465,11 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, n_clicks):
 
             min_sl = min(min1)
             max_sl = max(max1)
+            print('occur')
+
             value = [min_sl, max_sl]
 
         else:
-
-            print('hu')
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
@@ -479,17 +484,13 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, n_clicks):
                                              name=f"{user_input}{' '}{user_input1}"))
 
             value = time_input
-
             min_sl = min(min1)
             max_sl = max(max1)
-
-
 
         Smax_in = max_sl-1
         Smin_in = min_sl
         Lmax_in = max_sl
         Lmin_in = min_sl+1
-
 
         if len(user_inputs) == 1 and len(user_inputs1) == 1:
 
@@ -507,8 +508,9 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, n_clicks):
                 xanchor="center",
             ))
 
+    n_clicks = n_clicks
 
-    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in,
+    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, n_clicks
 
 
 # code to change legend names could be possible
@@ -520,26 +522,21 @@ def update_dropdowns(user_inputs, user_inputs1,time_input, n_clicks):
 #                   )
 
 
-
 @app.callback(
-        [Output(component_id="File", component_property='value', allow_duplicate=True),
-        Output(component_id='Vect', component_property='value', allow_duplicate=True),
-        Output(component_id="File", component_property='options', allow_duplicate=True),
-        Output(component_id='Vect', component_property='options', allow_duplicate=True),
-        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-        Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-        Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-         Output(component_id='all_file_checklist', component_property='value', allow_duplicate=True),
-         Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
-         Output(component_id='all_type_checklist', component_property='value', allow_duplicate=True),
-         Output(component_id="small_t", component_property='placeholder'),
-         Output(component_id="big_t", component_property='placeholder'),
-
-],
-        [Input(component_id='clear_files', component_property='n_clicks')],
-        prevent_initial_call=True
-        )
-
+            [Output(component_id="File", component_property='value', allow_duplicate=True),
+            Output(component_id='Vect', component_property='value', allow_duplicate=True),
+            Output(component_id="File", component_property='options', allow_duplicate=True),
+            Output(component_id='Vect', component_property='options', allow_duplicate=True),
+            Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+            Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+            Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+            Output(component_id='all_file_checklist', component_property='value', allow_duplicate=True),
+            Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
+            Output(component_id='all_type_checklist', component_property='value', allow_duplicate=True),
+            Output(component_id="small_t", component_property='value'),
+            Output(component_id="big_t", component_property='value')],
+            [Input(component_id='clear_files', component_property='n_clicks')],
+            prevent_initial_call=True)
 
 def clear_files(n_clicks):
 
