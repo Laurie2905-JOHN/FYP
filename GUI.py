@@ -64,7 +64,7 @@ def file_chooser():
 
     return file_paths, file_names
 
-def cal_velocity(BarnFilePath):
+def cal_velocity(file_paths):
     import numpy as np
     import scipy.io as sio
 
@@ -188,7 +188,7 @@ app.layout = html.Div([
             id="File",
             options=[],
             multi=True,
-            value=[],
+            value=['Example 1.txt'],
             placeholder="Select a dataset",
             style={'width': "50%"}
         ),
@@ -210,11 +210,12 @@ app.layout = html.Div([
 
         html.Label("Line Thickness", style={'text-align': 'left'}),
 
-        dcc.Input(
-            id="line_thick",
-            type='number',
-            placeholder="Enter line thickness",
-        ),
+        dcc.Slider(0.5, 5,
+                   value = 1,
+            id="line_thick", marks={
+                0.5: {'label': 'Thin'},
+        5: {'label': 'Thick'}}),
+
 
         html.Div(children = [
 
@@ -294,48 +295,87 @@ app.layout = html.Div([
 
 
 
+# @app.callback(
+#      [Output(component_id="File", component_property='options'),
+#      Output(component_id='Vect', component_property='options'),
+#      Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+#      Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
+#     [Input(component_id="submit_files", component_property='n_clicks'),
+#     Input(component_id="File", component_property='options'),
+#      Input(component_id='Vect', component_property='options'),
+#      Input(component_id="file_checklist", component_property='options'),
+#      Input(component_id="vel_checklist", component_property='options')
+#      ], prevent_initial_call=True)
+#
+# def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
+#
+#     file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
+#
+#     file_names = ['Example 1.txt', 'Example 2.txt']
+#
+#     file_checklist = file_checklist
+#
+#     vel_checklist = vel_checklist
+#
+#     file_dropdown_options = file_dropdown_options
+#
+#     vect_options = vect_options
+#
+#     if n_clicks <= 1:
+#
+#         if file_dropdown_options == [] and vect_options == []:
+#
+#             if "submit_files" == ctx.triggered_id:
+#
+#                 # This block of code will run when the user clicks the submit button
+#                 #file_chooser()
+#
+#                 vect_options = ['Ux', 'Uy', 'Uz']
+#
+#                 file_dropdown_options = file_names
+#
+#                 global prb
+#
+#                 prb = cal_velocity(file_paths)
+#
+#                 file_checklist = file_dropdown_options
+#
+#                 vel_checklist = ['Ux','Uy','Uz','Time']
+#
+#     return file_dropdown_options, vect_options, file_checklist, vel_checklist
+
 @app.callback(
-     [Output(component_id="File", component_property='options'),
+    [Output(component_id="File", component_property='options'),
      Output(component_id='Vect', component_property='options'),
      Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
      Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
     [Input(component_id="submit_files", component_property='n_clicks'),
-    Input(component_id="File", component_property='options'),
+     Input(component_id="File", component_property='options'),
      Input(component_id='Vect', component_property='options'),
      Input(component_id="file_checklist", component_property='options'),
      Input(component_id="vel_checklist", component_property='options')
      ], prevent_initial_call=True)
 
-def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
+def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist):
 
-    file_checklist = file_checklist
+    file_paths = [
 
-    vel_checklist = vel_checklist
+        'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt',
+        'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
 
-    file_dropdown_options = file_dropdown_options
+    file_names = ['Example 1.txt', 'Example 2.txt']
 
-    vect_options = vect_options
+    file_dropdown_options = ['Example 1.txt', 'Example 2.txt']
 
-    if n_clicks <= 1:
+    vect_options = ['Ux', 'Uy', 'Uz']
 
-        if file_dropdown_options == [] and vect_options == []:
+    global prb
 
-            if "submit_files" == ctx.triggered_id:
+    prb = cal_velocity(file_paths)
 
-                # This block of code will run when the user clicks the submit button
-                file_chooser()
+    file_checklist = file_dropdown_options
 
-                vect_options = ['Ux', 'Uy', 'Uz']
-
-                file_dropdown_options = file_names
-
-                global prb
-
-                prb = cal_velocity(file_paths)
-
-                file_checklist = file_dropdown_options
-
-                vel_checklist = ['Ux','Uy','Uz','Time']
+    vel_checklist = ['Ux', 'Uy', 'Uz', 'Time']
 
     return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
@@ -451,11 +491,12 @@ def update_In(Sin_val, Lin_val, n_clicks):
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
     Input(component_id = 'time-range', component_property = 'value'),
+     Input(component_id='line_thick', component_property='value'),
      Input(component_id='submit_files', component_property='n_clicks')
      ],
     prevent_initial_call = True)
 
-def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
+def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, n_clicks):
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -487,6 +528,11 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
 
         fig = go.Figure()
 
+
+# 0.5 to
+        color1 = 'rgb(0,0,0)'
+
+
         if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and n_clicks >= 1:
 
             for user_input in user_inputs:
@@ -496,7 +542,10 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
                     max1.append(np.round(np.amax(t)))
                     min1.append(np.round(np.amin(V)))
                     fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
-                                             name=f"{user_input}{' '}{user_input1}"))
+                                            line=dict(
+                                            color = color1,
+                                            width=line_thick),
+                                            name=f"{user_input}{' '}{user_input1}"))
 
             min_sl = min(min1)
             max_sl = max(max1)
@@ -515,7 +564,10 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,n_clicks):
                     t2 = t[mask]
                     V2 = V[mask]
                     fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
-                                             name=f"{user_input}{' '}{user_input1}"))
+                                            line=dict(
+                                            color=color1,
+                                            width=line_thick),
+                                            name=f"{user_input}{' '}{user_input1}"))
 
             value = time_input
             min_sl = min(min1)
