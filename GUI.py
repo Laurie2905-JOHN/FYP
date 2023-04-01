@@ -807,31 +807,31 @@ def download(n_clicks,smallt, bigt, vels, types):
                 for vel in vels:
                     # Create a list to store the flattened arrays
                     flat_list = []
-
                     for key, value in prb.items():
                         # Flatten the array and append it to the list
                         flat_list.append(value[vel].flatten())
-
                     # Concatenate the flattened arrays with commas
-                        dff = ',\n'.join(map(str, np.concatenate(flat_list)))
+                    dff = ',\n'.join(map(str, np.concatenate(flat_list)))
+                    # Store the result in the dictionary as a string
+                    results[vel] = vel + ',\n' + dff
 
-                    # Store the result in the dictionary
-                        results[vel] = [vel + ',\n' + dff]
+                list1 = [results[vels[0]]]
 
-                print(results[vels])
+                list2 = [results[vels[1]]]
 
-                        # Zip the lists into tuples
-                tuples = zip([results[vels][0]], [results[vels][1]])
+                print(list2)
+
+                # Join the two lists element-wise and concatenate the strings with comma separator
+                result = [x.strip() + ',' + y.strip() if x.strip() and y.strip() else '' for x, y in zip(list1, list2)]
+
+                # Combine the resulting list into a single string
+                output = '\n'.join(result)
 
 
 
-                # Join the tuples into a string with a comma delimiter
-                f = '\n'.join([','.join(t) for t in tuples])
 
-                # Print the result
-                print(f)
 
-        text = dict(content=f, filename="hello.txt")
+        text = dict(content=output, filename="hello.txt")
         #print(text)
         return text
 

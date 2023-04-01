@@ -1,13 +1,10 @@
-current_names = ['Example 1.txt Ux', 'Example 1.txt Uy']
-NewLeg_name = 'tst,gf'
-NewLeg_name_list = NewLeg_name.split(',')
-print(NewLeg_name_list[0])
+list1 = ['1',' \n', '2',' \n',  '3']
+list2 = ['4',' \n', '5',' \n',  '6']
 
-newname_result = {}
-for i, current_name in enumerate(current_names):
-    parts = current_name.split()
-    parts[-1] = NewLeg_name_list[i]
-    new_name = " ".join(parts)
-    newname_result[current_name] = new_name
+# Join the two lists element-wise and concatenate the strings with comma separator
+result = [x.strip() + ',' + y.strip() if x.strip() and y.strip() else '' for x, y in zip(list1, list2)]
 
-print(newname_result)
+# Combine the resulting list into a single string
+output = '\n'.join(result)
+
+print(output)
