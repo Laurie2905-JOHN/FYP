@@ -221,7 +221,7 @@ app.layout = html.Div([
 
         html.Label("Legend", style={'text-align': 'left'}),
 
-        dcc.RadioItems(['On', 'Off']),
+        dcc.RadioItems(id = 'legend_onoff', value = 'On', options = ['On', 'Off']),
 
         ]),
 
@@ -229,13 +229,13 @@ app.layout = html.Div([
 
             html.Label("Title", style={'text-align': 'left'}),
 
-            dcc.RadioItems(['On', 'Off']),
+            dcc.RadioItems(id = 'title_onoff', value = 'On', options = ['On', 'Off']),
 
         ]),
 
         html.Label("Use this text box and selector to input new legend names or title", style={'text-align': 'left'}),
 
-        dcc.RadioItems(['Legend', 'Title'], inline=True),
+        dcc.RadioItems(id = 'text_sel',value = 'Legend', options = ['Legend', 'Title'], inline=True),
 
 
         dcc.Input(
@@ -244,6 +244,9 @@ app.layout = html.Div([
             placeholder="When entering seperate values with a comma",
             debounce = True,
         ),
+
+        # Create a button for downloading data
+        html.Button("Update", id="btn_update", n_clicks=0,),
 
         html.Br(),
 
@@ -487,16 +490,23 @@ def update_In(Sin_val, Lin_val, n_clicks):
     Output(component_id="small_t", component_property ='min'),
      Output(component_id="small_t", component_property='max'),
     Output(component_id="big_t", component_property='min'),
-     Output(component_id="big_t", component_property='max')],
+     Output(component_id="big_t", component_property='max'),
+     Output(component_id='New_name', component_property='value'),
+     Output(component_id='btn_update', component_property='n_clicks')],
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
     Input(component_id = 'time-range', component_property = 'value'),
      Input(component_id='line_thick', component_property='value'),
+     Input(component_id='legend_onoff', component_property='value'),
+     Input(component_id='title_onoff', component_property='value'),
+     Input(component_id='text_sel', component_property='value'),
+     Input(component_id='New_name', component_property='value'),
+     Input(component_id='btn_update', component_property='n_clicks'),
      Input(component_id='submit_files', component_property='n_clicks')
      ],
     prevent_initial_call = True)
 
-def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, n_clicks):
+def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title, text_sel, New_name,n_clicks, n_clicks1):
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -533,7 +543,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, n_clicks):
         color1 = 'rgb(0,0,0)'
 
 
-        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and n_clicks >= 1:
+        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and n_clicks1 >= 1:
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
@@ -578,37 +588,71 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, n_clicks):
         Lmax_in = max_sl
         Lmin_in = min_sl+1
 
-        if len(user_inputs) + len(user_inputs1) == 2:
-
-            fig.update_layout(
-                    title=(user_input + " " + user_input1 + " Data"),
-                    title_x = 0.5,
-                    xaxis_title="Time (s) ",
-                    yaxis_title="Velocity (m/s)")
-        else:
-
-            fig.update_layout(
-                title="Barnacle Data",
-                xaxis_title="Time (s)",
-                yaxis_title="Velocity (m/s)",
-                legend= dict(
-                y = 1,
-                x = 0.5,
+        fig.update_layout(
+            xaxis_title="Time (s)",
+            yaxis_title="Velocity (m/s)",
+            legend=dict(
+                y=1,
+                x=0.5,
                 orientation="h",
                 yanchor="bottom",
                 xanchor="center"),
-            )
+        )
+
+        if leg == 'Off':
+            fig.layout.update(showlegend=False)
+        else:
+            fig.layout.update(showlegend=True)
+
+        print(n_clicks)
+
+        if title == 'Off':
+            fig.layout.update(title='')
+            n_clicks = 0
+            New_name = ''
+
+        elif title == 'On' and n_clicks == 0:
+            fig.layout.update(title='Barnacle Data')
+
+        elif title == 'On' and n_clicks >= 1:
+            fig.layout.update(title=New_name)
+
+        print(n_clicks)
+
+    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in,New_name, n_clicks
 
 
-            newnames = {'Example 1.txt Ux': 'hello', 'Example 1.txt Uy': 'hi', 'col3': 'U'}
-            fig.for_each_trace(lambda t: t.update(name = newnames[t.name],
-                                                  # legendgroup = newnames[t.name],
-                                                  # hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
-                                                 )
-                              )
-
-    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in
-
+# if "btn_update" == ctx.triggered_id:
+#
+#     if text_sel == 'Legend':
+#
+#         current_names = f"{user_input}{' '}{user_input1}"
+#
+#         for i, current_name in current_names:
+#             newnames = {current_name: New_name[i]}
+#
+#         # fig.for_each_trace(lambda t: t.update(name=newnames[t.name],
+#         #                                       # legendgroup = newnames[t.name],
+#         #                                       # hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
+#         #                                       )
+#         # )
+#
+#     if text_sel == 'Title':
+#         fig.layout.update(title=New_name)
+#
+# else:
+#
+#     fig.update_layout(
+#         title="Barnacle Data",
+#         xaxis_title="Time (s)",
+#         yaxis_title="Velocity (m/s)",
+#         legend=dict(
+#             y=1,
+#             x=0.5,
+#             orientation="h",
+#             yanchor="bottom",
+#             xanchor="center"),
+#     )
 
 
 
