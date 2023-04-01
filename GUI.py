@@ -7,6 +7,7 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
+import sys
 
 from tkinter import *
 from tkinter import ttk
@@ -781,25 +782,58 @@ def clear_files(n_clicks):
         return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_file_checklist, all_vel_checklist, all_type_checklist, in_val_S, in_val_L, n_clicks
 
 
-# @app.callback(
-#     Output(component_id="download", component_property='data'),
-#     Input(component_id="btn_download", component_property='n_clicks'),
-#         Input(component_id="small_t", component_property='value'),
-# Input(component_id="big_t", component_property='value'),
+@app.callback(
+    Output(component_id="download", component_property='data'),
+    Input(component_id="btn_download", component_property='n_clicks'),
+        Input(component_id="small_t", component_property='value'),
+Input(component_id="big_t", component_property='value'),
+Input(component_id="vel_checklist", component_property='value'),
+Input(component_id="type_checklist", component_property='value'),
+    prevent_initial_call=True)
+
+
+def download(n_clicks,smallt, bigt, vels, types):
+
+    if "btn_download" == ctx.triggered_id:
+
+        for k, type in enumerate(types):
+
+            if type =='.txt':
+
+                # Create a dictionary to store the results
+                results = {}
+
+                # Loop over the velocities
+                for vel in vels:
+                    # Create a list to store the flattened arrays
+                    flat_list = []
+
+                    for key, value in prb.items():
+                        # Flatten the array and append it to the list
+                        flat_list.append(value[vel].flatten())
+
+                    # Concatenate the flattened arrays with commas
+                        dff = ',\n'.join(map(str, np.concatenate(flat_list)))
+
+                    # Store the result in the dictionary
+                        results[vel] = [vel + ',\n' + dff]
+
+                print(results[vels])
+
+                        # Zip the lists into tuples
+                tuples = zip([results[vels][0]], [results[vels][1]])
 
 
 
+                # Join the tuples into a string with a comma delimiter
+                f = '\n'.join([','.join(t) for t in tuples])
 
-#
-# def download(n_clicks):
-#     # global t
-#     # if "btn_download" == ctx.triggered_id:
-#     #
-#     #     print(t)
-#     #     print('work')
-#     #     text = dict(content='hello', filename="hello.txt")
-#     #     print(text)
-#     #     return text
+                # Print the result
+                print(f)
+
+        text = dict(content=f, filename="hello.txt")
+        #print(text)
+        return text
 
 # Run app
 if __name__== '__main__':
