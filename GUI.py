@@ -452,10 +452,9 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 
     vel_type = ['Ux','Uy','Uz','Time']
 
-    if input_id == "type_checklist":
+    if input_id == "vel_checklist":
 
         all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
-
 
     else:
 
@@ -531,8 +530,6 @@ def update_In(Sin_val, Lin_val, n_clicks):
 def leg_sync_checklist(leg_list, all_leg_checklist, leg_act ):
 
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    print(leg_act)
 
     if leg_act != []:
 
@@ -680,7 +677,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
         if title == 'Off':
             fig.layout.update(title='')
 
-        elif title =='On' and n_clicks >= 1  and NewTit_name !='':
+        elif title =='On' and n_clicks >= 1  and NewTit_name !='' and NewTit_name !=None:
             fig.layout.update(title=NewTit_name)
 
         elif title == 'On':
@@ -690,7 +687,9 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
         if leg == 'Off':
             fig.layout.update(showlegend=False)
 
-        elif leg =='On' and n_clicks1 >= 1 and NewLeg_name !='':
+        elif leg =='On' and n_clicks1 >= 1 and NewLeg_name !='' and NewLeg_name !=None:
+
+            print(NewLeg_name)
 
             NewLeg_name_list = NewLeg_name.split(',')
 
