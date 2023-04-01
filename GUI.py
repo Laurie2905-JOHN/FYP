@@ -2,6 +2,7 @@ from dash import Dash, dcc, Output, Input, ctx, State
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
+import dash_daq as daq
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 import pandas as pd
@@ -210,11 +211,14 @@ app.layout = html.Div([
 
         html.Label("Line Thickness", style={'text-align': 'left'}),
 
-        dcc.Slider(0.5, 5,
+        daq.Slider(min = 0.5,max = 5,
                    value = 1,
+                   step=0.1,
             id="line_thick",
             marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
             updatemode = 'drag'),
+
+        html.Br(),
 
 
         html.Div(children = [
@@ -253,6 +257,27 @@ app.layout = html.Div([
             html.Button("Update Title", id="btn_title_update", n_clicks=0, ),
 
         ]),
+
+        html.Div([
+
+            html.Label("Custom Colours", style={'text-align': 'left'}),
+
+            html.Label("Select ", style={'text-align': 'left'}),
+
+            # Create a checklist for selecting a data file
+            dcc.Checklist(["All"], [], id="all_leg_checklist", inline=True),
+            dcc.Checklist(value=[], id="leg_list", inline=True),
+
+            daq.ColorPicker(
+
+                id='my-color-picker-1',
+                label='Color Picker',
+                value=dict(hex='#119DFF')
+            ),
+
+            html.Div(id='color-picker-output-1'),
+        ]),
+
 
 
         html.Br(),
@@ -487,6 +512,8 @@ def update_In(Sin_val, Lin_val, n_clicks):
             Lin_val = Sin_val + 1
 
     return Lin_val, Sin_val
+
+    @app.callback(
 
 
 @app.callback(
