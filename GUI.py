@@ -266,11 +266,11 @@ app.layout = html.Div([
 
             # Create a checklist for selecting a data file
             dcc.Checklist(["All"], [], id="all_leg_checklist", inline=True),
-            dcc.Checklist(value=[], id="leg_list", inline=True),
+            dcc.Checklist(id="leg_list", inline=True),
 
             daq.ColorPicker(
 
-                id='my-color-picker-1',
+                id='color_picker',
                 label='Color Picker',
                 value=dict(hex='#119DFF')
             ),
@@ -513,8 +513,44 @@ def update_In(Sin_val, Lin_val, n_clicks):
 
     return Lin_val, Sin_val
 
-    @app.callback(
+# @app.callback(
+#     Output(component_id='leg_list', component_property='options'),
+#     Input(component_id = 'Velocity_Graph', component_property = 'figure'),
+#     Input(component_id='color_picker', component_property='value')
+#     , prevent_initial_call=True)
+#
 
+@app.callback(
+    Output(component_id="leg_list", component_property='value'),
+    Output(component_id='all_leg_checklist', component_property='value'),
+    Input(component_id="leg_list", component_property='value'),
+    Input(component_id='all_leg_checklist', component_property='value'),
+    Input(component_id="leg_list", component_property='options'),
+     prevent_initial_call=True)
+
+def leg_sync_checklist(leg_list, all_leg_checklist, leg_act ):
+
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    print(leg_act)
+
+    if leg_act != []:
+
+        if input_id == "leg_list":
+
+            all_leg_checklist = ["All"] if set(leg_list) == set(leg_act) else []
+
+        else:
+
+            leg_list = leg_act if all_leg_checklist else []
+
+    else:
+        leg_list = []
+
+        all_leg_checklist = []
+
+
+    return leg_list, all_leg_checklist
 
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
@@ -525,6 +561,7 @@ def update_In(Sin_val, Lin_val, n_clicks):
      Output(component_id="small_t", component_property='max'),
     Output(component_id="big_t", component_property='min'),
      Output(component_id="big_t", component_property='max'),
+     Output(component_id='leg_list', component_property='options'),
      Output(component_id='btn_title_update', component_property='n_clicks'),
      Output(component_id='btn_leg_update', component_property='n_clicks')],
     [Input(component_id = 'File', component_property = 'value'),
@@ -617,6 +654,8 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
                                             name=f"{user_input}{' '}{user_input1}"))
                     current_names.append(f"{user_input}{' '}{user_input1}")
 
+
+
             value = time_input
             min_sl = min(min1)
             max_sl = max(max1)
@@ -637,20 +676,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
                 xanchor="center"),
         )
 
-
-        input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-
-
-        # if input_id == 'title_onoff' and  title == 'Off':
-        #     print('why')
-        #     New_name = ''
-        #     n_clicks = 0
-        #
-        # if input_id == 'legend_onoff' and  leg == 'Off':
-        #     print('leg')
-        #     New_name = ''
-        #     n_clicks = 0
 
         if title == 'Off':
             fig.layout.update(title='')
@@ -686,8 +711,25 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
             fig.layout.update(showlegend=True)
 
 
-    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, n_clicks, n_clicks1
 
+    if fig == {}:
+
+        names = []
+
+    elif "newname_result" in locals():
+
+
+        names = newname_result
+
+
+    else:
+
+        names = current_names
+
+
+
+
+    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, names, n_clicks, n_clicks1
 
 
 @app.callback(
