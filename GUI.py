@@ -506,15 +506,15 @@ def update_In(Sin_val, Lin_val, n_clicks):
      Input(component_id='line_thick', component_property='value'),
      Input(component_id='legend_onoff', component_property='value'),
      Input(component_id='title_onoff', component_property='value'),
-     Input(component_id='New_Titlename', component_property='value'),
-     Input(component_id='New_LegName', component_property='value'),
      Input(component_id='btn_title_update', component_property='n_clicks'),
      Input(component_id='btn_leg_update', component_property='n_clicks'),
-     Input(component_id='submit_files', component_property='n_clicks')
+     Input(component_id='submit_files', component_property='n_clicks'),
+     State(component_id='New_Titlename', component_property='value'),
+     State(component_id='New_LegName', component_property='value'),
      ],
     prevent_initial_call = True)
 
-def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title, NewTit_name, NewLeg_name, n_clicks, n_clicks1, n_clicks2):
+def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, n_clicks2, NewTit_name, NewLeg_name):
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -628,7 +628,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
         if title == 'Off':
             fig.layout.update(title='')
 
-        elif title =='On' and n_clicks > 1:
+        elif title =='On' and n_clicks >= 1  and NewTit_name !='':
             fig.layout.update(title=NewTit_name)
 
         elif title == 'On':
