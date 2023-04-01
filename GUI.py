@@ -212,18 +212,29 @@ app.layout = html.Div([
 
         dcc.Slider(0.5, 5,
                    value = 1,
-            id="line_thick", marks={
-                0.5: {'label': 'Thin'},
-        5: {'label': 'Thick'}}),
+            id="line_thick",
+            marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
+            updatemode = 'drag'),
 
 
         html.Div(children = [
 
         html.Label("Legend", style={'text-align': 'left'}),
 
-        dcc.RadioItems(id = 'legend_onoff', value = 'On', options = ['On', 'Off']),
+        dcc.RadioItems(id ='legend_onoff', value = 'On', options = ['On', 'Off']),
+
+        dcc.Input(
+                id="New_LegName",
+                type='text',
+                placeholder="Enter New Legend (seperate values with comma)",
+                debounce=True,
+            ),
+
+            # Create a button for downloading data
+        html.Button("Update Legend", id="btn_leg_update", n_clicks=0, ),
 
         ]),
+
 
         html.Div(children=[
 
@@ -231,22 +242,18 @@ app.layout = html.Div([
 
             dcc.RadioItems(id = 'title_onoff', value = 'On', options = ['On', 'Off']),
 
+            dcc.Input(
+                id="New_Titlename",
+                type='text',
+                placeholder="Enter New Title",
+                debounce=True,
+            ),
+
+            # Create a button for downloading data
+            html.Button("Update Title", id="btn_title_update", n_clicks=0, ),
+
         ]),
 
-        html.Label("Use this text box and selector to input new legend names or title", style={'text-align': 'left'}),
-
-        dcc.RadioItems(id = 'text_sel',value = 'Legend', options = ['Legend', 'Title'], inline=True),
-
-
-        dcc.Input(
-            id="New_name",
-            type='text',
-            placeholder="When entering seperate values with a comma",
-            debounce = True,
-        ),
-
-        # Create a button for downloading data
-        html.Button("Update", id="btn_update", n_clicks=0,),
 
         html.Br(),
 
@@ -491,22 +498,23 @@ def update_In(Sin_val, Lin_val, n_clicks):
      Output(component_id="small_t", component_property='max'),
     Output(component_id="big_t", component_property='min'),
      Output(component_id="big_t", component_property='max'),
-     Output(component_id='New_name', component_property='value'),
-     Output(component_id='btn_update', component_property='n_clicks')],
+     Output(component_id='btn_title_update', component_property='n_clicks'),
+     Output(component_id='btn_leg_update', component_property='n_clicks')],
     [Input(component_id = 'File', component_property = 'value'),
     Input(component_id = 'Vect', component_property = 'value'),
     Input(component_id = 'time-range', component_property = 'value'),
      Input(component_id='line_thick', component_property='value'),
      Input(component_id='legend_onoff', component_property='value'),
      Input(component_id='title_onoff', component_property='value'),
-     Input(component_id='text_sel', component_property='value'),
-     Input(component_id='New_name', component_property='value'),
-     Input(component_id='btn_update', component_property='n_clicks'),
+     Input(component_id='New_Titlename', component_property='value'),
+     Input(component_id='New_LegName', component_property='value'),
+     Input(component_id='btn_title_update', component_property='n_clicks'),
+     Input(component_id='btn_leg_update', component_property='n_clicks'),
      Input(component_id='submit_files', component_property='n_clicks')
      ],
     prevent_initial_call = True)
 
-def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title, text_sel, New_name,n_clicks, n_clicks1):
+def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title, NewTit_name, NewLeg_name, n_clicks, n_clicks1, n_clicks2):
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -538,6 +546,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
 
         fig = go.Figure()
 
+        current_names = []
 
 # 0.5 to
         color1 = 'rgb(0,0,0)'
@@ -556,6 +565,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
                                             color = color1,
                                             width=line_thick),
                                             name=f"{user_input}{' '}{user_input1}"))
+                    current_names.append(f"{user_input}{' '}{user_input1}")
 
             min_sl = min(min1)
             max_sl = max(max1)
@@ -578,6 +588,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
                                             color=color1,
                                             width=line_thick),
                                             name=f"{user_input}{' '}{user_input1}"))
+                    current_names.append(f"{user_input}{' '}{user_input1}")
 
             value = time_input
             min_sl = min(min1)
@@ -599,60 +610,56 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
                 xanchor="center"),
         )
 
-        if leg == 'Off':
-            fig.layout.update(showlegend=False)
-        else:
-            fig.layout.update(showlegend=True)
 
-        print(n_clicks)
+        input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+
+
+        # if input_id == 'title_onoff' and  title == 'Off':
+        #     print('why')
+        #     New_name = ''
+        #     n_clicks = 0
+        #
+        # if input_id == 'legend_onoff' and  leg == 'Off':
+        #     print('leg')
+        #     New_name = ''
+        #     n_clicks = 0
 
         if title == 'Off':
             fig.layout.update(title='')
-            n_clicks = 0
-            New_name = ''
 
-        elif title == 'On' and n_clicks == 0:
+        elif title =='On' and n_clicks > 1:
+            fig.layout.update(title=NewTit_name)
+
+        elif title == 'On':
             fig.layout.update(title='Barnacle Data')
 
-        elif title == 'On' and n_clicks >= 1:
-            fig.layout.update(title=New_name)
 
-        print(n_clicks)
+        if leg == 'Off':
+            fig.layout.update(showlegend=False)
 
-    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in,New_name, n_clicks
+        elif leg =='On' and n_clicks1 >= 1 and NewLeg_name !='':
+
+            NewLeg_name_list = NewLeg_name.split(',')
+
+            newname_result = {}
+            for i, current_name in enumerate(current_names):
+                newnames = {current_name: NewLeg_name_list[i]}
+                newname_result.update(newnames)
+
+            fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
+                                                  legendgroup=newname_result[t.name],
+                                                  hovertemplate=t.hovertemplate.replace(t.name, newname_result[
+                                                      t.name]) if t.hovertemplate is not None else None)
+                               )
+
+            fig.layout.update(showlegend=True)
+
+        elif leg == 'On':
+            fig.layout.update(showlegend=True)
 
 
-# if "btn_update" == ctx.triggered_id:
-#
-#     if text_sel == 'Legend':
-#
-#         current_names = f"{user_input}{' '}{user_input1}"
-#
-#         for i, current_name in current_names:
-#             newnames = {current_name: New_name[i]}
-#
-#         # fig.for_each_trace(lambda t: t.update(name=newnames[t.name],
-#         #                                       # legendgroup = newnames[t.name],
-#         #                                       # hovertemplate = t.hovertemplate.replace(t.name, newnames[t.name])
-#         #                                       )
-#         # )
-#
-#     if text_sel == 'Title':
-#         fig.layout.update(title=New_name)
-#
-# else:
-#
-#     fig.update_layout(
-#         title="Barnacle Data",
-#         xaxis_title="Time (s)",
-#         yaxis_title="Velocity (m/s)",
-#         legend=dict(
-#             y=1,
-#             x=0.5,
-#             orientation="h",
-#             yanchor="bottom",
-#             xanchor="center"),
-#     )
+    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, n_clicks, n_clicks1
 
 
 
