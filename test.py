@@ -62,25 +62,11 @@ def file_chooser():
 
     win.mainloop()
 
-    file_paths
-
-    # try:
-    #     file_paths
-
-
-
     return file_paths, file_names
 
-try:
-    file_chooser()
-except NameError:
-        file_names = None
-        file_paths = None
-        print('Application was closed without selecting data')
+file = file_chooser()
 
 print(file_paths)
-
-
 
 
 
