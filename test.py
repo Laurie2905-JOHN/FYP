@@ -132,7 +132,7 @@ print(result_df)
 
 
 
-value = file.split('.')
+value = 'hello'.split('.')
 
 print(value[0])
 

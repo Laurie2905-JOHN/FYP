@@ -324,11 +324,8 @@ app.layout = html.Div([
         html.Button("Download", id="btn_download"),
 
         # Create a component for downloading data
-        dcc.Download(id="TXT_download"),
+        dcc.Download(id="download"),
 
-        dcc.Download(id="CSV_download"),
-
-        dcc.Download(id="EXCEL_download"),
     ])
 ])
 
@@ -748,7 +745,7 @@ def clear_files(n_clicks):
 # def download_CSV(n_clicks,smallt, bigt, vels, file, type):
 #
 @app.callback(
-        Output(component_id="EXCEL_download", component_property='data'),
+        Output(component_id="download", component_property='data', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
         Input(component_id="small_t", component_property='value'),
         Input(component_id="big_t", component_property='value'),
@@ -761,7 +758,7 @@ def clear_files(n_clicks):
 
 def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
 
-    if "btn_download" == ctx.triggered_id and type == 'Excel':
+    if "btn_download" == ctx.triggered_id and [type == 'Excel' or 'CSV']:
 
         dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
 
@@ -801,15 +798,32 @@ def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
 
         if name == None:
             value = file.split('.')
-            filename = value[0] + ".xlsx"
+            filename = value[0]
         else:
-            filename = name + ".xlsx"
+            filename = name
 
+        if type == 'Excel':
 
-        return dcc.send_data_frame(data.to_excel, filename, sheet_name="Sheet_name_1")
+            if name == None:
+                value = file.split('.')
+                filename = value[0] + '.xlsx'
+            else:
+                filename = name + '.xlsx'
+
+            return dcc.send_data_frame(data.to_excel, filename)
+
+        if type == 'CSV':
+
+            if name == None:
+                value = file.split('.')
+                filename = value[0] + '.csv'
+            else:
+                filename = name + '.csv'
+
+            return dcc.send_data_frame(data.to_csv, filename)
 
 @app.callback(
-        Output(component_id="TXT_download", component_property='data'),
+        Output(component_id="download", component_property='data', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
         Input(component_id="small_t", component_property='value'),
         Input(component_id="big_t", component_property='value'),
