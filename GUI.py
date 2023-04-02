@@ -320,28 +320,29 @@ app.layout = html.Div([
 
 
 @app.callback(
-     Output(component_id="File", component_property='options'),
-     Output(component_id='Vect', component_property='options'),
-     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="submit_files_error", component_property='children'),
-    Output(component_id="submit_files", component_property='n_clicks'),
-    [Input(component_id="submit_files", component_property='n_clicks'),
-    Input(component_id="File", component_property='options'),
-     Input(component_id='Vect', component_property='options'),
-     Input(component_id="file_checklist", component_property='options'),
-     Input(component_id="vel_checklist", component_property='options')
-     ], prevent_initial_call=True)
+        Output(component_id="File", component_property='options'),
+        Output(component_id='Vect', component_property='options'),
+        Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id="submit_files_error", component_property='children'),
+        Output(component_id="submit_files", component_property='n_clicks'),
+        [Input(component_id="submit_files", component_property='n_clicks'),
+        Input(component_id="File", component_property='options'),
+        Input(component_id='Vect', component_property='options'),
+        Input(component_id="file_checklist", component_property='options'),
+        Input(component_id="vel_checklist", component_property='options')
+        ], prevent_initial_call=True)
 
 def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
 
     if n_clicks <= 1:
 
-        if "submit_files" == ctx.triggered_id:
+        if file_dropdown_options == [] and vect_options == []:
 
-           if file_dropdown_options != [] and vect_options != []:
+            if "submit_files" == ctx.triggered_id:
 
                 try:
+
                     file_chooser()
 
                     if file_paths == []:
@@ -390,7 +391,7 @@ def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, v
 
                     n_clicks = 0
 
-        return file_dropdown_options, vect_options, file_checklist, vel_checklist, sub_files_error, n_clicks
+            return file_dropdown_options, vect_options, file_checklist, vel_checklist, sub_files_error, n_clicks
 
 
 
