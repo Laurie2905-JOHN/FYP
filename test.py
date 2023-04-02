@@ -79,11 +79,12 @@ file_paths = [
 
 prb = cal_velocity(file_paths)
 vels = ['Ux', 'Uy', 'Uz', 't']
-files = ['Example 1.txt', 'Example 2.txt']
 file = 'Example 1.txt'
-con = []
+df = {file: {vel: prb[file][vel] for vel in vels}}
 
-df = {file: {vel: prb[file][vel] for vel in vels} for file in files}
+data = {}
+
+
 
 list_all = []
 
@@ -111,12 +112,15 @@ str_all = str_all.replace('[[', '')
 
 str_all = str_all.replace('[', '')
 
+#my_list.append(my_dict)
+# = {file: str_all}
+
+print(str_all)
 
 end_time = time.time()
 
 elapsed_time = end_time - start_time
 
-print(f"Elapsed time: {elapsed_time} seconds")
 
 
 

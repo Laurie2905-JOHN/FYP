@@ -793,14 +793,14 @@ Input(component_id="type_checklist", component_property='value'),
     prevent_initial_call=True)
 
 
-def download(n_clicks,smallt, bigt, vels, files, types):
+def download(n_clicks,smallt, bigt, vels, file, types):
 
     if "btn_download" == ctx.triggered_id:
+        file = file[0]
 
-        file = 'Example 1.txt'
-        con = []
+        print(file)
 
-        df = {file: {vel: prb[file][vel] for vel in vels} for file in files}
+        df = {file: {vel: prb[file][vel] for vel in vels}}
 
         list_all = []
 
@@ -828,8 +828,7 @@ def download(n_clicks,smallt, bigt, vels, files, types):
 
         str_all = str_all.replace('[', '')
 
-        text = dict(content=final, filename="hello.txt")
-        #print(text)
+        text = dict(content=str_all, filename="hello.txt")
 
         return text
 
