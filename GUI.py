@@ -376,7 +376,7 @@ app.layout = html.Div([
 #
 #                 file_checklist = file_dropdown_options
 #
-#                 vel_checklist = ['Ux','Uy','Uz','Time']
+#                 vel_checklist = ['Ux','Uy','Uz','t']
 #
 #     return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
@@ -411,7 +411,7 @@ def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, v
 
     file_checklist = file_dropdown_options
 
-    vel_checklist = ['Ux', 'Uy', 'Uz', 'Time']
+    vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 
     return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
@@ -451,7 +451,7 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    vel_type = ['Ux','Uy','Uz','Time']
+    vel_type = ['Ux','Uy','Uz','t']
 
     if input_id == "vel_checklist":
 
@@ -788,51 +788,49 @@ def clear_files(n_clicks):
         Input(component_id="small_t", component_property='value'),
 Input(component_id="big_t", component_property='value'),
 Input(component_id="vel_checklist", component_property='value'),
+Input(component_id="file_checklist", component_property='value'),
 Input(component_id="type_checklist", component_property='value'),
     prevent_initial_call=True)
 
 
-def download(n_clicks,smallt, bigt, vels, types):
+def download(n_clicks,smallt, bigt, vels, files, types):
 
     if "btn_download" == ctx.triggered_id:
 
-        for k, type in enumerate(types):
+        file = 'Example 1.txt'
+        con = []
 
-            if type =='.txt':
+        df = {file: {vel: prb[file][vel] for vel in vels} for file in files}
 
-                # Create a dictionary to store the results
-                results = {}
+        list_all = []
 
-                # Loop over the velocities
-                for vel in vels:
-                    # Create a list to store the flattened arrays
-                    flat_list = []
-                    for key, value in prb.items():
-                        # Flatten the array and append it to the list
-                        flat_list.append(value[vel].flatten())
-                    # Concatenate the flattened arrays with commas
-                    dff = ',\n'.join(map(str, np.concatenate(flat_list)))
-                    # Store the result in the dictionary as a string
-                    results[vel] = vel + ',\n' + dff
+        k = 0
+        while k < len(vels) - 1:
+            stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+            list_all.append(stacked)
+            k = k + 2
 
-                list1 = [results[vels[0]]]
+        list_all = np.concatenate(list_all, axis=1)
 
-                list2 = [results[vels[1]]]
+        str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
-                print(list2)
+        vels_str = ','.join(vels)
 
-                # Join the two lists element-wise and concatenate the strings with comma separator
-                result = [x.strip() + ',' + y.strip() if x.strip() and y.strip() else '' for x, y in zip(list1, list2)]
+        str_all = vels_str + '\n' + str_all
 
-                # Combine the resulting list into a single string
-                output = '\n'.join(result)
+        str_all = str_all.replace(' ', '')
 
+        str_all = str_all.replace('],', '')
 
+        str_all = str_all.replace(']]', '')
 
+        str_all = str_all.replace('[[', '')
 
+        str_all = str_all.replace('[', '')
 
-        text = dict(content=output, filename="hello.txt")
+        text = dict(content=final, filename="hello.txt")
         #print(text)
+
         return text
 
 # Run app
