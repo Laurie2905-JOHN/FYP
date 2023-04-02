@@ -78,7 +78,7 @@ file_paths = [
 
 
 prb = cal_velocity(file_paths)
-vels = ['Ux', 'Uy', 'Uz', 't']
+vels = ['t']
 file = 'Example 1.txt'
 df = {file: {vel: prb[file][vel] for vel in vels}}
 
@@ -88,15 +88,37 @@ data = {}
 
 list_all = []
 
-k = 0
-while k < len(vels) - 1:
-    stacked = np.stack((df[file][vels[k]], df[file][vels[k+1]]), axis=1)
+if len(vels) == 1:
+    stacked = df[file][vels[0]]
     list_all.append(stacked)
-    k = k+2
 
-list_all = np.concatenate(list_all, axis=1)
+if len(vels) == 2:
+    stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+    list_all.append(stacked)
 
-str_all = np.array2string(list_all,separator = ',', threshold=sys.maxsize)
+
+if len(vels) == 3:
+    stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+    stacked2 = df[file][vels[2]].reshape(-1, 1)
+    stacked = np.concatenate((stacked1, stacked2), axis=1)
+    list_all.append(stacked)
+
+k = 0
+if len(vels) == 4:
+    while k < len(vels) - 1:
+        stacked = np.stack((df[file][vels[k]], df[file][vels[k+1]]), axis=1)
+        list_all.append(stacked)
+        k = k+2
+
+if len(vels) == 1:
+    list_all = list_all[0]
+    str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
+
+else:
+    list_all = np.concatenate(list_all, axis=1)
+    str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
+
+
 
 vels_str = ','.join(vels)
 
@@ -112,8 +134,8 @@ str_all = str_all.replace('[[', '')
 
 str_all = str_all.replace('[', '')
 
-#my_list.append(my_dict)
-# = {file: str_all}
+str_all = str_all.replace(']', '')
+
 
 print(str_all)
 
