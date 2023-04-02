@@ -190,7 +190,7 @@ app.layout = html.Div([
             id="File",
             options=[],
             multi=True,
-            value=['Example 1.txt'],
+            value=[],
             placeholder="Select a dataset",
             style={'width': "50%"}
         ),
@@ -259,28 +259,6 @@ app.layout = html.Div([
 
         ]),
 
-        html.Div([
-
-            html.Label("Custom Colours", style={'text-align': 'left'}),
-
-            html.Label("Select ", style={'text-align': 'left'}),
-
-            # Create a checklist for selecting a data file
-            dcc.Checklist(["All"], [], id="all_leg_checklist", inline=True),
-            dcc.Checklist(id="leg_list", inline=True),
-
-            daq.ColorPicker(
-
-                id='color_picker',
-                label='Color Picker',
-                value=dict(hex='#119DFF')
-            ),
-
-            html.Div(id='color-picker-output-1'),
-        ]),
-
-
-
         html.Br(),
 
         html.Br(),
@@ -331,87 +309,40 @@ app.layout = html.Div([
 
 
 
-# @app.callback(
-#      [Output(component_id="File", component_property='options'),
-#      Output(component_id='Vect', component_property='options'),
-#      Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-#      Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
-#     [Input(component_id="submit_files", component_property='n_clicks'),
-#     Input(component_id="File", component_property='options'),
-#      Input(component_id='Vect', component_property='options'),
-#      Input(component_id="file_checklist", component_property='options'),
-#      Input(component_id="vel_checklist", component_property='options')
-#      ], prevent_initial_call=True)
-#
-# def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
-#
-#     file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
-#
-#     file_names = ['Example 1.txt', 'Example 2.txt']
-#
-#     file_checklist = file_checklist
-#
-#     vel_checklist = vel_checklist
-#
-#     file_dropdown_options = file_dropdown_options
-#
-#     vect_options = vect_options
-#
-#     if n_clicks <= 1:
-#
-#         if file_dropdown_options == [] and vect_options == []:
-#
-#             if "submit_files" == ctx.triggered_id:
-#
-#                 # This block of code will run when the user clicks the submit button
-#                 #file_chooser()
-#
-#                 vect_options = ['Ux', 'Uy', 'Uz']
-#
-#                 file_dropdown_options = file_names
-#
-#                 global prb
-#
-#                 prb = cal_velocity(file_paths)
-#
-#                 file_checklist = file_dropdown_options
-#
-#                 vel_checklist = ['Ux','Uy','Uz','t']
-#
-#     return file_dropdown_options, vect_options, file_checklist, vel_checklist
-
 @app.callback(
-    [Output(component_id="File", component_property='options'),
+     [Output(component_id="File", component_property='options'),
      Output(component_id='Vect', component_property='options'),
      Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
      Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
     [Input(component_id="submit_files", component_property='n_clicks'),
-     Input(component_id="File", component_property='options'),
+    Input(component_id="File", component_property='options'),
      Input(component_id='Vect', component_property='options'),
      Input(component_id="file_checklist", component_property='options'),
      Input(component_id="vel_checklist", component_property='options')
      ], prevent_initial_call=True)
 
-def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist):
+def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
 
-    file_paths = [
+    if n_clicks <= 1:
 
-        'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt',
-        'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
+        if file_dropdown_options == [] and vect_options == []:
 
-    file_names = ['Example 1.txt', 'Example 2.txt']
+            if "submit_files" == ctx.triggered_id:
 
-    file_dropdown_options = ['Example 1.txt', 'Example 2.txt']
+                # This block of code will run when the user clicks the submit button
+                file_chooser()
 
-    vect_options = ['Ux', 'Uy', 'Uz']
+                vect_options = ['Ux', 'Uy', 'Uz']
 
-    global prb
+                file_dropdown_options = file_names
 
-    prb = cal_velocity(file_paths)
+                global prb
 
-    file_checklist = file_dropdown_options
+                prb = cal_velocity(file_paths)
 
-    vel_checklist = ['Ux', 'Uy', 'Uz', 't']
+                file_checklist = file_dropdown_options
+
+                vel_checklist = ['Ux','Uy','Uz','t']
 
     return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
@@ -469,42 +400,6 @@ def update_In(Sin_val, Lin_val, n_clicks):
 
     return Lin_val, Sin_val
 
-# @app.callback(
-#     Output(component_id='leg_list', component_property='options'),
-#     Input(component_id = 'Velocity_Graph', component_property = 'figure'),
-#     Input(component_id='color_picker', component_property='value')
-#     , prevent_initial_call=True)
-#
-
-@app.callback(
-    Output(component_id="leg_list", component_property='value'),
-    Output(component_id='all_leg_checklist', component_property='value'),
-    Input(component_id="leg_list", component_property='value'),
-    Input(component_id='all_leg_checklist', component_property='value'),
-    Input(component_id="leg_list", component_property='options'),
-     prevent_initial_call=True)
-
-def leg_sync_checklist(leg_list, all_leg_checklist, leg_act ):
-
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    if leg_act != []:
-
-        if input_id == "leg_list":
-
-            all_leg_checklist = ["All"] if set(leg_list) == set(leg_act) else []
-
-        else:
-
-            leg_list = leg_act if all_leg_checklist else []
-
-    else:
-        leg_list = []
-
-        all_leg_checklist = []
-
-
-    return leg_list, all_leg_checklist
 
 @app.callback(
     [Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
@@ -515,7 +410,6 @@ def leg_sync_checklist(leg_list, all_leg_checklist, leg_act ):
      Output(component_id="small_t", component_property='max'),
     Output(component_id="big_t", component_property='min'),
      Output(component_id="big_t", component_property='max'),
-     Output(component_id='leg_list', component_property='options'),
      Output(component_id='btn_title_update', component_property='n_clicks'),
      Output(component_id='btn_leg_update', component_property='n_clicks')],
     [Input(component_id = 'File', component_property = 'value'),
@@ -566,9 +460,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
 
         current_names = []
 
-# 0.5 to
-        color1 = 'rgb(0,0,0)'
-
 
         if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and n_clicks1 >= 1:
 
@@ -580,7 +471,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
                     min1.append(np.round(np.amin(V)))
                     fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
                                             line=dict(
-                                            color = color1,
                                             width=line_thick),
                                             name=f"{user_input}{' '}{user_input1}"))
                     current_names.append(f"{user_input}{' '}{user_input1}")
@@ -603,12 +493,9 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
                     V2 = V[mask]
                     fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
                                             line=dict(
-                                            color=color1,
                                             width=line_thick),
                                             name=f"{user_input}{' '}{user_input1}"))
                     current_names.append(f"{user_input}{' '}{user_input1}")
-
-
 
             value = time_input
             min_sl = min(min1)
@@ -646,8 +533,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
 
         elif leg =='On' and n_clicks1 >= 1 and NewLeg_name !='' and NewLeg_name !=None:
 
-            print(NewLeg_name)
-
             NewLeg_name_list = NewLeg_name.split(',')
 
             newname_result = {}
@@ -667,25 +552,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
             fig.layout.update(showlegend=True)
 
 
-
-    if fig == {}:
-
-        names = []
-
-    elif "newname_result" in locals():
-
-
-        names = newname_result
-
-
-    else:
-
-        names = current_names
-
-
-
-
-    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, names, n_clicks, n_clicks1
+    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, n_clicks, n_clicks1
 
 
 @app.callback(
@@ -732,18 +599,6 @@ def clear_files(n_clicks):
         return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_vel_checklist, in_val_S, in_val_L, n_clicks
 
 
-# @app.callback(
-#         Output(component_id="CSV_download", component_property='data'),
-#         Input(component_id="btn_download", component_property='n_clicks'),
-#         Input(component_id="small_t", component_property='value'),
-#         Input(component_id="big_t", component_property='value'),
-#         Input(component_id="vel_checklist", component_property='value'),
-#         Input(component_id="file_checklist", component_property='value'),
-#         Input(component_id="type_checklist", component_property='value'),
-#         prevent_initial_call=True)
-#
-# def download_CSV(n_clicks,smallt, bigt, vels, file, type):
-#
 @app.callback(
         Output(component_id="download", component_property='data', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
@@ -758,86 +613,8 @@ def clear_files(n_clicks):
 
 def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
 
-    if "btn_download" == ctx.triggered_id and [type == 'Excel' or 'CSV']:
 
-        dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
-
-        df = {file: {vel: [] for vel in vels}}
-
-        if smallt != None or bigt != None:
-
-            t = dff[file]['t']
-
-            if smallt != None and bigt != None:
-                mask = (t >= smallt) & (t < bigt)
-
-            if smallt != None and bigt == None:
-                mask = (t >= smallt)
-
-            if bigt != None and smallt == None:
-                mask = (t < bigt)
-
-            df[file]['t'] = t[mask]
-            for vel in vels:
-                df[file][vel] = dff[file][vel][mask]
-
-        else:
-
-            df = dff
-
-        # create an empty list to store dataframes
-        pandaData = []
-
-        # loop through each file and convert to dataframe
-        for file, df in df.items():
-            dfff = pd.DataFrame(df)
-            pandaData.append(dfff)
-
-        # concatenate all dataframes in the list
-        data = pd.concat(pandaData)
-
-        if name == None:
-            value = file.split('.')
-            filename = value[0]
-        else:
-            filename = name
-
-        if type == 'Excel':
-
-            if name == None:
-                value = file.split('.')
-                filename = value[0] + '.xlsx'
-            else:
-                filename = name + '.xlsx'
-
-            return dcc.send_data_frame(data.to_excel, filename)
-
-        if type == 'CSV':
-
-            if name == None:
-                value = file.split('.')
-                filename = value[0] + '.csv'
-            else:
-                filename = name + '.csv'
-
-            return dcc.send_data_frame(data.to_csv, filename)
-
-@app.callback(
-        Output(component_id="download", component_property='data', allow_duplicate=True),
-        Input(component_id="btn_download", component_property='n_clicks'),
-        Input(component_id="small_t", component_property='value'),
-        Input(component_id="big_t", component_property='value'),
-        Input(component_id="vel_checklist", component_property='value'),
-        Input(component_id="vel_checklist", component_property='options'),
-        Input(component_id="file_checklist", component_property='value'),
-        Input(component_id="type_checklist", component_property='value'),
-        Input(component_id="file_name_input", component_property='value'),
-        prevent_initial_call=True)
-
-
-def download_TXT(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
-
-    if "btn_download" == ctx.triggered_id and type =='.txt':
+    if "btn_download" == ctx.triggered_id and type == '.txt':
 
         dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
 
@@ -918,6 +695,71 @@ def download_TXT(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
         text = dict(content=str_all, filename=filename)
 
         return text
+
+    if "btn_download" == ctx.triggered_id and [type == 'Excel' or 'CSV']:
+
+        dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
+
+        df = {file: {vel: [] for vel in vels}}
+
+        if smallt != None or bigt != None:
+
+            t = dff[file]['t']
+
+            if smallt != None and bigt != None:
+                mask = (t >= smallt) & (t < bigt)
+
+            if smallt != None and bigt == None:
+                mask = (t >= smallt)
+
+            if bigt != None and smallt == None:
+                mask = (t < bigt)
+
+            df[file]['t'] = t[mask]
+            for vel in vels:
+                df[file][vel] = dff[file][vel][mask]
+
+        else:
+
+            df = dff
+
+        # create an empty list to store dataframes
+        pandaData = []
+
+        # loop through each file and convert to dataframe
+        for file, df in df.items():
+            dfff = pd.DataFrame(df)
+            pandaData.append(dfff)
+
+        # concatenate all dataframes in the list
+        data = pd.concat(pandaData)
+
+        if name == None:
+            value = file.split('.')
+            filename = value[0]
+        else:
+            filename = name
+
+        if type == 'Excel':
+
+            if name == None:
+                value = file.split('.')
+                filename = value[0] + '.xlsx'
+            else:
+                filename = name + '.xlsx'
+
+            return dcc.send_data_frame(data.to_excel, filename)
+
+        if type == 'CSV':
+
+            if name == None:
+                value = file.split('.')
+                filename = value[0] + '.csv'
+            else:
+                filename = name + '.csv'
+
+            return dcc.send_data_frame(data.to_csv, filename)
+
 
 # Run app
 if __name__== '__main__':

@@ -1,4 +1,39 @@
 import numpy as np
+@app.callback(
+    [Output(component_id="File", component_property='options'),
+     Output(component_id='Vect', component_property='options'),
+     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
+    [Input(component_id="submit_files", component_property='n_clicks'),
+     Input(component_id="File", component_property='options'),
+     Input(component_id='Vect', component_property='options'),
+     Input(component_id="file_checklist", component_property='options'),
+     Input(component_id="vel_checklist", component_property='options')
+     ], prevent_initial_call=True)
+
+def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist):
+
+    file_paths = [
+
+        'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt',
+        'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
+
+    file_names = ['Example 1.txt', 'Example 2.txt']
+
+    file_dropdown_options = ['Example 1.txt', 'Example 2.txt']
+
+    vect_options = ['Ux', 'Uy', 'Uz']
+
+    global prb
+
+    prb = cal_velocity(file_paths)
+
+    file_checklist = file_dropdown_options
+
+    vel_checklist = ['Ux', 'Uy', 'Uz', 't']
+
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist
+
 def cal_velocity(file_paths):
     import numpy as np
     import scipy.io as sio
