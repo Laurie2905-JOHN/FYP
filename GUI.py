@@ -312,6 +312,9 @@ app.layout = html.Div([
             html.Br(),
             dcc.Input(id="small_t", min = 0, type="number", placeholder = "Minimum Time", debounce = True, style={'marginRight': '10px'}),
             dcc.Input(id="big_t", min = 0, type="number", placeholder="Maximum Time", debounce = True,),
+            html.Br(),
+            html.Br(),
+            dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename", debounce=True, ),
 
         html.Br(),
 
@@ -753,9 +756,10 @@ def clear_files(n_clicks):
         Input(component_id="vel_checklist", component_property='options'),
         Input(component_id="file_checklist", component_property='value'),
         Input(component_id="type_checklist", component_property='value'),
+        Input(component_id="file_name_input", component_property='value'),
         prevent_initial_call=True)
 
-def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type):
+def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
 
     if "btn_download" == ctx.triggered_id and type == 'Excel':
 
@@ -795,8 +799,14 @@ def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type):
         # concatenate all dataframes in the list
         data = pd.concat(pandaData)
 
+        if name == None:
+            value = file.split('.')
+            filename = value[0] + ".xlsx"
+        else:
+            filename = name + ".xlsx"
 
-        return dcc.send_data_frame(data.to_excel, "mydf.xlsx", sheet_name="Sheet_name_1")
+
+        return dcc.send_data_frame(data.to_excel, filename, sheet_name="Sheet_name_1")
 
 @app.callback(
         Output(component_id="TXT_download", component_property='data'),
@@ -807,10 +817,11 @@ def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type):
         Input(component_id="vel_checklist", component_property='options'),
         Input(component_id="file_checklist", component_property='value'),
         Input(component_id="type_checklist", component_property='value'),
+        Input(component_id="file_name_input", component_property='value'),
         prevent_initial_call=True)
 
 
-def download_TXT(n_clicks,smallt, bigt, vels, vel_opts, file, type):
+def download_TXT(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
 
     if "btn_download" == ctx.triggered_id and type =='.txt':
 
@@ -823,14 +834,13 @@ def download_TXT(n_clicks,smallt, bigt, vels, vel_opts, file, type):
             t = dff[file]['t']
 
             if smallt != None and bigt != None:
-                mask = (t >= smallt) & (t <= bigt)
-                print(len(t))
+                mask = (t >= smallt) & (t < bigt)
 
             if smallt != None and bigt == None:
                 mask = (t >= smallt)
 
             if bigt != None and smallt == None:
-                mask = (t <= bigt)
+                mask = (t < bigt)
 
             df[file]['t'] = t[mask]
             for vel in vels:
@@ -885,7 +895,13 @@ def download_TXT(n_clicks,smallt, bigt, vels, vel_opts, file, type):
 
         str_all = str_all.replace(']', '')
 
-        text = dict(content=str_all, filename="hello.txt")
+        if name == None:
+            value = file.split('.')
+            filename = value[0] + ".txt"
+        else:
+            filename = name + ".txt"
+
+        text = dict(content=str_all, filename=filename)
 
         return text
 

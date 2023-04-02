@@ -132,6 +132,10 @@ print(result_df)
 
 
 
+value = file.split('.')
+
+print(value[0])
+
 
 
 
