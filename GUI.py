@@ -759,34 +759,45 @@ def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type):
 
     if "btn_download" == ctx.triggered_id and type == 'Excel':
 
+        pd.set_option('display.max_rows', None)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.width', None)
+        pd.set_option('display.max_colwidth', -1)
+
         dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
 
-        df = {file: {vel_opt: [] for vel_opt in vel_opts}}
+        df = {file: {vel: prb[file][vel] for vel in vels}}
 
         if smallt != None or bigt != None:
 
             t = dff[file]['t']
 
             if smallt != None and bigt != None:
-                mask = (t >= smallt) & (t < bigt)
+                mask = (t >= smallt) & (t <= bigt)
+                print(len(t))
 
-            if smallt != None:
+            if smallt != None and bigt == None:
                 mask = (t >= smallt)
 
-            if bigt != None:
-                mask = (t < bigt)
+            if bigt != None and smallt == None:
+                mask = (t <= bigt)
 
-            df[file]['t'] = t[mask]
             for vel in vels:
-                df[file][vel] = dff[file][vel][mask]
+                df[file][vel][mask] = dff[file][vel][mask]
 
-        else:
 
-            df = dff
+        # Remove the extra brackets from the values of the dictionary
+        df = {k: v[0] for k, v in df.items()}
 
-        print((df))
+        pandaData = pd.DataFrame(df)
 
-        return dcc.send_data_frame(df.to_excel, "mydf.xlsx", sheet_name="Sheet_name_1")
+        print(df)
+        print(pandaData)
+
+
+
+
+        return dcc.send_data_frame(pandaData.to_excel, "mydf.xlsx", sheet_name="Sheet_name_1")
 
 @app.callback(
         Output(component_id="TXT_download", component_property='data'),
@@ -813,16 +824,14 @@ def download_TXT(n_clicks,smallt, bigt, vels, vel_opts, file, type):
             t = dff[file]['t']
 
             if smallt != None and bigt != None:
+                mask = (t >= smallt) & (t <= bigt)
+                print(len(t))
 
-                mask = (t >= smallt) & (t < bigt)
-
-            if smallt != None:
-
+            if smallt != None and bigt == None:
                 mask = (t >= smallt)
 
-            if bigt != None:
-
-                mask = (t < bigt)
+            if bigt != None and smallt == None:
+                mask = (t <= bigt)
 
             df[file]['t'] = t[mask]
             for vel in vels:
