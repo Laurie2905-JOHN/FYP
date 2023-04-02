@@ -86,7 +86,7 @@ file = 'Example 1.txt'
 
 
 smallt =9
-bigt = 11.00000000001
+bigt = 9.1
 dff = {file: {vel: prb[file][vel] for vel in vels}}
 
 df = {file: {vel: [] for vel in vels}}
@@ -99,7 +99,6 @@ if smallt != None or bigt != None:
 
     if smallt != None and bigt != None:
         mask = (t >= smallt) & (t < bigt)
-        print(len(t))
 
     if smallt != None and bigt == None:
         mask = (t >= smallt)
@@ -108,8 +107,6 @@ if smallt != None or bigt != None:
         mask = (t < bigt)
 
     df[file]['t'] = t[mask]
-    print(df[file]['t'])
-    print(mask)
     for vel in vels:
         df[file][vel] = dff[file][vel][mask]
 
@@ -117,7 +114,21 @@ else:
 
     df = dff
 
-dffff = pd.DataFrame(df)
+
+import pandas as pd
+
+# create an empty list to store dataframes
+dfs = []
+
+# loop through each file and convert to dataframe
+for file, df in df.items():
+    dfff = pd.DataFrame(df)
+    dfs.append(dfff)
+
+# concatenate all dataframes in the list
+result_df = pd.concat(dfs)
+
+print(result_df)
 
 
 
