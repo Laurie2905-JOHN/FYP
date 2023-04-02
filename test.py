@@ -1,176 +1,84 @@
-import numpy as np
-@app.callback(
-    [Output(component_id="File", component_property='options'),
-     Output(component_id='Vect', component_property='options'),
-     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
-    [Input(component_id="submit_files", component_property='n_clicks'),
-     Input(component_id="File", component_property='options'),
-     Input(component_id='Vect', component_property='options'),
-     Input(component_id="file_checklist", component_property='options'),
-     Input(component_id="vel_checklist", component_property='options')
-     ], prevent_initial_call=True)
-
-def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist):
-
-    file_paths = [
-
-        'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt',
-        'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
-
-    file_names = ['Example 1.txt', 'Example 2.txt']
-
-    file_dropdown_options = ['Example 1.txt', 'Example 2.txt']
-
-    vect_options = ['Ux', 'Uy', 'Uz']
-
-    global prb
-
-    prb = cal_velocity(file_paths)
-
-    file_checklist = file_dropdown_options
-
-    vel_checklist = ['Ux', 'Uy', 'Uz', 't']
-
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist
-
-def cal_velocity(file_paths):
-    import numpy as np
-    import scipy.io as sio
-
-    # Constants
-    rho = 997
-    fs = 16  # sample rate
-
-    # File retrieving
-    ZeroFolder = "C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/"
-    ZeroFile = 'Mon1527.txt'
-    CalFolder = ZeroFolder
-    CalFile = 'IanYawAndDynCalMk2.mat'
-    Cal = sio.loadmat(CalFolder + CalFile)
-
-    Cal = Cal["Cal"]
-    Dynfit = Cal[0][0][0].flatten()
-    Yawfit = Cal[0][0][1].flatten()
-    LDyn = Cal[0][0][2].flatten()
-    LYaw = Cal[0][0][3].flatten()
-    LDyn_0 = Cal[0][0][4].flatten()
-
-    # Evaluating yawcal for a polynomial Cal.Yawfit and dyncal
-    yawcal = np.zeros((91, 2))
-    yawcal[:, 0] = np.linspace(-45, 45, 91)
-    yawcal[:, 1] = np.polyval(Yawfit, yawcal[:, 0])
-    dyncal = np.polyval(Dynfit, yawcal[:, 0])
-    dyncal = dyncal * LDyn_0
-
-    # Importing Zeroes
-    zeros = {}
-    zeros['pr_raw'] = np.loadtxt(ZeroFolder + ZeroFile, delimiter=',')
-    zeros['pr_mean'] = np.mean(zeros['pr_raw'][1300:1708, :], axis=0)
-
-    # Loading actual Barnacle data
-    prb = {}
-    for i, file_path in enumerate(file_paths):
-        file_name = file_path.split("/")[-1]
-        prb[file_name] = {'raw': {}}
-        prb[file_name]['raw'] = np.loadtxt(file_path, delimiter=',')
-        prb[file_name]['raw'] -= zeros['pr_mean']
-        # Data analysis
-        prb[file_name]['denom'] = np.mean(prb[file_name]['raw'][:, :4], axis=1)
-        prb[file_name]['Lyaw'] = (prb[file_name]['raw'][:, 1] - prb[file_name]['raw'][:, 3]) / prb[file_name]['denom']
-        prb[file_name]['Lpitch'] = (prb[file_name]['raw'][:, 0] - prb[file_name]['raw'][:, 2]) / prb[file_name]['denom']
-
-        from scipy import interpolate
-
-        ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
-        apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
-        prb[file_name]['ayaw'] = ayaw_interp(prb[file_name]['Lyaw'])
-        prb[file_name]['apitch'] = apitch_interp(prb[file_name]['Lpitch'])
-        prb[file_name]['pitchbigger'] = np.abs(prb[file_name]['apitch']) > np.abs(prb[file_name]['ayaw'])
-        prb[file_name]['amax'] = prb[file_name]['pitchbigger'] * prb[file_name]['apitch'] + (1 - prb[file_name]['pitchbigger']) * prb[file_name]['ayaw']
-        ldyn_interp = interpolate.interp1d(yawcal[:, 0], dyncal, kind='linear', fill_value='extrapolate')
-        prb[file_name]['ldyn'] = ldyn_interp(prb[file_name]['amax'])
-
-        # Splitting into velocities
-        prb[file_name]['U1'] = np.sqrt(2 * -prb[file_name]['ldyn'] * np.mean(prb[file_name]['raw'][:, :4], axis=1) / rho)
-        prb[file_name]['U1'][np.imag(prb[file_name]['U1']) > 0] = 0
-        prb[file_name]['Ux'] = prb[file_name]['U1'] * np.cos(np.deg2rad(prb[file_name]['apitch'])) * np.cos(np.deg2rad(prb[file_name]['ayaw']))
-        prb[file_name]['Uy'] = prb[file_name]['U1'] * np.cos(np.deg2rad(prb[file_name]['apitch'])) * np.sin(np.deg2rad(prb[file_name]['ayaw']))
-        prb[file_name]['Uz'] = prb[file_name]['U1'] * np.sin(np.deg2rad(prb[file_name]['apitch']))
-        prb[file_name]['t'] = np.linspace(0, prb[file_name]['raw'].shape[0] / fs, prb[file_name]['raw'].shape[0]);
-
-    return prb
-import time
+from dash import Dash, dcc, Output, Input, ctx, State
+import dash_bootstrap_components as dbc
+from dash import dcc
+from dash import html
+import dash_daq as daq
+from dash.dependencies import Input, Output, State
+import plotly.express as px
+import pandas as pd
+import plotly.graph_objects as go
 import sys
-import pandas as pd
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
 
-start_time = time.time()
+from tkinter import *
+from tkinter import ttk
+import tkinter.filedialog as fd
+import numpy as np
+import scipy.io as sio
+from pathlib import Path, PureWindowsPath
+import plotly.graph_objects as go
+# Create an instance of tkinter frame or window
+def file_chooser():
 
-file_paths = [
+    win = Tk()
+    # Set the geometry of tkinter frame
+    win.geometry("800x350")
+    # Make the window jump above all
+    win.attributes('-topmost', 1)
+    # Add a Label widget
+    label = Label(win, text="Select the Button to Open the File", font=('Aerial 11'))
+    label.pack(pady=30)
+    # Add a Treeview widget to display the selected file names
+    tree = ttk.Treeview(win, columns=('Filename'))
+    tree.heading('#0', text='Index')
+    tree.heading('Filename', text='Filename')
+    tree.pack(side=LEFT, padx=30, pady=30)
 
-    'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt',
-    'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
+    def open_file():
+        files = fd.askopenfilenames(parent=win, title='Choose a File')
+        global file_paths
+        file_paths = list(win.splitlist(files))
+        # Clear the Treeview widget before inserting new file names
+        tree.delete(*tree.get_children())
+        # Update the table with the selected file names
+        global file_names
+        file_names = []
+        for i, file_path in enumerate(file_paths):
+            file_name = file_path.split("/")[-1]
+            file_names.append(file_name)
+            tree.insert('', 'end', text=str(i + 1), values=(file_name,))
+        return file_paths, file_names
 
+    def close_window():
+        win.destroy()
 
-prb = cal_velocity(file_paths)
-vels = ['t','Ux','Uy','Uz']
-file = 'Example 1.txt'
-#df = {file: {vel: prb[file][vel] for vel in vels}}
+    # Add a Button Widget
+    ttk.Button(win, text="Select a File", command=open_file).pack()
+    # Add a Close Button Widget
 
+    # Add a Label widget for close button
+    label = Label(win, text="Close window once files are added", font=('Aerial 11'))
+    label.pack(pady=30)
+    ttk.Button(win, text="Close", command=close_window).pack()
 
-smallt =9
-bigt = 9.1
-dff = {file: {vel: prb[file][vel] for vel in vels}}
+    win.mainloop()
 
-df = {file: {vel: [] for vel in vels}}
+    file_paths
 
-
-if smallt != None or bigt != None:
-
-    t = dff[file]['t']
-
-
-    if smallt != None and bigt != None:
-        mask = (t >= smallt) & (t < bigt)
-
-    if smallt != None and bigt == None:
-        mask = (t >= smallt)
-
-    if bigt != None and smallt == None:
-        mask = (t < bigt)
-
-    df[file]['t'] = t[mask]
-    for vel in vels:
-        df[file][vel] = dff[file][vel][mask]
-
-else:
-
-    df = dff
-
-
-import pandas as pd
-
-# create an empty list to store dataframes
-dfs = []
-
-# loop through each file and convert to dataframe
-for file, df in df.items():
-    dfff = pd.DataFrame(df)
-    dfs.append(dfff)
-
-# concatenate all dataframes in the list
-result_df = pd.concat(dfs)
-
-print(result_df)
+    # try:
+    #     file_paths
 
 
 
-value = 'hello'.split('.')
+    return file_paths, file_names
 
-print(value[0])
+try:
+    file_chooser()
+except NameError:
+        file_names = None
+        file_paths = None
+        print('Application was closed without selecting data')
 
+print(file_paths)
 
 
 

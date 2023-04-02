@@ -64,7 +64,18 @@ def file_chooser():
 
     win.mainloop()
 
+    # try:
+    #     file_paths
+    #
+    # except NameError:
+    #
+    #     file_names = None
+    #     file_paths = None
+    #     print('Application was closed without selecting data')
+
     return file_paths, file_names
+
+
 
 def cal_velocity(file_paths):
     import numpy as np
@@ -175,14 +186,13 @@ app.layout = html.Div([
         # Create a button to select files
         html.Br(),
         html.Button("Select Files", id='submit_files', n_clicks=0, type='button'),
+        html.Div(id='submit_files_error',
+                 children='Please select files'),
         html.Br(),
         html.Br(),
 
 
-        # Create a button to clear files
-        html.Button("Clear Files", id='clear_files', n_clicks=0),
-        html.Br(),
-        html.Br(),
+        html.A(html.Button("Clear Files"),href='/'),
 
         # Create a dropdown for selecting a dataset
         html.Label("Choose DataSet"),
@@ -310,10 +320,12 @@ app.layout = html.Div([
 
 
 @app.callback(
-     [Output(component_id="File", component_property='options'),
+     Output(component_id="File", component_property='options'),
      Output(component_id='Vect', component_property='options'),
      Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
+     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="submit_files_error", component_property='children'),
+    Output(component_id="submit_files", component_property='n_clicks'),
     [Input(component_id="submit_files", component_property='n_clicks'),
     Input(component_id="File", component_property='options'),
      Input(component_id='Vect', component_property='options'),
@@ -325,26 +337,62 @@ def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, v
 
     if n_clicks <= 1:
 
-        if file_dropdown_options == [] and vect_options == []:
+        if "submit_files" == ctx.triggered_id:
 
-            if "submit_files" == ctx.triggered_id:
+           if file_dropdown_options != [] and vect_options != []:
 
-                # This block of code will run when the user clicks the submit button
-                file_chooser()
+                try:
+                    file_chooser()
 
-                vect_options = ['Ux', 'Uy', 'Uz']
+                    if file_paths == []:
 
-                file_dropdown_options = file_names
+                        sub_files_error = 'Please select files before closing the application'
 
-                global prb
+                        vect_options = []
 
-                prb = cal_velocity(file_paths)
+                        file_dropdown_options = []
 
-                file_checklist = file_dropdown_options
+                        file_checklist = file_dropdown_options
 
-                vel_checklist = ['Ux','Uy','Uz','t']
+                        vel_checklist = []
 
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist
+                        n_clicks = 0
+
+                    else:
+
+                        sub_files_error = 'To select new files please clear old files first'
+
+                        vect_options = ['Ux', 'Uy', 'Uz']
+
+                        file_dropdown_options = file_names
+
+                        global prb
+
+                        prb = cal_velocity(file_paths)
+
+                        file_checklist = file_dropdown_options
+
+                        vel_checklist = ['Ux', 'Uy', 'Uz', 't']
+
+                except NameError:
+
+                    print('Application was closed without selecting data')
+
+                    sub_files_error = 'Please select files before closing the application'
+
+                    vect_options = []
+
+                    file_dropdown_options = []
+
+                    file_checklist = file_dropdown_options
+
+                    vel_checklist = []
+
+                    n_clicks = 0
+
+        return file_dropdown_options, vect_options, file_checklist, vel_checklist, sub_files_error, n_clicks
+
+
 
 
 @app.callback(
@@ -378,25 +426,22 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
         Output(component_id="small_t", component_property='value', allow_duplicate=True),
         Input(component_id="small_t", component_property='value'),
         Input(component_id="big_t", component_property='value'),
-        Input(component_id='clear_files', component_property='n_clicks'),
         prevent_initial_call=True)
 
 
-def update_In(Sin_val, Lin_val, n_clicks):
+def update_In(Sin_val, Lin_val):
 
-    if "clear_files" != ctx.triggered_id:
+    if Lin_val == None:
 
-        if Lin_val == None:
+        Lin_val = Sin_val + 1
 
-            Lin_val = Sin_val + 1
+    if Sin_val == None:
 
-        if Sin_val == None:
+        Sin_val = Lin_val - 1
 
-            Sin_val = Lin_val - 1
+    if Lin_val - Sin_val < 1:
 
-        if Lin_val - Sin_val < 1:
-
-            Lin_val = Sin_val + 1
+        Lin_val = Sin_val + 1
 
     return Lin_val, Sin_val
 
@@ -461,7 +506,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
         current_names = []
 
 
-        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id and n_clicks1 >= 1:
+        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
@@ -556,50 +601,6 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
 
 
 @app.callback(
-            [Output(component_id="File", component_property='value', allow_duplicate=True),
-            Output(component_id='Vect', component_property='value', allow_duplicate=True),
-            Output(component_id="File", component_property='options', allow_duplicate=True),
-            Output(component_id='Vect', component_property='options', allow_duplicate=True),
-            Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-            Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-            Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-            Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
-            Output(component_id="small_t", component_property='value'),
-            Output(component_id="big_t", component_property='value'),
-            Output(component_id="submit_files", component_property='n_clicks')],
-            Input(component_id='clear_files', component_property='n_clicks'),
-            prevent_initial_call=True)
-
-def clear_files(n_clicks):
-
-    if "clear_files" == ctx.triggered_id:
-
-        vect_val = []
-
-        file_val = []
-
-        file_dropdown_options = []
-
-        vect_options = []
-
-        fig = {}
-
-        file_checklist = []
-
-        vel_checklist = []
-
-        all_vel_checklist = []
-
-        in_val_S = "Minimum Time"
-        #
-        in_val_L = "Maximum Time"
-
-        n_clicks = 0
-
-        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_vel_checklist, in_val_S, in_val_L, n_clicks
-
-
-@app.callback(
         Output(component_id="download", component_property='data', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
         Input(component_id="small_t", component_property='value'),
@@ -671,19 +672,12 @@ def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
             str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
         vels_str = ','.join(vels)
-
         str_all = vels_str + '\n' + str_all
-
         str_all = str_all.replace(' ', '')
-
         str_all = str_all.replace('],', '')
-
         str_all = str_all.replace(']]', '')
-
         str_all = str_all.replace('[[', '')
-
         str_all = str_all.replace('[', '')
-
         str_all = str_all.replace(']', '')
 
         if name == None:
