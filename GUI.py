@@ -292,8 +292,11 @@ app.layout = html.Div([
         html.Label("Select Data File"),
 
         # Create a checklist for selecting a data file
-            dcc.Checklist(["All"], [], id="all_file_checklist", inline=True),
-            dcc.Checklist(value=[], id="file_checklist", inline=True),
+        dcc.RadioItems(value='', id="file_checklist", inline=True),
+
+        # Create a checklist for selecting a file type
+        html.Label("Select File Type"),
+        dcc.RadioItems(['CSV', 'Excel', '.txt'], id="type_checklist", inline=True),
 
 
         # Create a label for selecting a velocity
@@ -302,13 +305,6 @@ app.layout = html.Div([
         # Create a checklist for selecting a velocity
             dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
             dcc.Checklist(value=[], id="vel_checklist", inline=True),
-
-
-
-        # Create a checklist for selecting a file type
-        html.Label("Select File Type"),
-        dcc.Checklist(["All"], [], id="all_type_checklist", inline=True),
-        dcc.Checklist(['CSV','Excel','.txt'],id="type_checklist", inline=True),
 
 
             html.I(
@@ -325,7 +321,11 @@ app.layout = html.Div([
         html.Button("Download", id="btn_download"),
 
         # Create a component for downloading data
-        dcc.Download(id="download")
+        dcc.Download(id="TXT_download"),
+
+        dcc.Download(id="CSV_download"),
+
+        dcc.Download(id="EXCEL_download"),
     ])
 ])
 
@@ -417,28 +417,6 @@ def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, v
 
 
 @app.callback(
-        Output(component_id="file_checklist", component_property='value'),
-        Output(component_id='all_file_checklist', component_property='value'),
-        Input(component_id="file_checklist", component_property='value'),
-        Input(component_id='all_file_checklist', component_property='value'),
-        Input(component_id="File", component_property='options'),
-        prevent_initial_call= True)
-
-def file_sync_checklist(file_checklist, all_file_checklist, file_dropdown_options):
-
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    if input_id == "file_checklist":
-
-        all_file_checklist = ["All"] if set(file_checklist) == set(file_dropdown_options) else []
-
-    else:
-
-        file_checklist = file_dropdown_options if all_file_checklist else []
-
-    return file_checklist, all_file_checklist,
-
-@app.callback(
         Output(component_id="vel_checklist", component_property='value'),
         Output(component_id='all_vel_checklist', component_property='value'),
         Input(component_id="vel_checklist", component_property='value'),
@@ -463,28 +441,6 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 
     return vel_check, all_vel_checklist
 
-@app.callback(
-    Output(component_id="type_checklist", component_property='value'),
-    Output(component_id='all_type_checklist', component_property='value'),
-    Input(component_id="type_checklist", component_property='value'),
-    Input(component_id='all_type_checklist', component_property='value'),
-     prevent_initial_call=True)
-
-def type_sync_checklist(type_checklist, all_type_checklist ):
-
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    file_type = ['CSV', 'Excel', '.txt']
-
-    if input_id == "type_checklist":
-
-        all_type_checklist = ["All"] if set(type_checklist) == set(file_type) else []
-
-    else:
-
-        type_checklist = file_type if all_type_checklist else []
-
-    return type_checklist, all_type_checklist
 
 @app.callback(
         Output(component_id="big_t", component_property='value', allow_duplicate=True),
@@ -740,9 +696,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
             Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
             Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
             Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-            Output(component_id='all_file_checklist', component_property='value', allow_duplicate=True),
             Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
-            Output(component_id='all_type_checklist', component_property='value', allow_duplicate=True),
             Output(component_id="small_t", component_property='value'),
             Output(component_id="big_t", component_property='value'),
             Output(component_id="submit_files", component_property='n_clicks')],
@@ -767,11 +721,7 @@ def clear_files(n_clicks):
 
         vel_checklist = []
 
-        all_file_checklist = []
-
         all_vel_checklist = []
-
-        all_type_checklist = []
 
         in_val_S = "Minimum Time"
         #
@@ -779,57 +729,135 @@ def clear_files(n_clicks):
 
         n_clicks = 0
 
-        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_file_checklist, all_vel_checklist, all_type_checklist, in_val_S, in_val_L, n_clicks
+        return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_vel_checklist, in_val_S, in_val_L, n_clicks
 
+
+# @app.callback(
+#         Output(component_id="CSV_download", component_property='data'),
+#         Input(component_id="btn_download", component_property='n_clicks'),
+#         Input(component_id="small_t", component_property='value'),
+#         Input(component_id="big_t", component_property='value'),
+#         Input(component_id="vel_checklist", component_property='value'),
+#         Input(component_id="file_checklist", component_property='value'),
+#         Input(component_id="type_checklist", component_property='value'),
+#         prevent_initial_call=True)
+#
+# def download_CSV(n_clicks,smallt, bigt, vels, file, type):
+#
+@app.callback(
+        Output(component_id="EXCEL_download", component_property='data'),
+        Input(component_id="btn_download", component_property='n_clicks'),
+        Input(component_id="small_t", component_property='value'),
+        Input(component_id="big_t", component_property='value'),
+        Input(component_id="vel_checklist", component_property='value'),
+        Input(component_id="vel_checklist", component_property='options'),
+        Input(component_id="file_checklist", component_property='value'),
+        Input(component_id="type_checklist", component_property='value'),
+        prevent_initial_call=True)
+
+def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type):
+
+    if "btn_download" == ctx.triggered_id and type == 'Excel':
+
+        dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
+
+        df = {file: {vel_opt: [] for vel_opt in vel_opts}}
+
+        if smallt != None or bigt != None:
+
+            t = dff[file]['t']
+
+            if smallt != None and bigt != None:
+                mask = (t >= smallt) & (t < bigt)
+
+            if smallt != None:
+                mask = (t >= smallt)
+
+            if bigt != None:
+                mask = (t < bigt)
+
+            df[file]['t'] = t[mask]
+            for vel in vels:
+                df[file][vel] = dff[file][vel][mask]
+
+        else:
+
+            df = dff
+
+        print((df))
+
+        return dcc.send_data_frame(df.to_excel, "mydf.xlsx", sheet_name="Sheet_name_1")
 
 @app.callback(
-    Output(component_id="download", component_property='data'),
-    Input(component_id="btn_download", component_property='n_clicks'),
+        Output(component_id="TXT_download", component_property='data'),
+        Input(component_id="btn_download", component_property='n_clicks'),
         Input(component_id="small_t", component_property='value'),
-Input(component_id="big_t", component_property='value'),
-Input(component_id="vel_checklist", component_property='value'),
-Input(component_id="file_checklist", component_property='value'),
-Input(component_id="type_checklist", component_property='value'),
-    prevent_initial_call=True)
+        Input(component_id="big_t", component_property='value'),
+        Input(component_id="vel_checklist", component_property='value'),
+        Input(component_id="vel_checklist", component_property='options'),
+        Input(component_id="file_checklist", component_property='value'),
+        Input(component_id="type_checklist", component_property='value'),
+        prevent_initial_call=True)
 
 
-def download(n_clicks,smallt, bigt, vels, file, types):
+def download_TXT(n_clicks,smallt, bigt, vels, vel_opts, file, type):
 
-    if "btn_download" == ctx.triggered_id:
-        file = file[0]
+    if "btn_download" == ctx.triggered_id and type =='.txt':
 
-        print(file)
+        dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
 
-        df = {file: {vel: prb[file][vel] for vel in vels}}
+        df = {file: {vel_opt: [] for vel_opt in vel_opts}}
+
+        if smallt != None or bigt != None:
+
+            t = dff[file]['t']
+
+            if smallt != None and bigt != None:
+
+                mask = (t >= smallt) & (t < bigt)
+
+            if smallt != None:
+
+                mask = (t >= smallt)
+
+            if bigt != None:
+
+                mask = (t < bigt)
+
+            df[file]['t'] = t[mask]
+            for vel in vels:
+                df[file][vel] = dff[file][vel][mask]
+
+        else:
+            df = dff
 
         list_all = []
 
         if len(vels) == 1:
             stacked = df[file][vels[0]]
             list_all.append(stacked)
-
-        if len(vels) == 2:
-            stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-            list_all.append(stacked)
-
-        if len(vels) == 3:
-            stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-            stacked2 = df[file][vels[2]].reshape(-1, 1)
-            stacked = np.concatenate((stacked1, stacked2), axis=1)
-            list_all.append(stacked)
-
-        k = 0
-        if len(vels) == 4:
-            while k < len(vels) - 1:
-                stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
-                list_all.append(stacked)
-                k = k + 2
-
-        if len(vels) == 1:
             list_all = list_all[0]
             str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
 
         else:
+
+            if len(vels) == 2:
+                stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+                list_all.append(stacked)
+
+            if len(vels) == 3:
+                stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+                stacked2 = df[file][vels[2]].reshape(-1, 1)
+                stacked = np.concatenate((stacked1, stacked2), axis=1)
+                list_all.append(stacked)
+
+            k = 0
+            if len(vels) == 4:
+                while k < len(vels) - 1:
+                    stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+                    list_all.append(stacked)
+                    k = k + 2
+
             list_all = np.concatenate(list_all, axis=1)
             str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
