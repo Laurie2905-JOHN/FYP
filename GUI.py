@@ -38,17 +38,22 @@ def file_chooser():
 
     def open_file():
         files = fd.askopenfilenames(parent=win, title='Choose a File')
-        global file_paths
-        file_paths = list(win.splitlist(files))
-        # Clear the Treeview widget before inserting new file names
-        tree.delete(*tree.get_children())
-        # Update the table with the selected file names
-        global file_names
-        file_names = []
-        for i, file_path in enumerate(file_paths):
-            file_name = file_path.split("/")[-1]
-            file_names.append(file_name)
-            tree.insert('', 'end', text=str(i + 1), values=(file_name,))
+        if files == [] or None:
+            global file_paths
+            file_paths = []
+            global file_names
+            file_names = []
+            close_window()
+        else:
+            file_paths = list(win.splitlist(files))
+            # Clear the Treeview widget before inserting new file names
+            tree.delete(*tree.get_children())
+            # Update the table with the selected file names
+            file_names = []
+            for i, file_path in enumerate(file_paths):
+                file_name = file_path.split("/")[-1]
+                file_names.append(file_name)
+                tree.insert('', 'end', text=str(i + 1), values=(file_name,))
         return file_paths, file_names
 
     def close_window():
@@ -64,7 +69,6 @@ def file_chooser():
     ttk.Button(win, text="Close", command=close_window).pack()
 
     win.mainloop()
-
 
     return file_paths, file_names
 
@@ -321,7 +325,6 @@ app.layout = html.Div([
         Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
         Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
         Output(component_id="submit_files_error", component_property='children'),
-        Output(component_id="submit_files", component_property='n_clicks'),
         Input(component_id="submit_files", component_property='n_clicks'),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id="File", component_property='options'),
@@ -334,71 +337,94 @@ def upload_data(n_clicks, n_clicks1, file_dropdown_options, vect_options, file_c
 
 
     print(ctx.triggered_id)
-    print(file_dropdown_options)
+    # print(file_dropdown_options)
     print(n_clicks)
-    print(vect_options)
+    # print(vect_options)
 
     if "clear_files" == ctx.triggered_id:
-        PreventUpdate
+        print('clear')
+        raise PreventUpdate
 
-    if file_dropdown_options != [] and vect_options != [] and n_clicks >= 1 and "submit_files" == ctx.triggered_id:
+    elif "submit_files" != ctx.triggered_id:
+        print('sub')
+        raise PreventUpdate
 
-        file_checklist = file_checklist
+    elif n_clicks > 1:
+        print('n')
+        raise PreventUpdate
 
-        vel_checklist = vel_checklist
+    elif file_dropdown_options != [] and vect_options != []:
+        print('full')
+        raise PreventUpdate
 
-        file_dropdown_options = file_dropdown_options
+    else:
 
-        vect_options = vect_options
-
-        submit_text = 'Please clear before selecting new files'
-
-        n_clicks = n_clicks
-
-    elif file_dropdown_options == [] or vect_options == [] and n_clicks == 1 and "submit_files" == ctx.triggered_id:
+        print(n_clicks)
 
         # This block of code will run when the user clicks the submit button
         file_chooser()
 
-        print('filepaths: ')
+        global prb
+
+        prb = cal_velocity(file_paths)
 
         print(file_paths)
 
-        if file_paths == []:
+        print(file_names)
 
-            print('whhdusadfhuias')
+        submit_text = 'selected'
 
-            submit_text = 'Please select files before closing the application'
+        file_dropdown_options = file_names
 
-            n_clicks = 0
+        vect_options = ['Ux', 'Uy', 'Uz']
 
-            file_checklist = file_checklist
+        file_checklist = file_dropdown_options
 
-            vel_checklist = vel_checklist
+        vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 
-            file_dropdown_options = file_dropdown_options
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist, submit_text
 
-            vect_options = vect_options
 
-        else:
 
-            submit_text = ' '
 
-            vect_options = ['Ux', 'Uy', 'Uz']
+        # if 'file_paths' in locals():
+        #
+        #     print('whhdusadfhuias')
+        #
+        #     if file_paths == []:
 
-            file_checklist = file_dropdown_options
+        #
+        #
+        # submit_text = 'Please select files before closing the application'
+        #
+        # file_checklist = file_checklist
+        #
+        # vel_checklist = vel_checklist
+        #
+        # file_dropdown_options = file_dropdown_options
+        #
+        # vect_options = vect_options
 
-            vel_checklist = ['Ux','Uy','Uz','t']
 
-            file_dropdown_options = file_names
 
-            global prb
 
-            prb = cal_velocity(file_paths)
-
-            n_clicks = n_clicks
-
-    print(n_clicks)
+    #     else:
+    #
+    #         print('daaaaaaaaaaaaaa')
+    #
+    #         submit_text = 'Please select files before closing the application'
+    #
+    #         n_clicks = 0
+    #
+    #         file_checklist = file_checklist
+    #
+    #         vel_checklist = vel_checklist
+    #
+    #         file_dropdown_options = file_dropdown_options
+    #
+    #         vect_options = vect_options
+    #
+    # print(n_clicks)
 
     #
     # elif file_dropdown_options == [] or vect_options == [] and n_clicks >= 1 and "submit_files" == ctx.triggered_id:
@@ -417,7 +443,7 @@ def upload_data(n_clicks, n_clicks1, file_dropdown_options, vect_options, file_c
     #
     #     n_clicks = 0
 
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist, submit_text, n_clicks
+
 
 # @app.callback(
 #         Output(component_id="File", component_property='options'),
