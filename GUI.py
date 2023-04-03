@@ -25,7 +25,7 @@ import datetime
 import io
 
 
-def cal_velocity(file_paths):
+def cal_velocity(contents, filenames):
     import numpy as np
     import scipy.io as sio
 
@@ -60,16 +60,22 @@ def cal_velocity(file_paths):
     zeros['pr_mean'] = np.mean(zeros['pr_raw'][1300:1708, :], axis=0)
 
     # Loading actual Barnacle data
+
     prb = {}
-    for i, file_path in enumerate(file_paths):
-        file_name = file_path.split("/")[-1]
+
+    for i, filename in enumerate(filenames):
         prb[file_name] = {'raw': {}}
-        prb[file_name]['raw'] = np.loadtxt(file_path, delimiter=',')
+        content_string = contents[i]
+        decoded = base64.b64decode(content_string)
+        decoded_str = decoded.removeprefix(b'u\xabZ\xb5\xecm\xfe\x99Z\x8av\xda\xb1\xee\xb8')
+        lines = decoded_str.decode().split('\r\n')[:-1]
+        prb[file_name]['raw'] = np.array([list(map(float, line.split(','))) for line in lines])
         prb[file_name]['raw'] -= zeros['pr_mean']
         # Data analysis
         prb[file_name]['denom'] = np.mean(prb[file_name]['raw'][:, :4], axis=1)
         prb[file_name]['Lyaw'] = (prb[file_name]['raw'][:, 1] - prb[file_name]['raw'][:, 3]) / prb[file_name]['denom']
         prb[file_name]['Lpitch'] = (prb[file_name]['raw'][:, 0] - prb[file_name]['raw'][:, 2]) / prb[file_name]['denom']
+
 
         from scipy import interpolate
 
@@ -311,18 +317,23 @@ app.layout = html.Div([
 
 
 @app.callback(Output('output-data-upload', 'children'),
-              Input('submit_files', 'contents'),
-              State('submit_files', 'filename'),
-              State('submit_files', 'last_modified'),
-prevent_initial_call = True
-)
+              Input('upload-data', 'contents'),
+              State('upload-data', 'filename'),
+                prevent_initial_call = True)
 
-def update_output(list_of_contents, list_of_names, list_of_dates):
-    if list_of_contents is not None:
-        children = [
-            parse_contents(c, n, d) for c, n, d in
-            zip(list_of_contents, list_of_names, list_of_dates)]
-        return children
+def parse_contents(contents, filenames):
+
+    try:
+        if filenames or contents is not None:
+            cal_velocity(contents, filenames)
+
+    except Exception as e:
+        print(e)
+        return html.Div([
+            'There was an error processing this file.'
+        ])
+
+
 
 
 

@@ -30,6 +30,10 @@ decoded_str = codedData()
 lines = decoded_str.decode().split('\r\n')[:-1]
 
 # convert the lines to a 2D NumPy array
-arr = np.array([list(map(float, line.split(','))) for line in lines])
+prb = np.array([list(map(float, line.split(','))) for line in lines])
 
 print(arr)
+
+# [[-0.27585    -0.39164902 -0.21327353 -0.4299652  -0.00513627]
+#  [-0.34585    -0.45374902 -0.29527353 -0.5011652  -0.00593627]
+#  [-0.29855    -0.36154902 -0.22967353 -0.4280652  -0.00513627]

@@ -143,3 +143,4 @@ axs[2].plot(vect['t'], vect['Uz'], 'r')
 
 plt.show()
 
+print(prb['raw'])
