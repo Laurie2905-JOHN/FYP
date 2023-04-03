@@ -25,7 +25,8 @@ import datetime
 import io
 
 
-def cal_velocity(contents, filenames):
+def cal_velocity(contents, file_names):
+
     import numpy as np
     import scipy.io as sio
 
@@ -63,7 +64,7 @@ def cal_velocity(contents, filenames):
 
     prb = {}
 
-    for i, filename in enumerate(filenames):
+    for i, file_name in enumerate(file_names):
         prb[file_name] = {'raw': {}}
         content_string = contents[i]
         decoded = base64.b64decode(content_string)
@@ -97,39 +98,6 @@ def cal_velocity(contents, filenames):
         prb[file_name]['t'] = np.linspace(0, prb[file_name]['raw'].shape[0] / fs, prb[file_name]['raw'].shape[0]);
 
     return prb
-
-def parse_contents(contents, filename, date):
-
-    content_type, content_string = contents.split(',')
-
-    try:
-        cal_velocity(file_paths)
-
-    except Exception as e:
-        print(e)
-        return html.Div([
-            'There was an error processing this file.'
-        ])
-
-    return html.Div([
-        html.H5(filename),
-        html.H6(datetime.datetime.fromtimestamp(date)),
-
-        dash_table.DataTable(
-            df.to_dict('records'),
-            [{'name': i, 'id': i} for i in df.columns]
-        ),
-
-        html.Hr(),  # horizontal line
-
-        # For debugging, display the raw contents provided by the web browser
-        html.Div('Raw Content'),
-        html.Pre(contents[0:200] + '...', style={
-            'whiteSpace': 'pre-wrap',
-            'wordBreak': 'break-all'
-        })
-    ])
-
 
 
 
@@ -316,25 +284,41 @@ app.layout = html.Div([
     ])
 
 
-@app.callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-                prevent_initial_call = True)
+@app.callback(
+        #Output(component_id = 'output-data-upload', component_property = 'children'),
+        Output(component_id = "File", component_property = 'options'),
+        Output(component_id = 'Vect', component_property = 'options'),
+        Output(component_id = "file_checklist", component_property = 'options', allow_duplicate=True),
+        Output(component_id = "vel_checklist", component_property = 'options', allow_duplicate=True),
+        Input(component_id = 'submit_files',component_property = 'contents'),
+        State(component_id = 'submit_files', component_property ='filename'),
+        prevent_initial_call=True)
 
 def parse_contents(contents, filenames):
 
     try:
+
         if filenames or contents is not None:
             cal_velocity(contents, filenames)
+            vect_options = ['Ux', 'Uy', 'Uz']
+
+            file_dropdown_options = filenames
+
+            global prb
+
+            prb = cal_velocity(contents, filenames)
+
+            file_checklist = file_dropdown_options
+
+            vel_checklist = ['Ux', 'Uy', 'Uz', 'Time']
+
+        return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
     except Exception as e:
         print(e)
         return html.Div([
             'There was an error processing this file.'
         ])
-
-
-
 
 
 @app.callback(
