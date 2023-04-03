@@ -1,79 +1,71 @@
-from dash import Dash, dcc, Output, Input, ctx, State
-import dash_bootstrap_components as dbc
-from dash import dcc
-from dash import html
-import dash_daq as daq
+import base64
+import datetime
+import io
+
+import dash
 from dash.dependencies import Input, Output, State
-import plotly.express as px
+from dash import dcc, html, dash_table
+
 import pandas as pd
-import plotly.graph_objects as go
-import sys
 
-from tkinter import *
-from tkinter import ttk
-import tkinter.filedialog as fd
-import numpy as np
-import scipy.io as sio
-from pathlib import Path, PureWindowsPath
-import plotly.graph_objects as go
-# Create an instance of tkinter frame or window
-def file_chooser():
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-    win = Tk()
-    # Set the geometry of tkinter frame
-    win.geometry("800x350")
-    # Make the window jump above all
-    win.attributes('-topmost', 1)
-    # Add a Label widget
-    label = Label(win, text="Select the Button to Open the File", font=('Aerial 11'))
-    label.pack(pady=30)
-    # Add a Treeview widget to display the selected file names
-    tree = ttk.Treeview(win, columns=('Filename'))
-    tree.heading('#0', text='Index')
-    tree.heading('Filename', text='Filename')
-    tree.pack(side=LEFT, padx=30, pady=30)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-    def open_file():
-        files = fd.askopenfilenames(parent=win, title='Choose a File')
-        global file_paths
-        file_paths = list(win.splitlist(files))
-        # Clear the Treeview widget before inserting new file names
-        tree.delete(*tree.get_children())
-        # Update the table with the selected file names
-        global file_names
-        file_names = []
-        for i, file_path in enumerate(file_paths):
-            file_name = file_path.split("/")[-1]
-            file_names.append(file_name)
-            tree.insert('', 'end', text=str(i + 1), values=(file_name,))
-        return file_paths, file_names
+app.layout = html.Div([
+    dcc.Upload(
+        id='upload-data',
+        children=html.Div([
+            'Drag and Drop or ',
+            html.A('Select Files')
+        ]),
+        style={
+            'width': '100%',
+            'height': '60px',
+            'lineHeight': '60px',
+            'borderWidth': '1px',
+            'borderStyle': 'dashed',
+            'borderRadius': '5px',
+            'textAlign': 'center',
+            'margin': '10px'
+        },
+        # Allow multiple files to be uploaded
+        multiple=True
+    ),
+    html.Div(id='output-data-upload'),
+])
 
-    def close_window():
-        win.destroy()
+def parse_contents(contents, filename, date):
+    try:
+        if isinstance(contents, tuple):
+            content_string = contents[0]
+        else:
+            content_type, content_string = contents.split(',')
+            decoded = base64.b64decode(content_string)
 
-    # Add a Button Widget
-    ttk.Button(win, text="Select a File", command=open_file).pack()
-    # Add a Close Button Widget
-
-    # Add a Label widget for close button
-    label = Label(win, text="Close window once files are added", font=('Aerial 11'))
-    label.pack(pady=30)
-    ttk.Button(win, text="Close", command=close_window).pack()
-
-    win.mainloop()
-
-    return file_paths, file_names
-
-file = file_chooser()
-
-print(file_paths)
-
-# file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
-#
-# file_names = ['Example 1.txt', 'Example 2.txt']
+    except Exception as e:
+        print(e)
+        return html.Div([
+            'There was an error processing this file.'
+        ])
+    return decoded
 
 
+@app.callback(Output('output-data-upload', 'children'),
+              Input('upload-data', 'contents'),
+              State('upload-data', 'filename'),
+              State('upload-data', 'last_modified'))
 
+def update_output(decoded_data, list_of_names, list_of_dates):
+    if decoded_data is not None:
+        children = [
+            parse_contents(c, n, d) for c, n, d in
+            zip(decoded_data, list_of_names, list_of_dates)]
+        print(decoded_data)
+        return children
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
 
 
 
