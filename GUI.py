@@ -28,7 +28,7 @@ warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
 
 def cal_velocity(contents, file_names):
-
+    import base64
     import numpy as np
     import scipy.io as sio
 
@@ -65,6 +65,7 @@ def cal_velocity(contents, file_names):
     # Loading actual Barnacle data
 
     prb = {}
+    prb_final = {}
 
     for i, file_name in enumerate(file_names):
         prb[file_name] = {'raw': {}}
@@ -99,10 +100,19 @@ def cal_velocity(contents, file_names):
         prb[file_name]['Uz'] = prb[file_name]['U1'] * np.sin(np.deg2rad(prb[file_name]['apitch']))
         prb[file_name]['t'] = np.linspace(0, prb[file_name]['raw'].shape[0] / fs, prb[file_name]['raw'].shape[0]);
 
-    return prb
+        # Taking data needed
+        # Taking data needed
+        prb_final[file_name] = {'Ux': {}}
+        prb_final[file_name] = {'Uy': {}}
+        prb_final[file_name] = {'Uz': {}}
+        prb_final[file_name] = {'t': {}}
+        prb_final[file_name]['Ux'] = prb[file_name]['Ux']
+        prb_final[file_name]['Uy'] = prb[file_name]['Uy']
+        prb_final[file_name]['Uz'] = prb[file_name]['Uz']
+        prb_final[file_name]['t'] = prb[file_name]['t']
 
 
-
+    return prb_final
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -296,20 +306,25 @@ prevent_initial_call = True)
 
 def new_contents(contents, filenames):
 
+    print(ctx.triggered_id)
+
     if "submit_files" == ctx.triggered_id:
 
         try:
 
             all_contain_txt = all('txt' in name for name in filenames)
 
+            print(all_contain_txt == True and filenames and contents is not None)
+
             if all_contain_txt == True and filenames and contents is not None:
 
+
                 prb = cal_velocity(contents, filenames)
+
 
                 newdata = [prb, filenames]
 
                 return newdata
-
 
             else:
 
@@ -319,9 +334,9 @@ def new_contents(contents, filenames):
             print(e)
             return html.Div(['There was an error processing this file.'])
 
-    else:
-
-        raise PreventUpdate
+    # else:
+    #
+    #     raise PreventUpdate
 
 @app.callback(
     Output(component_id='filestorage', component_property='data'),
@@ -332,43 +347,51 @@ def new_contents(contents, filenames):
 
 def content(n_clicks, newData, data):
 
+
     if n_clicks is None:
         raise PreventUpdate
 
     if "newfile" == ctx.triggered_id:
 
         if data is None:
-            data = [{}, [] ]
 
-        new_prb = newData[0]
+            new_prb = newData[0]
 
-        new_filenames = newData[1]
+            new_filenames = newData[1]
+
+            data = [new_prb, new_filenames]
+
+
+        else:
+
+            new_prb = newData[0]
+
+            new_filenames = newData[1]
+
+            prb = data[0]
+
+
+            filenames = data[1]
+
+            # Create a new list to hold the combined values
+            combined_filenames = filenames.copy()
+
+            for i, value in enumerate(new_filenames):
+                # Check if the value is already in the combined list
+                if value not in combined_filenames:
+                    print(value)
+                    # If it's not, add it to the end of the list and record its index
+                    prb[value] = {value: {}}
+                    prb[value] = new_prb[value]
+                    combined_filenames.append(value)
+
+            data = [prb, combined_filenames]
 
         prb = data[0]
+        print(type(prb['Example 1.txt']['t']))
 
-        filenames = data[1]
-
-        # Create a new list to hold the combined values
-        combined_filenames = filenames.copy()
-
-        # Create a list to hold the indices of the unique values
-        indices = []
-
-        # Create a list of additional values to include based on the indices
-
-        combined_prb = prb.copy()
-
-        for i, value in enumerate(new_filenames):
-            # Check if the value is already in the combined list
-            if value not in combined_filenames:
-                # If it's not, add it to the end of the list and record its index
-                prb[value] = new_prb[value]
-                combined_filenames.append(value)
-
-        data = [combined_prb, combined_filenames]
 
         return data
-
 
 
 @app.callback(
@@ -473,7 +496,8 @@ def update_In(Sin_val, Lin_val):
 
 def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, NewTit_name, NewLeg_name):
 
-    if data is None:
+
+    if data is None or {}:
         raise PreventUpdate
 
     if user_inputs == [] or user_inputs1 == []:
@@ -530,8 +554,8 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
-                    V = df[user_input][user_input1]
-                    t = df[user_input]['t']
+                    V = np.array(df[user_input][user_input1])
+                    t = np.array(df[user_input]['t'])
                     max1.append(np.round(np.amax(t)))
                     min1.append(np.round(np.amin(V)))
                     mask = (t >= time_input[0]) & (t < time_input[1])
@@ -542,6 +566,7 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
                                             width=line_thick),
                                             name=f"{user_input}{' '}{user_input1}"))
                     current_names.append(f"{user_input}{' '}{user_input1}")
+
 
             value = time_input
             min_sl = min(min1)
@@ -604,20 +629,24 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 @app.callback(
         Output(component_id="download", component_property='data', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
-        Input(component_id="small_t", component_property='value'),
-        Input(component_id="big_t", component_property='value'),
-        Input(component_id="vel_checklist", component_property='value'),
-        Input(component_id="vel_checklist", component_property='options'),
-        Input(component_id="file_checklist", component_property='value'),
-        Input(component_id="type_checklist", component_property='value'),
-        Input(component_id="file_name_input", component_property='value'),
+        State(component_id="small_t", component_property='value'),
+        State(component_id="big_t", component_property='value'),
+        State(component_id="vel_checklist", component_property='value'),
+        State(component_id="vel_checklist", component_property='options'),
+        State(component_id="file_checklist", component_property='value'),
+        State(component_id="type_checklist", component_property='value'),
+        State(component_id="file_name_input", component_property='value'),
+        State(component_id='filestorage', component_property='data'),
         prevent_initial_call=True)
 
-def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
+def download(n_clicks,smallt, bigt, vels, vel_opts, file, type, name, data):
 
-    prb = data[0]
+
+    print(ctx.triggered_id)
 
     if "btn_download" == ctx.triggered_id and type == '.txt':
+
+        prb = data[0]
 
         dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
 
@@ -771,6 +800,8 @@ def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
         Output(component_id="small_t", component_property='value'),
         Output(component_id="big_t", component_property='value'),
         Output(component_id="line_thick", component_property='value', allow_duplicate=True),
+        Output(component_id="filestorage", component_property='clear_data'),
+        Output(component_id='newfilestorage', component_property='clear_data'),
         Input(component_id='clear_files', component_property='n_clicks'),
         prevent_initial_call=True)
 
@@ -810,10 +841,13 @@ def clear_files(n_clicks):
 
         line_thickness = 1
 
+        clear_data_main = True
+
+        clear_data = True
 
 
 
-    return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_vel_checklist, title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness
+    return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_vel_checklist, title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness, clear_data_main, clear_data
 
 
 # Run app
