@@ -23,6 +23,8 @@ import plotly.graph_objects as go
 import base64
 import datetime
 import io
+import warnings
+warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
 
 def cal_velocity(contents, file_names):
@@ -150,7 +152,7 @@ app.layout = html.Div([
             # Allow multiple files to be uploaded
             multiple=True
         ),
-        html.Div(id='output-data-upload'),
+        dcc.Store(id='filestorage', storage_type='session'),
     ]),
 
 
@@ -285,40 +287,66 @@ app.layout = html.Div([
 
 
 @app.callback(
-        #Output(component_id = 'output-data-upload', component_property = 'children'),
-        Output(component_id = "File", component_property = 'options'),
-        Output(component_id = 'Vect', component_property = 'options'),
-        Output(component_id = "file_checklist", component_property = 'options', allow_duplicate=True),
-        Output(component_id = "vel_checklist", component_property = 'options', allow_duplicate=True),
+        Output(component_id = 'filestorage', component_property = 'data'),
         Input(component_id = 'submit_files',component_property = 'contents'),
         State(component_id = 'submit_files', component_property ='filename'),
-        prevent_initial_call=True)
+prevent_initial_call = True)
 
 def parse_contents(contents, filenames):
 
-    try:
+    if "submit_files" == ctx.triggered_id:
 
-        if filenames or contents is not None:
-            cal_velocity(contents, filenames)
-            vect_options = ['Ux', 'Uy', 'Uz']
+        try:
 
-            file_dropdown_options = filenames
+            all_contain_txt = all('txt' in name for name in filenames)
 
-            global prb
+            if all_contain_txt == True and filenames and contents is not None:
 
-            prb = cal_velocity(contents, filenames)
+                prb = cal_velocity(contents, filenames)
 
-            file_checklist = file_dropdown_options
+                data = [prb, filenames]
 
-            vel_checklist = ['Ux', 'Uy', 'Uz', 'Time']
+                return data
 
-        return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
-    except Exception as e:
-        print(e)
-        return html.Div([
-            'There was an error processing this file.'
-        ])
+            else:
+
+                return html.Div(['There was an error processing this file.'])
+
+        except Exception as e:
+            print(e)
+            return html.Div(['There was an error processing this file.'])
+
+        else:
+            print('no')
+
+            raise PreventUpdate
+
+@app.callback(
+    Output(component_id="File", component_property='options'),
+    Output(component_id='Vect', component_property='options'),
+    Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+    Input(component_id='filestorage', component_property='data'),
+    prevent_initial_call=True)
+
+def update_dropdowns(data):
+
+    if data is None:
+        raise PreventUpdate
+
+    vect_options = ['Ux', 'Uy', 'Uz']
+
+    file_dropdown_options = data[1]
+
+    file_checklist = file_dropdown_options
+
+    vel_checklist = ['Ux', 'Uy', 'Uz', 'Time']
+
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist
+
+
+
 
 
 @app.callback(
@@ -383,7 +411,8 @@ def update_In(Sin_val, Lin_val):
         Output(component_id="big_t", component_property='max'),
         Output(component_id='btn_title_update', component_property='n_clicks'),
         Output(component_id='btn_leg_update', component_property='n_clicks')],
-        [Input(component_id = 'File', component_property = 'value'),
+        [Input(component_id = 'filestorage', component_property = 'data'),
+        Input(component_id = 'File', component_property = 'value'),
         Input(component_id = 'Vect', component_property = 'value'),
         Input(component_id = 'time-range', component_property = 'value'),
         Input(component_id='line_thick', component_property='value'),
@@ -395,7 +424,10 @@ def update_In(Sin_val, Lin_val):
         State(component_id='New_LegName', component_property='value')],
         prevent_initial_call = True)
 
-def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, NewTit_name, NewLeg_name):
+def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, NewTit_name, NewLeg_name):
+
+    if data == []:
+        raise PreventUpdate
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -417,7 +449,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
 
     else:
 
-        df = prb
+        df = data[0]
 
         max1 = []
 
@@ -536,6 +568,7 @@ def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title
 
 def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
 
+    prb = data[0]
 
     if "btn_download" == ctx.triggered_id and type == '.txt':
 
