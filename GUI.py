@@ -152,7 +152,9 @@ app.layout = html.Div([
             # Allow multiple files to be uploaded
             multiple=True
         ),
+        dcc.Store(id='newfilestorage', storage_type='local'),
         dcc.Store(id='filestorage', storage_type='session'),
+        html.Button("Upload new Files", id='newfile', n_clicks=0),
     ]),
 
 
@@ -287,12 +289,12 @@ app.layout = html.Div([
 
 
 @app.callback(
-        Output(component_id = 'filestorage', component_property = 'data'),
+        Output(component_id = 'newfilestorage', component_property = 'data'),
         Input(component_id = 'submit_files',component_property = 'contents'),
         State(component_id = 'submit_files', component_property ='filename'),
 prevent_initial_call = True)
 
-def parse_contents(contents, filenames):
+def new_contents(contents, filenames):
 
     if "submit_files" == ctx.triggered_id:
 
@@ -304,9 +306,9 @@ def parse_contents(contents, filenames):
 
                 prb = cal_velocity(contents, filenames)
 
-                data = [prb, filenames]
+                newdata = [prb, filenames]
 
-                return data
+                return newdata
 
 
             else:
@@ -317,10 +319,57 @@ def parse_contents(contents, filenames):
             print(e)
             return html.Div(['There was an error processing this file.'])
 
-        else:
-            print('no')
+    else:
 
-            raise PreventUpdate
+        raise PreventUpdate
+
+@app.callback(
+    Output(component_id='filestorage', component_property='data'),
+    Input(component_id='newfile', component_property='n_clicks'),
+    State(component_id='newfilestorage', component_property='data'),
+    State(component_id='filestorage', component_property='data'),
+    prevent_initial_call=True)
+
+def content(n_clicks, newData, data):
+
+    if n_clicks is None:
+        raise PreventUpdate
+
+    if "newfile" == ctx.triggered_id:
+
+        if data is None:
+            data = [{}, [] ]
+
+        new_prb = newData[0]
+
+        new_filenames = newData[1]
+
+        prb = data[0]
+
+        filenames = data[1]
+
+        # Create a new list to hold the combined values
+        combined_filenames = filenames.copy()
+
+        # Create a list to hold the indices of the unique values
+        indices = []
+
+        # Create a list of additional values to include based on the indices
+
+        combined_prb = prb.copy()
+
+        for i, value in enumerate(new_filenames):
+            # Check if the value is already in the combined list
+            if value not in combined_filenames:
+                # If it's not, add it to the end of the list and record its index
+                prb[value] = new_prb[value]
+                combined_filenames.append(value)
+
+        data = [combined_prb, combined_filenames]
+
+        return data
+
+
 
 @app.callback(
     Output(component_id="File", component_property='options'),
@@ -344,8 +393,6 @@ def update_dropdowns(data):
     vel_checklist = ['Ux', 'Uy', 'Uz', 'Time']
 
     return file_dropdown_options, vect_options, file_checklist, vel_checklist
-
-
 
 
 
@@ -426,7 +473,7 @@ def update_In(Sin_val, Lin_val):
 
 def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, NewTit_name, NewLeg_name):
 
-    if data == []:
+    if data is None:
         raise PreventUpdate
 
     if user_inputs == [] or user_inputs1 == []:
