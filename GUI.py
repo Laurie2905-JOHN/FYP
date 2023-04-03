@@ -162,7 +162,7 @@ app.layout = html.Div([
             # Allow multiple files to be uploaded
             multiple=True
         ),
-        dcc.Store(id='newfilestorage', storage_type='local'),
+        dcc.Store(id='newfilestorage', storage_type='memory'),
         dcc.Store(id='filestorage', storage_type='session'),
         html.Button("Upload new Files", id='newfile', n_clicks=0),
     ]),
@@ -222,7 +222,7 @@ app.layout = html.Div([
                 id="New_LegName",
                 type='text',
                 placeholder="Enter New Legend (seperate values with comma)",
-                debounce=True, persistence = True, persistence_type = 'session',
+                debounce=True,
             ),
 
             # Create a button for downloading data
@@ -242,7 +242,6 @@ app.layout = html.Div([
                 type='text',
                 placeholder="Enter New Title",
                 debounce=True,
-                persistence = True, persistence_type = 'session',
             ),
 
             # Create a button for downloading data
@@ -306,15 +305,11 @@ prevent_initial_call = True)
 
 def new_contents(contents, filenames):
 
-    print(ctx.triggered_id)
-
     if "submit_files" == ctx.triggered_id:
 
         try:
 
             all_contain_txt = all('txt' in name for name in filenames)
-
-            print(all_contain_txt == True and filenames and contents is not None)
 
             if all_contain_txt == True and filenames and contents is not None:
 
@@ -334,12 +329,13 @@ def new_contents(contents, filenames):
             print(e)
             return html.Div(['There was an error processing this file.'])
 
-    # else:
-    #
-    #     raise PreventUpdate
+    else:
+
+         raise PreventUpdate
 
 @app.callback(
     Output(component_id='filestorage', component_property='data'),
+    Output(component_id='newfilestorage', component_property='clear_data', allow_duplicate=True),
     Input(component_id='newfile', component_property='n_clicks'),
     State(component_id='newfilestorage', component_property='data'),
     State(component_id='filestorage', component_property='data'),
@@ -379,7 +375,6 @@ def content(n_clicks, newData, data):
             for i, value in enumerate(new_filenames):
                 # Check if the value is already in the combined list
                 if value not in combined_filenames:
-                    print(value)
                     # If it's not, add it to the end of the list and record its index
                     prb[value] = {value: {}}
                     prb[value] = new_prb[value]
@@ -387,11 +382,9 @@ def content(n_clicks, newData, data):
 
             data = [prb, combined_filenames]
 
-        prb = data[0]
-        print(type(prb['Example 1.txt']['t']))
+        newData = True
 
-
-        return data
+        return data, newData
 
 
 @app.callback(
@@ -413,7 +406,7 @@ def update_dropdowns(data):
 
     file_checklist = file_dropdown_options
 
-    vel_checklist = ['Ux', 'Uy', 'Uz', 'Time']
+    vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 
     return file_dropdown_options, vect_options, file_checklist, vel_checklist
 
@@ -629,161 +622,126 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 @app.callback(
         Output(component_id="download", component_property='data', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
+        State(component_id="file_name_input", component_property='value'),
         State(component_id="small_t", component_property='value'),
         State(component_id="big_t", component_property='value'),
         State(component_id="vel_checklist", component_property='value'),
         State(component_id="vel_checklist", component_property='options'),
         State(component_id="file_checklist", component_property='value'),
         State(component_id="type_checklist", component_property='value'),
-        State(component_id="file_name_input", component_property='value'),
         State(component_id='filestorage', component_property='data'),
         prevent_initial_call=True)
 
-def download(n_clicks,smallt, bigt, vels, vel_opts, file, type, name, data):
+def download(n_clicks, name, smallt, bigt, vels, vel_opts, file, file_type, data):
 
-
-    print(ctx.triggered_id)
-
-    if "btn_download" == ctx.triggered_id and type == '.txt':
+    if "btn_download" == ctx.triggered_id:
 
         prb = data[0]
 
-        dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
+        dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
 
         df = {file: {vel_opt: [] for vel_opt in vel_opts}}
 
-        if smallt != None or bigt != None:
+        if smallt is not None or bigt is not None:
+            t = np.array(dff[file]['t'])
 
-            t = dff[file]['t']
-
-            if smallt != None and bigt != None:
+            if smallt is not None and bigt is not None:
                 mask = (t >= smallt) & (t < bigt)
 
-            if smallt != None and bigt == None:
+            if smallt is not None and bigt == None:
                 mask = (t >= smallt)
 
-            if bigt != None and smallt == None:
+            if bigt is not None and smallt == None:
                 mask = (t < bigt)
-
             df[file]['t'] = t[mask]
             for vel in vels:
                 df[file][vel] = dff[file][vel][mask]
 
         else:
+
             df = dff
 
-        list_all = []
+        if file_type == '.txt':
 
-        if len(vels) == 1:
-            stacked = df[file][vels[0]]
-            list_all.append(stacked)
-            list_all = list_all[0]
-            str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
+            list_all = []
 
-        else:
-
-            if len(vels) == 2:
-                stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+            if len(vels) == 1:
+                stacked = df[file][vels[0]]
                 list_all.append(stacked)
+                list_all = list_all[0]
+                str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
 
-            if len(vels) == 3:
-                stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-                stacked2 = df[file][vels[2]].reshape(-1, 1)
-                stacked = np.concatenate((stacked1, stacked2), axis=1)
-                list_all.append(stacked)
+            else:
 
-            k = 0
-            if len(vels) == 4:
-                while k < len(vels) - 1:
-                    stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+                if len(vels) == 2:
+                    stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
                     list_all.append(stacked)
-                    k = k + 2
 
-            list_all = np.concatenate(list_all, axis=1)
-            str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
+                if len(vels) == 3:
+                    stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+                    stacked2 = df[file][vels[2]].reshape(-1, 1)
+                    stacked = np.concatenate((stacked1, stacked2), axis=1)
+                    list_all.append(stacked)
 
-        vels_str = ','.join(vels)
-        str_all = vels_str + '\n' + str_all
-        str_all = str_all.replace(' ', '')
-        str_all = str_all.replace('],', '')
-        str_all = str_all.replace(']]', '')
-        str_all = str_all.replace('[[', '')
-        str_all = str_all.replace('[', '')
-        str_all = str_all.replace(']', '')
+                k = 0
+                if len(vels) == 4:
+                    while k < len(vels) - 1:
+                        stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+                        list_all.append(stacked)
+                        k = k + 2
 
-        if name == None:
-            value = file.split('.')
-            filename = value[0] + ".txt"
-        else:
-            filename = name + ".txt"
+                list_all = np.concatenate(list_all, axis=1)
+                str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
-        text = dict(content=str_all, filename=filename)
+            vels_str = ','.join(vels)
+            str_all = vels_str + '\n' + str_all
+            str_all = str_all.replace(' ', '')
+            str_all = str_all.replace('],', '')
+            str_all = str_all.replace(']]', '')
+            str_all = str_all.replace('[[', '')
+            str_all = str_all.replace('[', '')
+            str_all = str_all.replace(']', '')
 
-        return text
-
-    if "btn_download" == ctx.triggered_id and [type == 'Excel' or 'CSV']:
-
-        dff = {file: {vel_opt: prb[file][vel_opt] for vel_opt in vel_opts}}
-
-        df = {file: {vel: [] for vel in vels}}
-
-        if smallt != None or bigt != None:
-
-            t = dff[file]['t']
-
-            if smallt != None and bigt != None:
-                mask = (t >= smallt) & (t < bigt)
-
-            if smallt != None and bigt == None:
-                mask = (t >= smallt)
-
-            if bigt != None and smallt == None:
-                mask = (t < bigt)
-
-            df[file]['t'] = t[mask]
-            for vel in vels:
-                df[file][vel] = dff[file][vel][mask]
-
-        else:
-
-            df = dff
-
-        # create an empty list to store dataframes
-        pandaData = []
-
-        # loop through each file and convert to dataframe
-        for file, df in df.items():
-            dfff = pd.DataFrame(df)
-            pandaData.append(dfff)
-
-        # concatenate all dataframes in the list
-        data = pd.concat(pandaData)
-
-        if name == None:
-            value = file.split('.')
-            filename = value[0]
-        else:
-            filename = name
-
-        if type == 'Excel':
-
-            if name == None:
+            if name is None or name == []:
                 value = file.split('.')
-                filename = value[0] + '.xlsx'
+                filename = value[0] + ".txt"
+
             else:
-                filename = name + '.xlsx'
 
-            return dcc.send_data_frame(data.to_excel, filename)
+                filename = name + ".txt"
 
-        if type == 'CSV':
+            text = dict(content=str_all, filename=filename)
 
-            if name == None:
+            return text
+
+        if file_type == 'Excel' or 'CSV':
+
+            # create an empty list to store dataframes
+            pandaData = []
+
+            # loop through each file and convert to dataframe
+            for file, df in df.items():
+                dfff = pd.DataFrame(df)
+                pandaData.append(dfff)
+            # concatenate all dataframes in the list
+            PDdata = pd.concat(pandaData)
+
+            if name is None or name == []:
                 value = file.split('.')
-                filename = value[0] + '.csv'
-            else:
-                filename = name + '.csv'
+                filename = value[0]
 
-            return dcc.send_data_frame(data.to_csv, filename)
+
+            else:
+                filename = name
+            print(file_type)
+
+            if file_type == 'Excel':
+                ty = '.xlsx'
+            return dcc.send_data_frame(PDdata.to_excel, filename + ty)
+
+            if file_type == 'CSV':
+                ty = '.csv'
+            return dcc.send_data_frame(PDdata.to_csv, filename + ty)
 
 @app.callback(
         Output(component_id="File", component_property='value', allow_duplicate=True),
