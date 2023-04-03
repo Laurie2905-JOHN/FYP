@@ -68,6 +68,10 @@ file = file_chooser()
 
 print(file_paths)
 
+# file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
+#
+# file_names = ['Example 1.txt', 'Example 2.txt']
+
 
 
 

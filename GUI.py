@@ -1,4 +1,5 @@
 from dash import Dash, dcc, Output, Input, ctx, State
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
@@ -237,7 +238,7 @@ app.layout = html.Div([
                 id="New_LegName",
                 type='text',
                 placeholder="Enter New Legend (seperate values with comma)",
-                debounce=True,
+                debounce=True, persistence = True, persistence_type = 'session',
             ),
 
             # Create a button for downloading data
@@ -257,6 +258,7 @@ app.layout = html.Div([
                 type='text',
                 placeholder="Enter New Title",
                 debounce=True,
+                persistence = True, persistence_type = 'session',
             ),
 
             # Create a button for downloading data
@@ -297,7 +299,7 @@ app.layout = html.Div([
             dcc.Input(id="big_t", min = 0, type="number", placeholder="Maximum Time", debounce = True,),
             html.Br(),
             html.Br(),
-            dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename", debounce=True, ),
+            dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename", debounce=True, persistence = True, persistence_type = 'session'  ),
 
         html.Br(),
 
@@ -318,49 +320,104 @@ app.layout = html.Div([
         Output(component_id='Vect', component_property='options'),
         Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
         Output(component_id="vel_checklist", component_property='options', allow_duplicate=True)],
-        [Input(component_id="submit_files", component_property='n_clicks'),
-        Input(component_id="File", component_property='options'),
-        Input(component_id='Vect', component_property='options'),
-        Input(component_id="file_checklist", component_property='options'),
-        Input(component_id="vel_checklist", component_property='options')
-        ], prevent_initial_call=True)
+        Output(component_id="submit_files_error", component_property='children'),
+        Output(component_id="submit_files", component_property='n_clicks'),
+        Input(component_id="submit_files", component_property='n_clicks'),
+        Input(component_id='clear_files', component_property='n_clicks'),
+        State(component_id="File", component_property='options'),
+        State(component_id='Vect', component_property='options'),
+        State(component_id="file_checklist", component_property='options'),
+        State(component_id="vel_checklist", component_property='options'),
+        prevent_initial_call=True)
 
-def upload_data(n_clicks, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
+def upload_data(n_clicks, n_clicks1, file_dropdown_options, vect_options, file_checklist, vel_checklist ):
 
-    # file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
+
+    print(ctx.triggered_id)
+    print(file_dropdown_options)
+    print(n_clicks)
+    print(vect_options)
+
+    if "clear_files" == ctx.triggered_id:
+        PreventUpdate
+
+    if file_dropdown_options != [] and vect_options != [] and n_clicks >= 1 and "submit_files" == ctx.triggered_id:
+
+        file_checklist = file_checklist
+
+        vel_checklist = vel_checklist
+
+        file_dropdown_options = file_dropdown_options
+
+        vect_options = vect_options
+
+        submit_text = 'Please clear before selecting new files'
+
+        n_clicks = n_clicks
+
+    elif file_dropdown_options == [] or vect_options == [] and n_clicks == 1 and "submit_files" == ctx.triggered_id:
+
+        # This block of code will run when the user clicks the submit button
+        file_chooser()
+
+        print('filepaths: ')
+
+        print(file_paths)
+
+        if file_paths == []:
+
+            print('whhdusadfhuias')
+
+            submit_text = 'Please select files before closing the application'
+
+            n_clicks = 0
+
+            file_checklist = file_checklist
+
+            vel_checklist = vel_checklist
+
+            file_dropdown_options = file_dropdown_options
+
+            vect_options = vect_options
+
+        else:
+
+            submit_text = ' '
+
+            vect_options = ['Ux', 'Uy', 'Uz']
+
+            file_checklist = file_dropdown_options
+
+            vel_checklist = ['Ux','Uy','Uz','t']
+
+            file_dropdown_options = file_names
+
+            global prb
+
+            prb = cal_velocity(file_paths)
+
+            n_clicks = n_clicks
+
+    print(n_clicks)
+
     #
-    # file_names = ['Example 1.txt', 'Example 2.txt']
+    # elif file_dropdown_options == [] or vect_options == [] and n_clicks >= 1 and "submit_files" == ctx.triggered_id:
+    #
+    #     print('whdsdsy')
+    #
+    #     file_checklist = file_checklist
+    #
+    #     vel_checklist = vel_checklist
+    #
+    #     file_dropdown_options = file_dropdown_options
+    #
+    #     vect_options = vect_options
+    #
+    #     submit_text = 'Please select files before closing the application'
+    #
+    #     n_clicks = 0
 
-    file_checklist = file_checklist
-
-    vel_checklist = vel_checklist
-
-    file_dropdown_options = file_dropdown_options
-
-    vect_options = vect_options
-
-    if n_clicks <= 1:
-
-        if file_dropdown_options == [] and vect_options == []:
-
-            if "submit_files" == ctx.triggered_id:
-
-                # This block of code will run when the user clicks the submit button
-                file_chooser()
-
-                vect_options = ['Ux', 'Uy', 'Uz']
-
-                file_dropdown_options = file_names
-
-                global prb
-
-                prb = cal_velocity(file_paths)
-
-                file_checklist = file_dropdown_options
-
-                vel_checklist = ['Ux','Uy','Uz','t']
-
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist, submit_text, n_clicks
 
 # @app.callback(
 #         Output(component_id="File", component_property='options'),
@@ -506,16 +563,13 @@ def update_In(Sin_val, Lin_val):
         Input(component_id='title_onoff', component_property='value'),
         Input(component_id='btn_title_update', component_property='n_clicks'),
         Input(component_id='btn_leg_update', component_property='n_clicks'),
-        Input(component_id='submit_files', component_property='n_clicks'),
         State(component_id='New_Titlename', component_property='value'),
         State(component_id='New_LegName', component_property='value')],
         prevent_initial_call = True)
 
-def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, n_clicks2, NewTit_name, NewLeg_name):
+def update_dropdowns(user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, NewTit_name, NewLeg_name):
 
     if user_inputs == [] or user_inputs1 == []:
-
-        fig = go.Figure()
 
         fig = {}
 
@@ -806,11 +860,11 @@ def download_EXCEL(n_clicks,smallt, bigt, vels, vel_opts, file, type, name):
         Output(component_id='New_Titlename', component_property='value', allow_duplicate=True),
         Output(component_id='New_LegName', component_property='value', allow_duplicate=True),
         Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
-
-
-        # Output(component_id="small_t", component_property='value'),
-        # Output(component_id="big_t", component_property='value'),
+        Output(component_id="small_t", component_property='value'),
+        Output(component_id="big_t", component_property='value'),
+        Output(component_id="line_thick", component_property='value', allow_duplicate=True),
         Output(component_id="submit_files", component_property='n_clicks', allow_duplicate=True),
+        Output(component_id="submit_files_error", component_property='children', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
         prevent_initial_call=True)
 
@@ -834,13 +888,26 @@ def clear_files(n_clicks):
 
         all_vel_checklist = []
 
-        # in_val_S = "Minimum Time"
-        # #
-        # in_val_L = "Maximum Time"
+        in_val_S = ' '
+
+        in_val_L = ' '
 
         n_clicks = 0
 
-    return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_vel_checklist, n_clicks
+        html.A()
+
+        title_name = ''
+
+        new_legname = ''
+
+        file_name_inp = ''
+
+        line_thickness = 1
+
+        submit_files_text = 'Please select files'
+
+
+    return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_vel_checklist, title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness, n_clicks, submit_files_text
 
 
 # Run app
