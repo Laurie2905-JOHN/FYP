@@ -296,10 +296,9 @@ app.layout = html.Div([
 
             html.I(
                 "Input the maximum and minimum time values for download"),
-            html.Div(id="big_min_value"),
             html.Br(),
             dcc.Input(id="small_t", type="number", placeholder = "Minimum Time", debounce = True, style={'marginRight': '10px'}),
-            dcc.Input(id="big_t", type="number", placeholder="Maximum Time", debounce = True,),
+            dcc.Input(id="big_t",min = 0, type="number", placeholder="Maximum Time", debounce = True,),
             html.Br(),
             html.Br(),
             dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
@@ -571,34 +570,30 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 @app.callback(
         Output(component_id="big_t", component_property='value', allow_duplicate=True),
         Output(component_id="small_t", component_property='value', allow_duplicate=True),
-        Output(component_id='big_min_value', component_property='children'),
+        #Output(component_id='big_min_value', component_property='children'),
         Input(component_id="small_t", component_property='value'),
         Input(component_id="big_t", component_property='value'),
-        Input(component_id="small_t", component_property='min'),
-        Input(component_id="big_t", component_property='max'),
+        # Input(component_id="small_t", component_property='min'),
+        # Input(component_id="big_t", component_property='max'),
         prevent_initial_call=True)
 
 
-def update_In(Sin_val, Lin_val, Smin, Lmax):
+def update_In(Sin_val, Lin_val):
 
-    if Smin or Lmax is None:
-        raise PreventUpdate
+    if Lin_val is None and Sin_val is None:
+         raise PreventUpdate
 
-    if Lin_val == None:
+    if Lin_val is None:
+        Lin_val = 0
 
-        Lin_val = Sin_val + 1
-
-    if Sin_val == None:
-
-        Sin_val = Lin_val - 1
+    if Sin_val is None:
+        Sin_val = 0
 
     if Lin_val - Sin_val < 1:
 
         Lin_val = Sin_val + 1
 
-    download_text = 'The time range available to input based on the selected data is ' + str(Smin) + ' and ' + str(Lmax)
-    print(download_text)
-    return Lin_val, Sin_val
+    return Lin_val, Sin_val,
 
 
 @app.callback(
@@ -606,10 +601,6 @@ def update_In(Sin_val, Lin_val, Smin, Lmax):
         Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
-        Output(component_id="small_t", component_property ='min'),
-        Output(component_id="small_t", component_property='max'),
-        Output(component_id="big_t", component_property='min'),
-        Output(component_id="big_t", component_property='max'),
         Output(component_id='btn_title_update', component_property='n_clicks'),
         Output(component_id='btn_leg_update', component_property='n_clicks'),
         Output(component_id='alert', component_property='children', allow_duplicate=True),
@@ -654,14 +645,6 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 
         value =[1, 10]
 
-        Smax_in = max_sl-1
-
-        Smin_in = min_sl
-
-        Lmax_in = max_sl
-
-        Lmin_in = min_sl+1
-
     else:
 
         df = data[0]
@@ -682,7 +665,7 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
                     V = df[user_input][user_input1]
                     t = df[user_input]['t']
                     max1.append(np.round(np.amax(t)))
-                    min1.append(np.round(np.amin(V)))
+                    min1.append(np.round(np.amin(t)))
                     fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
                                             line=dict(
                                             width=line_thick),
@@ -701,7 +684,7 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
                     V = np.array(df[user_input][user_input1])
                     t = np.array(df[user_input]['t'])
                     max1.append(np.round(np.amax(t)))
-                    min1.append(np.round(np.amin(V)))
+                    min1.append(np.round(np.amin(t)))
                     mask = (t >= time_input[0]) & (t < time_input[1])
                     t2 = t[mask]
                     V2 = V[mask]
@@ -715,11 +698,6 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
             value = time_input
             min_sl = min(min1)
             max_sl = max(max1)
-
-        Smax_in = max_sl-1
-        Smin_in = min_sl
-        Lmax_in = max_sl
-        Lmin_in = min_sl+1
 
         fig.update_layout(
             xaxis_title="Time (s)",
@@ -783,8 +761,7 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 
             fig.layout.update(showlegend=True)
 
-
-    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, n_clicks, n_clicks1, error, color, open1
+    return fig, min_sl, max_sl, value, n_clicks, n_clicks1, error, color, open1,
 
 
 @app.callback(
@@ -807,8 +784,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
     if "btn_download" == ctx.triggered_id:
 
-        print(file)
-
         if file == '':
 
             error = 'No data to download'
@@ -821,7 +796,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
         if vels == [] or vels is None:
 
-            error = 'No Velocity Selected'
+            error = 'No data selected'
 
             color = 'danger'
 
@@ -831,31 +806,53 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
         else:
 
-            error = file_type + ' File Downloaded'
-
-            color = 'primary'
-
-            open1 = True
-
             prb = data[0]
 
             dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
 
             df = {file: {vel: [] for vel in vels}}
 
-
             if smallt is not None or bigt is not None:
 
                 t = np.array(dff[file]['t'])
+                max1 = np.amax(t)
+                min1 = np.amin(t)
 
                 if smallt is not None and bigt is not None:
-                    mask = (t >= smallt) & (t < bigt)
 
-                if smallt is not None and bigt == None:
-                    mask = (t >= smallt)
+                    smallt_error = [
+                    file_type + ' File Downloaded.\n' + 'The data has been cut to the minimum time limit because it\n'
+                    'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
 
-                if bigt is not None and smallt == None:
-                    mask = (t < bigt)
+                    bigt_error = [
+                        file_type + ' File Downloaded.\n' + 'The data has been cut to the maximum time limit because it\n'
+                        'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
+
+                    both_t_error = [
+                        file_type + ' File Downloaded. Warning: Both minimum and maximum time limits are outside the range\n'
+                                    'of available raw time data. The data has been trimmed to the minimum and maximum\n'
+                                    'time limits. Please adjust your time limits accordingly.', 'primary']
+
+                    both_t_NO_error = [file_type + ' File Downloaded.\n' + 'Data has been cut to the specified limits', 'primary']
+
+                    print(smallt <= min1)
+
+                    if smallt < min1 and bigt > max1:
+                        error1 = both_t_error
+                        mask = (t >= min1) & (t <= max1)
+
+                    elif smallt < min1:
+                        error1 = smallt_error
+                        mask = (t >= min1)
+
+                    elif bigt > max1:
+                        error1 = bigt_error
+                        mask = (t <= max1)
+
+                    else:
+                        mask = (t >= smallt) & (t < bigt)
+                        error1 = both_t_NO_error
+
 
                 for vel in vels:
                     df[file][vel] = dff[file][vel][mask]
@@ -864,6 +861,10 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
                 for vel in vels:
                     df[file][vel] = dff[file][vel]
+
+                error1 = [file_type + ' File Downloaded', 'primary']
+
+                open1 = True
 
             if file_type == '.txt':
 
@@ -915,7 +916,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
                 text = dict(content=str_all, filename = filenameTXT )
 
-
             if file_type == 'Excel' or 'CSV':
 
                 # create an empty list to store dataframes
@@ -942,7 +942,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                     ty = '.csv'
                     text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
 
-            return text, error, open1, color
+            return text, error1[0], True, error1[1],
 
 @app.callback(
         Output(component_id="File", component_property='value', allow_duplicate=True),
