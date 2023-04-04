@@ -2,6 +2,7 @@
 
 #file_names = ['Example 1.txt', 'Example 2.txt']
 from dash import Dash, dcc, Output, Input, ctx, State
+from dash.dash import no_update
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from dash import dcc
@@ -239,7 +240,7 @@ app.layout = html.Div([
         dcc.Input(
                 id="New_LegName",
                 type='text',
-                placeholder="Enter New Legend (seperate values with comma)",
+                placeholder="Enter New Legend",
                 debounce=True,
             ),
 
@@ -282,7 +283,7 @@ app.layout = html.Div([
 
         # Create a checklist for selecting a file type
         html.Label("Select File Type"),
-        dcc.RadioItems(['CSV', 'Excel', '.txt'], id="type_checklist", inline=True),
+        dcc.RadioItems(options = ['CSV', 'Excel', '.txt'], value = 'CSV', id="type_checklist", inline=True),
 
 
         # Create a label for selecting a velocity
@@ -290,7 +291,7 @@ app.layout = html.Div([
 
         # Create a checklist for selecting a velocity
             dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
-            dcc.Checklist(value=[], id="vel_checklist", inline=True),
+            dcc.Checklist( value = [], id="vel_checklist", inline=True),
 
 
             html.I(
@@ -330,31 +331,47 @@ def new_contents(contents, filenames):
 
         try:
 
-            all_contain_txt = all('txt' in name for name in filenames)
+            contain_text = []
 
-            if all_contain_txt == True and filenames and contents is not None:
+            for name in filenames:
+                if 'txt' not in name:
+                    contain_text.append(name)
 
-                prb = cal_velocity(contents, filenames)
+            if contain_text != []:
 
-                newdata = [prb, filenames]
-
-                filename_str = ', '.join(filenames)
-
-                error = filename_str + ' selected, please upload for analysis'
-
-                color = "primary"
-
-                open1 = True
-
-            else:
-
-                newdata = []
-
-                error = 'There was an error processing the files, please try again.'
+                error = 'There was an error processing files: (' + ', '.join(contain_text) + ') ' + '\nPlease check file type'
 
                 color = "danger"
 
                 open1 = True
+
+                newdata = []
+
+            else:
+
+                if filenames and contents is not None:
+
+                    prb = cal_velocity(contents, filenames)
+
+                    newdata = [prb, filenames]
+
+                    filename_str = ', '.join(filenames)
+
+                    error = filename_str + ' selected, please upload for analysis'
+
+                    color = "primary"
+
+                    open1 = True
+
+                else:
+
+                    newdata = []
+
+                    error = 'There was an error processing the files, please try again.'
+
+                    color = "danger"
+
+                    open1 = True
 
         except Exception:
 
@@ -436,7 +453,8 @@ def content(n_clicks, newData, data):
 
                         error = ', '.join(repeated_value) + ' not uploaded as repeated filenames were found'
                     else:
-                        error = ', '.join(new_value) + ' uploaded successfully ,but' + ', '.join(repeated_value) + ' not uploaded as repeated filenames were found'
+                        error = ', '.join(new_value) + ' uploaded successfully ,but' + ', '.join(repeated_value) +\
+                                ' not uploaded as repeated filenames were found'
 
                     color = "danger"
 
@@ -454,7 +472,7 @@ def content(n_clicks, newData, data):
 
             color = "danger"
 
-            data =  data
+            data = data
 
         newData = True
 
@@ -498,6 +516,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
     Input(component_id='filestorage', component_property='data'),
     prevent_initial_call=True)
 
@@ -516,7 +535,9 @@ def update_dropdowns(data):
 
     vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check
+    file_val = file_checklist[0]
+
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check, file_val
 
 
 
@@ -966,11 +987,9 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
         all_vel_checklist = []
 
-        in_val_S = ' '
+        in_val_S = 0
 
-        in_val_L = ' '
-
-        n_clicks = 0
+        in_val_L = 1
 
         title_name = ''
 
