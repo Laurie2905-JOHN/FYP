@@ -136,10 +136,11 @@ app.layout = dbc.Container([
 
 ]),
 
-    dbc.Row(
+    dbc.Row([
 
 
             dbc.Col(
+
 
 
                 dcc.Upload(
@@ -158,9 +159,9 @@ app.layout = dbc.Container([
                                 'margin': '10px'
                             },
                             # Allow multiple files to be uploaded
-                            multiple=True)),
+                            multiple=True), width = 3),
 
-            dbc.Col(
+            dbc.Col([
 
                     dbc.Row(
 
@@ -183,9 +184,9 @@ app.layout = dbc.Container([
                                     className="me-1",
                                     n_clicks=0),
                         ),
-                            width = 3),
+                            ], width = 3),
 
-                        dbc.Col(
+                        dbc.Col([
 
                             dbc.Row(
 
@@ -202,25 +203,34 @@ app.layout = dbc.Container([
                                 html.Label("Select files to upload"),
                                 dcc.Checklist(["All"], [], id="all_upload_file_checklist", inline=True),
                                 dcc.Checklist(value=[], id="upload_file_checklist", inline=True),
-
                             ),
-                        ),
-                            dbc.Col(
+                    ], width = 3),
 
-                                dbc.Alert(
-                                    id="alert",
-                                    is_open=False,
-                                    dismissable=True,
-                                    duration=20000,
-                                ),
-                        )
+
+                    dbc.Col(
+
+                        dbc.Row(
+
+                        html.Label('Download Options'),
+
+                        ),
+
+                        width = 3),
+
+                    ]),
+
+
+
+                        dbc.Alert(
+                            id="alert",
+                            is_open=False,
+                            dismissable=True,
+                            duration=20000,
+                        ), width = 3,
+                    ),
+        ]),
 
         ),
-
-    dbc.Row(
-
-        dbc.Row(
-
             dbc.Col(
 
                 dbc.Alert(
@@ -228,158 +238,224 @@ app.layout = dbc.Container([
                     is_open=False,
                     dismissable=True,
                     duration=20000,
-                ),
-
-
-    ]),
+                ), width = 6),
 
 
 
+dbc.Row(
 
+    dbc.Col(
 
+        # Create a range slider component
+        html.Label("Choose Time", style={'text-align': 'center'}),
 
+        dcc.RangeSlider(
+            id='time-range',
+            min=1,
+            max=10,
+            value=[1, 10],
+            tooltip={"placement": "bottom", "always_visible": True},
+            updatemode='drag',
+        ), width=3),
 
-    html.Br(),
-    html.Br(),
+    dbc.Col(
 
+        daq.Slider(min=0.5, max=5,
+                   value=1,
+                   step=0.1,
+                   id="line_thick",
+                   marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
+                   updatemode='drag'), width=3),
 
+),
 
+    dbc.Row(
+        dbc.Col(
 
-    # Create a range slider component
-    html.Label("Choose Time", style={'text-align': 'center'}),
+            html.Label("Choose DataSet"),
+            dcc.Dropdown(
+                id="File",
+                options=[],
+                multi=True,
+                value=[],
+                placeholder="Select a dataset",
+                style={'width': "50%"}
+            ), width = 3),
 
-    dcc.RangeSlider(
-        id='time-range',
-        min=1,
-        max=10,
-        value=[1, 10],
-        tooltip={"placement": "bottom", "always_visible": True},
-        updatemode='drag',
+        dbc.Col(
+
+            # Create a dropdown for selecting a velocity
+            html.Label("Choose Velocity"),
+            dcc.Dropdown(
+                id="Vect",
+                options=[],
+                multi=True,
+                value=[],
+                placeholder="Select a velocity",
+                style={'width': "50%"}
+            ), width = 3),
+
     ),
 
+    dbc.Row(
 
-
-
-        # Create a dropdown for selecting a dataset
-        html.Label("Choose DataSet"),
-        dcc.Dropdown(
-            id="File",
-            options=[],
-            multi=True,
-            value=[],
-            placeholder="Select a dataset",
-            style={'width': "50%"}
-        ),
-
-        # Create a dropdown for selecting a velocity
-        html.Label("Choose Velocity"),
-        dcc.Dropdown(
-            id="Vect",
-            options=[],
-            multi=True,
-            value=[],
-            placeholder="Select a velocity",
-            style={'width': "50%"}
-        ),
-
-        html.Br(),
-
-        html.Label("Graph Options", style={'text-align': 'left'}),
-
-        html.Label("Line Thickness", style={'text-align': 'left'}),
-
-        daq.Slider(min = 0.5,max = 5,
-                   value = 1,
-                   step=0.1,
-            id="line_thick",
-            marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
-            updatemode = 'drag'),
-
-        html.Br(),
-
-
-        html.Div(children = [
+        dbc.Col(
 
         html.Label("Legend", style={'text-align': 'left'}),
 
         dcc.RadioItems(id ='legend_onoff', value = 'On', options = ['On', 'Off']),
 
-        dcc.Input(
-                id="New_LegName",
-                type='text',
-                placeholder="Enter New Legend",
-                debounce=True,
-            ),
+dbc.Row(
 
-            # Create a button for downloading data
-        html.Button("Update Legend", id="btn_leg_update", n_clicks=0, ),
+    dcc.Input(
+        id="New_LegName",
+        type='text',
+        placeholder="Enter New Legend",
+        debounce=True,
+    ),
 
-        ]),
+    # Create a button for downloading data
+    html.Button("Update Legend", id="btn_leg_update", n_clicks=0),
+),
 
 
-        html.Div(children=[
+    width = 3),
+
+        dbc.Col(
 
             html.Label("Title", style={'text-align': 'left'}),
 
             dcc.RadioItems(id = 'title_onoff', value = 'On', options = ['On', 'Off']),
 
-            dcc.Input(
-                id="New_Titlename",
-                type='text',
-                placeholder="Enter New Title",
-                debounce=True,
+            dbc.Row(
+
+                dcc.Input(
+                    id="New_Titlename",
+                    type='text',
+                    placeholder="Enter New Title",
+                    debounce=True,
+                ),
+
+                # Create a button for downloading data
+                html.Button("Update Title", id="btn_title_update", n_clicks=0, ),
+
             ),
 
-            # Create a button for downloading data
-            html.Button("Update Title", id="btn_title_update", n_clicks=0, ),
+            width=3),
 
-        ]),
+        ),
+
+    dbc.Col([
+
+        dbc.Row(
 
         # Create a label for downloading data
         html.Label("Download Data"),
 
-        # Create a label for selecting a data file
-        html.Label("Select Data File"),
+        ),
 
-        # Create a checklist for selecting a data file
-        dcc.RadioItems(value='', id="file_checklist", inline=True),
+        dbc.Row(
 
-        # Create a checklist for selecting a file type
-        html.Label("Select File Type"),
-        dcc.RadioItems(options = ['CSV', 'Excel', '.txt'], value = 'CSV', id="type_checklist", inline=True),
+            # Create a label for downloading data
+            html.Label("Error Instructions etc"),
+
+        ),
+
+        dbc.Col([
+
+            dbc.Row(
+
+            # Create a label for selecting a data file
+            html.Label("Select Data File"),
+
+            ),
+
+            dbc.Row(
+
+                # Create a label for selecting a data file
+                dcc.RadioItems(value='', id="file_checklist", inline=True),
+
+            ),
+
+            ], width = 3),
+
+            dbc.Col([
+
+                dbc.Row(
+
+                    # Create a label for selecting a data file
+                    html.Label("Select File Type"),
+
+                ),
+
+                dbc.Row(
+
+                    # Create a label for selecting a data file
+                    dcc.RadioItems(options=['CSV', 'Excel', '.txt'], value='CSV', id="type_checklist", inline=True),
+
+                ),
+
+            ], width=1),
+
+            dbc.Col([
+
+                dbc.Row(
+
+                    # Create a label for selecting a velocity
+                    html.Label("Select Velocity"),
+
+                ),
+
+                dbc.Row(
+
+                    # Create a checklist for selecting a velocity
+                    dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
+                    dcc.Checklist(value=[], id="vel_checklist", inline=True),
+
+                ),
+
+            ], width=3),
+
+            dbc.Row(
 
 
-        # Create a label for selecting a velocity
-        html.Label("Select Velocity"),
+            dbc.Col(
 
-        # Create a checklist for selecting a velocity
-            dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
-            dcc.Checklist( value = [], id="vel_checklist", inline=True),
+                dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
 
+            width = 3),
 
-            html.I(
-                "Input the maximum and minimum time values for download"),
-            html.Br(),
+            #html.I("Time Range"),
+
+            dbc.Col(
+
             dcc.Input(id="small_t", type="number", placeholder = "Minimum Time", debounce = True, style={'marginRight': '10px'}),
+
+            width =1.5),
+
+            dbc.Col(
+
             dcc.Input(id="big_t",min = 0, type="number", placeholder="Maximum Time", debounce = True,),
-            html.Br(),
-            html.Br(),
-            dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
 
-        html.Br(),
+            width=1.5),
 
-        html.Br(),
+    dbc.Row(
+
+        dbc.Col(
 
         # Create a button for downloading data
         html.Button("Download", id="btn_download"),
 
-        # Create a component for downloading data
-        dcc.Download(id="download"),
+        width = 3),
 
-        dcc.Store(id='newfilestorage', storage_type='memory'),
-        dcc.Store(id='filestorage', storage_type='session'),
+
 
     ])
+
+    # Create a component for downloading data
+    dcc.Download(id="download"),
+    dcc.Store(id='newfilestorage', storage_type='memory'),
+    dcc.Store(id='filestorage', storage_type='session'),
 
 
 @app.callback(
