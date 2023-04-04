@@ -118,16 +118,132 @@ def cal_velocity(contents, file_names):
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # Define layout of the app
-app.layout = html.Div([
+app.layout = dbc.Container([
+    dbc.Row([
+        # Create a title
+        dbc.Col(html.H1("BARNACLE SENSOR ANALYSIS DASHBOARD",
+                        className='text-center font-weight-bolder, mb-1'),
+                width = 12)
+    ]),
 
-    # Create a heading
-    html.H1("BARNACLE SENSOR ANALYSIS", style={'text-align': 'center'}),
+    dbc.Row([
 
-    # Create a graph component
-    dcc.Graph(id='Velocity_Graph', figure={}),
+        dbc.Col(dcc.Graph(id='Velocity_Graph', figure={}),
+                            width = 12),
+
+]),
+
+    dbc.Row(
+
+
+            dbc.Col(
+
+
+                dcc.Upload(
+                            id='submit_files',
+                            children=html.Div([
+                                'Drag and Drop or ',
+                                html.A('Select Files')
+                            ]),
+                            style={
+                                'height': '60px',
+                                'lineHeight': '60px',
+                                'borderWidth': '1px',
+                                'borderStyle': 'dashed',
+                                'borderRadius': '5px',
+                                'textAlign': 'center',
+                                'margin': '10px'
+                            },
+                            # Allow multiple files to be uploaded
+                            multiple=True)),
+
+            dbc.Col(
+
+                    dbc.Row(
+
+                        dbc.Button(
+                                    "Upload new Files",
+                                    id='newfile',
+                                    outline=True,
+                                    color="primary",
+                                    className="me-1",
+                                    n_clicks=0),
+                    ),
+
+                    dbc.Row(
+
+                        dbc.Button(
+                                    "Clear Files",
+                                    id='clear_files',
+                                    outline=True,
+                                    color="secondary",
+                                    className="me-1",
+                                    n_clicks=0),
+                        ),
+                            width = 3),
+
+                        dbc.Col(
+
+                            dbc.Row(
+
+                                # Create a checklist for selecting a velocity
+                                html.Label("Select files to clear"),
+                                dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
+                                dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
+
+                            ),
+
+                            dbc.Row(
+
+                                # Create a checklist for selecting a velocity
+                                html.Label("Select files to upload"),
+                                dcc.Checklist(["All"], [], id="all_upload_file_checklist", inline=True),
+                                dcc.Checklist(value=[], id="upload_file_checklist", inline=True),
+
+                            ),
+                        ),
+                            dbc.Col(
+
+                                dbc.Alert(
+                                    id="alert",
+                                    is_open=False,
+                                    dismissable=True,
+                                    duration=20000,
+                                ),
+                        )
+
+        ),
+
+    dbc.Row(
+
+        dbc.Row(
+
+            dbc.Col(
+
+                dbc.Alert(
+                    id="alert",
+                    is_open=False,
+                    dismissable=True,
+                    duration=20000,
+                ),
+
+
+    ]),
+
+
+
+
+
+
+
+    html.Br(),
+    html.Br(),
+
+
+
 
     # Create a range slider component
     html.Label("Choose Time", style={'text-align': 'center'}),
@@ -141,56 +257,7 @@ app.layout = html.Div([
         updatemode='drag',
     ),
 
-    # Create a div component
-    html.Div(children=[
 
-        dcc.Upload(
-            id='submit_files',
-            children=html.Div([
-                'Drag and Drop or ',
-                html.A('Select Files')
-            ]),
-            style={
-                'width': '100%',
-                'height': '60px',
-                'lineHeight': '60px',
-                'borderWidth': '1px',
-                'borderStyle': 'dashed',
-                'borderRadius': '5px',
-                'textAlign': 'center',
-                'margin': '10px'
-            },
-            # Allow multiple files to be uploaded
-            multiple=True
-        ),
-        dcc.Store(id='newfilestorage', storage_type='memory'),
-        dcc.Store(id='filestorage', storage_type='session'),
-        html.Button("Upload new Files", id='newfile', n_clicks=0),
-    ]),
-
-
-        # Create a button to clear files
-        html.Button("Clear Files", id='clear_files', n_clicks=0),
-
-        html.Label("Select files to clear"),
-
-        # Create a checklist for selecting a velocity
-        dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
-        dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
-
-        html.Br(),
-        html.Br(),
-
-        html.Div(
-            [
-                html.Hr(),
-                dbc.Alert(
-                    id = "alert",
-                    is_open = False,
-                    dismissable=True,
-                    duration = 20000,
-                ),
-                ]),
 
 
         # Create a dropdown for selecting a dataset
@@ -268,10 +335,6 @@ app.layout = html.Div([
 
         ]),
 
-        html.Br(),
-
-        html.Br(),
-
         # Create a label for downloading data
         html.Label("Download Data"),
 
@@ -313,6 +376,9 @@ app.layout = html.Div([
         # Create a component for downloading data
         dcc.Download(id="download"),
 
+        dcc.Store(id='newfilestorage', storage_type='memory'),
+        dcc.Store(id='filestorage', storage_type='session'),
+
     ])
 
 
@@ -321,11 +387,12 @@ app.layout = html.Div([
         Output(component_id='alert', component_property='children'),
         Output(component_id='alert', component_property='color'),
         Output(component_id='alert', component_property='is_open'),
+        Input(component_id="upload_file_checklist", component_property='value'),
         Input(component_id = 'submit_files',component_property = 'contents'),
         State(component_id = 'submit_files', component_property ='filename'),
-prevent_initial_call = True)
+        prevent_initial_call = True)
 
-def new_contents(contents, filenames):
+def new_contents(filenames, contents, ALL_filenames):
 
     if "submit_files" == ctx.triggered_id:
 
@@ -333,9 +400,9 @@ def new_contents(contents, filenames):
 
             contain_text = []
 
-            for name in filenames:
-                if 'txt' not in name:
-                    contain_text.append(name)
+            for name1 in filenames:
+                if 'txt' not in name1:
+                    contain_text.append(name1)
 
             if contain_text != []:
 
@@ -387,7 +454,22 @@ def new_contents(contents, filenames):
 
     else:
 
-         raise PreventUpdate
+        contain_text = []
+
+        for name in ALL_filenames:
+            if 'txt' not in name:
+                contain_text.append(name)
+
+        error = 'WARNING: Files: (' + ', '.join(
+            contain_text) + ') ' + '\n  unsupported file type. \n Please upload .txt files'
+
+        color = "danger"
+
+        open1 = True
+
+        return no_update, error, color, open1
+
+
 
 @app.callback(
     Output(component_id='filestorage', component_property='data'),
@@ -481,6 +563,32 @@ def content(n_clicks, newData, data):
         return data, newData, error, color, open1
 
 @app.callback(
+        Output(component_id="upload_file_checklist", component_property='value'),
+        Output(component_id='all_upload_file_checklist', component_property='value'),
+        Input(component_id="upload_file_checklist", component_property='value'),
+        Input(component_id='all_upload_file_checklist', component_property='value'),
+        Input(component_id = 'submit_files', component_property ='filename'),
+        prevent_initial_call=True
+        )
+
+def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploaded_filenames):
+
+    if Uploaded_filenames is None:
+        raise PreventUpdate
+
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if input_id == "upload_file_check":
+
+        all_upload_file_check = ["All"] if set(upload_file_check) == set(Uploaded_filenames) else []
+
+    else:
+
+        upload_file_check = Uploaded_filenames if all_upload_file_check else []
+
+    return upload_file_check, all_upload_file_check
+
+@app.callback(
         Output(component_id="clear_file_checklist", component_property='value'),
         Output(component_id='all_clear_file_checklist', component_property='value'),
         Input(component_id="clear_file_checklist", component_property='value'),
@@ -507,8 +615,6 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
         clear_file_check = file_options if all_clear_check else []
 
     return clear_file_check, all_clear_check
-
-
 
 @app.callback(
     Output(component_id="File", component_property='options'),
