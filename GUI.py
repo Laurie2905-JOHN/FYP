@@ -168,9 +168,15 @@ app.layout = html.Div([
     ]),
 
 
-
         # Create a button to clear files
         html.Button("Clear Files", id='clear_files', n_clicks=0),
+
+        html.Label("Select files to clear"),
+
+        # Create a checklist for selecting a velocity
+        dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
+        dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
+
         html.Br(),
         html.Br(),
 
@@ -456,12 +462,42 @@ def content(n_clicks, newData, data):
 
         return data, newData, error, color, open1
 
+@app.callback(
+        Output(component_id="clear_file_checklist", component_property='value'),
+        Output(component_id='all_clear_file_checklist', component_property='value'),
+        Input(component_id="clear_file_checklist", component_property='value'),
+        Input(component_id='all_clear_file_checklist', component_property='value'),
+        Input(component_id='filestorage', component_property='data'),
+        prevent_initial_call=True
+        )
+
+def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
+
+    if data is None:
+        raise PreventUpdate
+
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    file_options = data[1]
+
+    if input_id == "clear_file_checklist":
+
+        all_clear_check = ["All"] if set(clear_file_check) == set(file_options) else []
+
+    else:
+
+        clear_file_check = file_options if all_clear_check else []
+
+    return clear_file_check, all_clear_check
+
+
 
 @app.callback(
     Output(component_id="File", component_property='options'),
     Output(component_id='Vect', component_property='options'),
     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
     Input(component_id='filestorage', component_property='data'),
     prevent_initial_call=True)
 
@@ -476,9 +512,11 @@ def update_dropdowns(data):
 
     file_checklist = file_dropdown_options
 
+    clear_file_check = file_checklist
+
     vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check
 
 
 
@@ -556,23 +594,27 @@ def update_In(Sin_val, Lin_val):
         Input(component_id='title_onoff', component_property='value'),
         Input(component_id='btn_title_update', component_property='n_clicks'),
         Input(component_id='btn_leg_update', component_property='n_clicks'),
+        State(component_id='alert', component_property='children'),
+        State(component_id='alert', component_property='color'),
+        State(component_id='alert', component_property='is_open'),
         State(component_id='New_Titlename', component_property='value'),
         State(component_id='New_LegName', component_property='value')],
         prevent_initial_call = True)
 
-def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, NewTit_name, NewLeg_name):
-
+def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, error,
+                     color, open1, NewTit_name, NewLeg_name):
 
     if data is None or {}:
         raise PreventUpdate
 
-    error = ''
-
-    color = ''
-
-    open1 = False
 
     if user_inputs == [] or user_inputs1 == []:
+
+        error = error
+
+        color = color
+
+        open1 = open1
 
         fig = {}
 
@@ -851,17 +893,62 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id='New_Titlename', component_property='value', allow_duplicate=True),
         Output(component_id='New_LegName', component_property='value', allow_duplicate=True),
         Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
-        Output(component_id="small_t", component_property='value'),
-        Output(component_id="big_t", component_property='value'),
+        Output(component_id="small_t", component_property='value', allow_duplicate=True),
+        Output(component_id="big_t", component_property='value', allow_duplicate=True),
         Output(component_id="line_thick", component_property='value', allow_duplicate=True),
-        Output(component_id="filestorage", component_property='clear_data'),
-        Output(component_id='newfilestorage', component_property='clear_data'),
+        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+        Output(component_id='newfilestorage', component_property='clear_data', allow_duplicate=True),
+        Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id='alert', component_property='children', allow_duplicate=True),
+        Output(component_id='alert', component_property='color', allow_duplicate=True),
+        Output(component_id='alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='data', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
+        State(component_id='filestorage', component_property='data'),
+        State(component_id="clear_file_checklist", component_property='value'),
+        State(component_id="all_clear_file_checklist", component_property='value'),
         prevent_initial_call=True)
 
-def clear_files(n_clicks):
+def clear_files(n_clicks, maindata, whatclear, allclear):
 
     if "clear_files" == ctx.triggered_id:
+
+        if allclear == ['All']:
+
+            newmaindata = []
+
+            clear_data_main = True
+
+            clear_data = True
+
+            error = 'All files cleared'
+
+        elif len(whatclear) >= 1:
+
+            df1 = maindata[0]
+            df2 = maindata[1]
+
+            for what in whatclear:
+                del df1[what]
+                df2.remove(what)
+
+            newmaindata = [df1, df2]
+
+            error = ', '.join(whatclear) + ' deleted'
+
+            clear_data_main = False
+
+            clear_data = True
+
+        else:
+
+            newmaindata = maindata
+
+            error = 'No files deleted as none were selected'
+
+            clear_data_main = False
+
+            clear_data = True
 
         vect_val = []
 
@@ -885,8 +972,6 @@ def clear_files(n_clicks):
 
         n_clicks = 0
 
-        html.A()
-
         title_name = ''
 
         new_legname = ''
@@ -895,13 +980,15 @@ def clear_files(n_clicks):
 
         line_thickness = 1
 
-        clear_data_main = True
+        clear_opt = []
 
-        clear_data = True
+        color = "success"
 
+        open1 = True
 
-
-    return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist, vel_checklist, all_vel_checklist, title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness, clear_data_main, clear_data
+    return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist,\
+        vel_checklist, all_vel_checklist, title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness,\
+        clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata
 
 
 # Run app
