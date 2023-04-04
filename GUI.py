@@ -586,6 +586,9 @@ def update_In(Sin_val, Lin_val):
     if Sin_val is None:
         Sin_val = 0
 
+    if Lin_val < Sin_val:
+        Lin_val = Sin_val
+
     return Lin_val, Sin_val,
 
 
@@ -827,8 +830,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                                     'time limits. Please adjust your time limits accordingly.', 'primary']
 
                     both_t_NO_error = [file_type + ' File Downloaded.\n' + 'Data has been cut to the specified limits', 'primary']
-
-                    print(smallt <= min1)
 
                     if smallt < min1 and bigt > max1:
                         error1 = both_t_error
