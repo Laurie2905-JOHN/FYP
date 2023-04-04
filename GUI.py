@@ -570,11 +570,8 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 @app.callback(
         Output(component_id="big_t", component_property='value', allow_duplicate=True),
         Output(component_id="small_t", component_property='value', allow_duplicate=True),
-        #Output(component_id='big_min_value', component_property='children'),
         Input(component_id="small_t", component_property='value'),
         Input(component_id="big_t", component_property='value'),
-        # Input(component_id="small_t", component_property='min'),
-        # Input(component_id="big_t", component_property='max'),
         prevent_initial_call=True)
 
 
@@ -588,10 +585,6 @@ def update_In(Sin_val, Lin_val):
 
     if Sin_val is None:
         Sin_val = 0
-
-    if Lin_val - Sin_val < 1:
-
-        Lin_val = Sin_val + 1
 
     return Lin_val, Sin_val,
 
@@ -894,7 +887,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                             stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
                             list_all.append(stacked)
                             k = k + 2
-
                     list_all = np.concatenate(list_all, axis=1)
                     str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
