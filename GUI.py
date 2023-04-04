@@ -12,7 +12,7 @@ import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
 import sys
-
+import dash_bootstrap_components as dbc
 from tkinter import *
 from tkinter import ttk
 import tkinter.filedialog as fd
@@ -174,6 +174,18 @@ app.layout = html.Div([
         html.Br(),
         html.Br(),
 
+        html.Div(
+            [
+                html.Hr(),
+                dbc.Alert(
+                    id = "alert",
+                    is_open = False,
+                    dismissable=True,
+                    duration = 20000,
+                ),
+                ]),
+
+
         # Create a dropdown for selecting a dataset
         html.Label("Choose DataSet"),
         dcc.Dropdown(
@@ -282,7 +294,7 @@ app.layout = html.Div([
             dcc.Input(id="big_t", min = 0, type="number", placeholder="Maximum Time", debounce = True,),
             html.Br(),
             html.Br(),
-            dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename", debounce=True, persistence = True, persistence_type = 'session'  ),
+            dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
 
         html.Br(),
 
@@ -299,6 +311,9 @@ app.layout = html.Div([
 
 @app.callback(
         Output(component_id = 'newfilestorage', component_property = 'data'),
+        Output(component_id='alert', component_property='children'),
+        Output(component_id='alert', component_property='color'),
+        Output(component_id='alert', component_property='is_open'),
         Input(component_id = 'submit_files',component_property = 'contents'),
         State(component_id = 'submit_files', component_property ='filename'),
 prevent_initial_call = True)
@@ -313,21 +328,39 @@ def new_contents(contents, filenames):
 
             if all_contain_txt == True and filenames and contents is not None:
 
-
                 prb = cal_velocity(contents, filenames)
-
 
                 newdata = [prb, filenames]
 
-                return newdata
+                filename_str = ', '.join(filenames)
+
+                error = filename_str + ' selected, please upload for analysis'
+
+                color = "primary"
+
+                open1 = True
 
             else:
 
-                return html.Div(['There was an error processing this file.'])
+                newdata = []
 
-        except Exception as e:
-            print(e)
-            return html.Div(['There was an error processing this file.'])
+                error = 'There was an error processing the files, please try again.'
+
+                color = "danger"
+
+                open1 = True
+
+        except Exception:
+
+            newdata = []
+
+            error = 'There was an error processing the files, please try again.'
+
+            color = "danger"
+
+            open1 = True
+
+        return newdata, error, color, open1
 
     else:
 
@@ -336,6 +369,9 @@ def new_contents(contents, filenames):
 @app.callback(
     Output(component_id='filestorage', component_property='data'),
     Output(component_id='newfilestorage', component_property='clear_data', allow_duplicate=True),
+    Output(component_id='alert', component_property='children', allow_duplicate=True),
+    Output(component_id='alert', component_property='color', allow_duplicate=True),
+    Output(component_id='alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='newfile', component_property='n_clicks'),
     State(component_id='newfilestorage', component_property='data'),
     State(component_id='filestorage', component_property='data'),
@@ -349,42 +385,76 @@ def content(n_clicks, newData, data):
 
     if "newfile" == ctx.triggered_id:
 
-        if data is None:
+        if newData is not None and newData != []:
 
-            new_prb = newData[0]
+            if data is None:
 
-            new_filenames = newData[1]
+                new_prb = newData[0]
 
-            data = [new_prb, new_filenames]
+                new_filenames = newData[1]
 
+                data = [new_prb, new_filenames]
+
+                error = ', '.join(new_filenames) + ' uploaded'
+
+                color = "primary"
+
+            else:
+
+                new_prb = newData[0]
+
+                new_filenames = newData[1]
+
+                prb = data[0]
+
+                filenames = data[1]
+
+                # Create a new list to hold the combined values
+                combined_filenames = filenames.copy()
+                new_value = []
+                repeated_value = []
+
+                for i, value in enumerate(new_filenames):
+                    # Check if the value is already in the combined list
+                    if value not in combined_filenames:
+                        new_value.append(value)
+                        prb[value] = {value: {}}
+                        prb[value] = new_prb[value]
+                        combined_filenames.append(value)
+                    if value in combined_filenames:
+                        repeated_value.append(value)
+
+                if len(new_value) != len(repeated_value):
+
+                    if len(new_value) == 0:
+
+                        error = ', '.join(repeated_value) + ' not uploaded as repeated filenames were found'
+                    else:
+                        error = ', '.join(new_value) + ' uploaded successfully ,but' + ', '.join(repeated_value) + ' not uploaded as repeated filenames were found'
+
+                    color = "danger"
+
+                else:
+
+                    error = ', '.join(new_value) + ' uploaded'
+
+                    color = "primary"
+
+                data = [prb, combined_filenames]
 
         else:
 
-            new_prb = newData[0]
+            error = 'No files selected to upload'
 
-            new_filenames = newData[1]
+            color = "danger"
 
-            prb = data[0]
-
-
-            filenames = data[1]
-
-            # Create a new list to hold the combined values
-            combined_filenames = filenames.copy()
-
-            for i, value in enumerate(new_filenames):
-                # Check if the value is already in the combined list
-                if value not in combined_filenames:
-                    # If it's not, add it to the end of the list and record its index
-                    prb[value] = {value: {}}
-                    prb[value] = new_prb[value]
-                    combined_filenames.append(value)
-
-            data = [prb, combined_filenames]
+            data =  data
 
         newData = True
 
-        return data, newData
+        open1 = True
+
+        return data, newData, error, color, open1
 
 
 @app.callback(
@@ -473,7 +543,10 @@ def update_In(Sin_val, Lin_val):
         Output(component_id="big_t", component_property='min'),
         Output(component_id="big_t", component_property='max'),
         Output(component_id='btn_title_update', component_property='n_clicks'),
-        Output(component_id='btn_leg_update', component_property='n_clicks')],
+        Output(component_id='btn_leg_update', component_property='n_clicks'),
+        Output(component_id='alert', component_property='children', allow_duplicate=True),
+        Output(component_id='alert', component_property='color', allow_duplicate=True),
+        Output(component_id='alert', component_property='is_open', allow_duplicate=True)],
         [Input(component_id = 'filestorage', component_property = 'data'),
         Input(component_id = 'File', component_property = 'value'),
         Input(component_id = 'Vect', component_property = 'value'),
@@ -492,6 +565,12 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 
     if data is None or {}:
         raise PreventUpdate
+
+    error = ''
+
+    color = ''
+
+    open1 = False
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -600,23 +679,40 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
             NewLeg_name_list = NewLeg_name.split(',')
 
             newname_result = {}
-            for i, current_name in enumerate(current_names):
-                newnames = {current_name: NewLeg_name_list[i]}
-                newname_result.update(newnames)
 
-            fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
-                                                  legendgroup=newname_result[t.name],
-                                                  hovertemplate=t.hovertemplate.replace(t.name, newname_result[
-                                                      t.name]) if t.hovertemplate is not None else None)
-                               )
+            if len(current_names) == len(NewLeg_name_list):
+
+                error = 'Legend Updated'
+
+                color = "success"
+
+                for i, current_name in enumerate(current_names):
+                    newnames = {current_name: NewLeg_name_list[i]}
+                    newname_result.update(newnames)
+
+                fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
+                                                      legendgroup=newname_result[t.name],
+                                                      hovertemplate=t.hovertemplate.replace(t.name, newname_result[
+                                                          t.name]) if t.hovertemplate is not None else None)
+                                   )
+
+            else:
+
+                error = 'Number of legend entries do not match'
+
+                color = "danger"
+
+
+            open1 = True
 
             fig.layout.update(showlegend=True)
 
         elif leg == 'On':
+
             fig.layout.update(showlegend=True)
 
 
-    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, n_clicks, n_clicks1
+    return fig, min_sl, max_sl, value, Smin_in, Smax_in, Lmin_in, Lmax_in, n_clicks, n_clicks1, error, color, open1
 
 
 @app.callback(
@@ -632,7 +728,7 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
         State(component_id='filestorage', component_property='data'),
         prevent_initial_call=True)
 
-def download(n_clicks, name, smallt, bigt, vels, vel_opts, file, file_type, data):
+def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_type, data):
 
     if "btn_download" == ctx.triggered_id:
 
@@ -640,9 +736,11 @@ def download(n_clicks, name, smallt, bigt, vels, vel_opts, file, file_type, data
 
         dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
 
-        df = {file: {vel_opt: [] for vel_opt in vel_opts}}
+        df = {file: {vel: [] for vel in vels}}
+
 
         if smallt is not None or bigt is not None:
+
             t = np.array(dff[file]['t'])
 
             if smallt is not None and bigt is not None:
@@ -653,13 +751,14 @@ def download(n_clicks, name, smallt, bigt, vels, vel_opts, file, file_type, data
 
             if bigt is not None and smallt == None:
                 mask = (t < bigt)
-            df[file]['t'] = t[mask]
+
             for vel in vels:
                 df[file][vel] = dff[file][vel][mask]
 
         else:
 
-            df = dff
+            for vel in vels:
+                df[file][vel] = dff[file][vel]
 
         if file_type == '.txt':
 
@@ -702,17 +801,17 @@ def download(n_clicks, name, smallt, bigt, vels, vel_opts, file, file_type, data
             str_all = str_all.replace('[', '')
             str_all = str_all.replace(']', '')
 
-            if name is None or name == []:
+            if selected_name is None or selected_name == '':
                 value = file.split('.')
-                filename = value[0] + ".txt"
+                filenameTXT = value[0] + ".txt"
 
             else:
+                filenameTXT = selected_name + ".txt"
 
-                filename = name + ".txt"
-
-            text = dict(content=str_all, filename=filename)
+            text = dict(content=str_all, filename = filenameTXT )
 
             return text
+
 
         if file_type == 'Excel' or 'CSV':
 
@@ -726,22 +825,19 @@ def download(n_clicks, name, smallt, bigt, vels, vel_opts, file, file_type, data
             # concatenate all dataframes in the list
             PDdata = pd.concat(pandaData)
 
-            if name is None or name == []:
+            if selected_name is None or selected_name == '':
                 value = file.split('.')
                 filename = value[0]
-
-
             else:
-                filename = name
-            print(file_type)
+                filename = selected_name
 
             if file_type == 'Excel':
                 ty = '.xlsx'
-            return dcc.send_data_frame(PDdata.to_excel, filename + ty)
+                return dcc.send_data_frame(PDdata.to_excel, filename + ty)
 
             if file_type == 'CSV':
                 ty = '.csv'
-            return dcc.send_data_frame(PDdata.to_csv, filename + ty)
+                return dcc.send_data_frame(PDdata.to_csv, filename + ty)
 
 @app.callback(
         Output(component_id="File", component_property='value', allow_duplicate=True),
