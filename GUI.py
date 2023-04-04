@@ -296,9 +296,10 @@ app.layout = html.Div([
 
             html.I(
                 "Input the maximum and minimum time values for download"),
+            html.Div(id="big_min_value"),
             html.Br(),
-            dcc.Input(id="small_t", min = 0, type="number", placeholder = "Minimum Time", debounce = True, style={'marginRight': '10px'}),
-            dcc.Input(id="big_t", min = 0, type="number", placeholder="Maximum Time", debounce = True,),
+            dcc.Input(id="small_t", type="number", placeholder = "Minimum Time", debounce = True, style={'marginRight': '10px'}),
+            dcc.Input(id="big_t", type="number", placeholder="Maximum Time", debounce = True,),
             html.Br(),
             html.Br(),
             dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
@@ -570,12 +571,18 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 @app.callback(
         Output(component_id="big_t", component_property='value', allow_duplicate=True),
         Output(component_id="small_t", component_property='value', allow_duplicate=True),
+        Output(component_id='big_min_value', component_property='children'),
         Input(component_id="small_t", component_property='value'),
         Input(component_id="big_t", component_property='value'),
+        Input(component_id="small_t", component_property='min'),
+        Input(component_id="big_t", component_property='max'),
         prevent_initial_call=True)
 
 
-def update_In(Sin_val, Lin_val):
+def update_In(Sin_val, Lin_val, Smin, Lmax):
+
+    if Smin or Lmax is None:
+        raise PreventUpdate
 
     if Lin_val == None:
 
@@ -589,6 +596,8 @@ def update_In(Sin_val, Lin_val):
 
         Lin_val = Sin_val + 1
 
+    download_text = 'The time range available to input based on the selected data is ' + str(Smin) + ' and ' + str(Lmax)
+    print(download_text)
     return Lin_val, Sin_val
 
 
@@ -934,10 +943,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                     text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
 
             return text, error, open1, color
-
-        Output(component_id='alert', component_property='children', allow_duplicate=True),
-        Output(component_id='alert', component_property='color', allow_duplicate=True),
-        Output(component_id='alert', component_property='is_open', allow_duplicate=True)
 
 @app.callback(
         Output(component_id="File", component_property='value', allow_duplicate=True),
