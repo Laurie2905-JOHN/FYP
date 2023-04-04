@@ -780,6 +780,9 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 
 @app.callback(
         Output(component_id="download", component_property='data', allow_duplicate=True),
+        Output(component_id='alert', component_property='children', allow_duplicate=True),
+        Output(component_id='alert', component_property='color', allow_duplicate=True),
+        Output(component_id='alert', component_property='is_open', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
         State(component_id="file_name_input", component_property='value'),
         State(component_id="small_t", component_property='value'),
@@ -795,112 +798,146 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
     if "btn_download" == ctx.triggered_id:
 
-        prb = data[0]
+        print(file)
 
-        dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
+        if file == '':
 
-        df = {file: {vel: [] for vel in vels}}
+            error = 'No data to download'
 
+            color = 'danger'
 
-        if smallt is not None or bigt is not None:
+            open1 = True
 
-            t = np.array(dff[file]['t'])
+            return no_update, error, open1, color
 
-            if smallt is not None and bigt is not None:
-                mask = (t >= smallt) & (t < bigt)
+        if vels == [] or vels is None:
 
-            if smallt is not None and bigt == None:
-                mask = (t >= smallt)
+            error = 'No Velocity Selected'
 
-            if bigt is not None and smallt == None:
-                mask = (t < bigt)
+            color = 'danger'
 
-            for vel in vels:
-                df[file][vel] = dff[file][vel][mask]
+            open1 = True
+
+            return no_update, error, open1, color
 
         else:
 
-            for vel in vels:
-                df[file][vel] = dff[file][vel]
+            error = file_type + ' File Downloaded'
 
-        if file_type == '.txt':
+            color = 'primary'
 
-            list_all = []
+            open1 = True
 
-            if len(vels) == 1:
-                stacked = df[file][vels[0]]
-                list_all.append(stacked)
-                list_all = list_all[0]
-                str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
+            prb = data[0]
+
+            dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
+
+            df = {file: {vel: [] for vel in vels}}
+
+
+            if smallt is not None or bigt is not None:
+
+                t = np.array(dff[file]['t'])
+
+                if smallt is not None and bigt is not None:
+                    mask = (t >= smallt) & (t < bigt)
+
+                if smallt is not None and bigt == None:
+                    mask = (t >= smallt)
+
+                if bigt is not None and smallt == None:
+                    mask = (t < bigt)
+
+                for vel in vels:
+                    df[file][vel] = dff[file][vel][mask]
 
             else:
 
-                if len(vels) == 2:
-                    stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-                    list_all.append(stacked)
+                for vel in vels:
+                    df[file][vel] = dff[file][vel]
 
-                if len(vels) == 3:
-                    stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-                    stacked2 = df[file][vels[2]].reshape(-1, 1)
-                    stacked = np.concatenate((stacked1, stacked2), axis=1)
-                    list_all.append(stacked)
+            if file_type == '.txt':
 
-                k = 0
-                if len(vels) == 4:
-                    while k < len(vels) - 1:
-                        stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+                list_all = []
+
+                if len(vels) == 1:
+                    stacked = df[file][vels[0]]
+                    list_all.append(stacked)
+                    list_all = list_all[0]
+                    str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
+
+                else:
+
+                    if len(vels) == 2:
+                        stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
                         list_all.append(stacked)
-                        k = k + 2
 
-                list_all = np.concatenate(list_all, axis=1)
-                str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
+                    if len(vels) == 3:
+                        stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+                        stacked2 = df[file][vels[2]].reshape(-1, 1)
+                        stacked = np.concatenate((stacked1, stacked2), axis=1)
+                        list_all.append(stacked)
 
-            vels_str = ','.join(vels)
-            str_all = vels_str + '\n' + str_all
-            str_all = str_all.replace(' ', '')
-            str_all = str_all.replace('],', '')
-            str_all = str_all.replace(']]', '')
-            str_all = str_all.replace('[[', '')
-            str_all = str_all.replace('[', '')
-            str_all = str_all.replace(']', '')
+                    k = 0
+                    if len(vels) == 4:
+                        while k < len(vels) - 1:
+                            stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+                            list_all.append(stacked)
+                            k = k + 2
 
-            if selected_name is None or selected_name == '':
-                value = file.split('.')
-                filenameTXT = value[0] + ".txt"
+                    list_all = np.concatenate(list_all, axis=1)
+                    str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
-            else:
-                filenameTXT = selected_name + ".txt"
+                vels_str = ','.join(vels)
+                str_all = vels_str + '\n' + str_all
+                str_all = str_all.replace(' ', '')
+                str_all = str_all.replace('],', '')
+                str_all = str_all.replace(']]', '')
+                str_all = str_all.replace('[[', '')
+                str_all = str_all.replace('[', '')
+                str_all = str_all.replace(']', '')
 
-            text = dict(content=str_all, filename = filenameTXT )
+                if selected_name is None or selected_name == '':
+                    value = file.split('.')
+                    filenameTXT = value[0] + ".txt"
 
-            return text
+                else:
+                    filenameTXT = selected_name + ".txt"
+
+                text = dict(content=str_all, filename = filenameTXT )
 
 
-        if file_type == 'Excel' or 'CSV':
+            if file_type == 'Excel' or 'CSV':
 
-            # create an empty list to store dataframes
-            pandaData = []
+                # create an empty list to store dataframes
+                pandaData = []
 
-            # loop through each file and convert to dataframe
-            for file, df in df.items():
-                dfff = pd.DataFrame(df)
-                pandaData.append(dfff)
-            # concatenate all dataframes in the list
-            PDdata = pd.concat(pandaData)
+                # loop through each file and convert to dataframe
+                for file, df in df.items():
+                    dfff = pd.DataFrame(df)
+                    pandaData.append(dfff)
+                # concatenate all dataframes in the list
+                PDdata = pd.concat(pandaData)
 
-            if selected_name is None or selected_name == '':
-                value = file.split('.')
-                filename = value[0]
-            else:
-                filename = selected_name
+                if selected_name is None or selected_name == '':
+                    value = file.split('.')
+                    filename = value[0]
+                else:
+                    filename = selected_name
 
-            if file_type == 'Excel':
-                ty = '.xlsx'
-                return dcc.send_data_frame(PDdata.to_excel, filename + ty)
+                if file_type == 'Excel':
+                    ty = '.xlsx'
+                    text = dcc.send_data_frame(PDdata.to_excel, filename + ty)
 
-            if file_type == 'CSV':
-                ty = '.csv'
-                return dcc.send_data_frame(PDdata.to_csv, filename + ty)
+                if file_type == 'CSV':
+                    ty = '.csv'
+                    text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
+
+            return text, error, open1, color
+
+        Output(component_id='alert', component_property='children', allow_duplicate=True),
+        Output(component_id='alert', component_property='color', allow_duplicate=True),
+        Output(component_id='alert', component_property='is_open', allow_duplicate=True)
 
 @app.callback(
         Output(component_id="File", component_property='value', allow_duplicate=True),
@@ -924,6 +961,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id='alert', component_property='color', allow_duplicate=True),
         Output(component_id='alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+        Output(component_id="file_checklist", component_property='value'),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
@@ -971,6 +1009,8 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
             clear_data = True
 
+        file_download_val = ''
+
         vect_val = []
 
         file_val = []
@@ -1007,7 +1047,7 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
     return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist,\
         vel_checklist, all_vel_checklist, title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness,\
-        clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata
+        clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata, file_download_val
 
 
 # Run app
