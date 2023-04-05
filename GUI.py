@@ -299,22 +299,24 @@ dcc.Download(id="download"),
 dcc.Store(id='newfilestorage', storage_type='memory'),
 dcc.Store(id='filestorage', storage_type='session'),
 
-])
+#])
 
 
 
 
-@app.callback(
-    Output(component_id = "tab-content", component_property = "children"),
-    [Input(component_id ="tabs", component_property = "active_tab")]
-)
-
-def render_tab_content(active_tab):
-    print(active_tab)
-
-    if active_tab is not None:
-        if active_tab == "Upload":
-            return dbc.Row([
+# @app.callback(
+#     Output(component_id = "tab-content", component_property = "children"),
+#     [Input(component_id ="tabs", component_property = "active_tab")]
+# )
+#
+# def render_tab_content(active_tab):
+#     print(active_tab)
+#
+#     if active_tab is not None:
+#         if active_tab == "Upload":
+#             return
+#
+dbc.Row([
 
             dbc.Col([
                 dbc.Alert(
@@ -397,8 +399,9 @@ def render_tab_content(active_tab):
 
             ], align = 'center', justify = 'evenly'),
 
-        elif active_tab == "Download":
-            return dbc.Row([
+        # elif active_tab == "Download":
+        #     return \
+dbc.Row([
 
                 dbc.Col(
 
@@ -474,7 +477,22 @@ def render_tab_content(active_tab):
                 ),
                 ], align = 'center', justify = 'start'),
 
-        return "No tab selected"
+    ])
+
+        # return "No tab selected"
+
+@app.callback(
+        Output(component_id = 'newfilestorage', component_property = 'data'),
+        Output(component_id='alert', component_property='children'),
+        Output(component_id='alert', component_property='color'),
+        Output(component_id='alert', component_property='is_open'),
+        Input(component_id="upload_file_checklist", component_property='value'),
+        Input(component_id = 'submit_files',component_property = 'contents'),
+        State(component_id = 'submit_files', component_property ='filename'),
+        prevent_initial_call = True)
+
+
+
 
 
 @app.callback(
@@ -492,7 +510,7 @@ def render_tab_content(active_tab):
 def new_contents(filenames, contents, ALL_filenames):
 
 
-    if "submit_files" == ctx.triggered_id:
+    if "submit_files" == ctx.triggered_id and filenames != []:
 
         try:
 
@@ -552,20 +570,22 @@ def new_contents(filenames, contents, ALL_filenames):
 
     else:
 
-        contain_text = []
+        raise PreventUpdate
 
-        for name in ALL_filenames:
-            if 'txt' not in name:
-                contain_text.append(name)
-
-        error = 'WARNING: Files: (' + ', '.join(
-            contain_text) + ') ' + '\n  unsupported file type. \n Please upload .txt files'
-
-        color = "danger"
-
-        open1 = True
-
-        return no_update, error, color, open1
+        # contain_text = []
+        #
+        # for name in ALL_filenames:
+        #     if 'txt' not in name:
+        #         contain_text.append(name)
+        #
+        # error = 'WARNING: Files: (' + ', '.join(
+        #     contain_text) + ') ' + '\n  unsupported file type. \n Please upload .txt files'
+        #
+        # color = "danger"
+        #
+        # open1 = True
+        #
+        # return no_update, error, color, open1
 
 
 
@@ -714,61 +734,61 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 
     return clear_file_check, all_clear_check
 
-@app.callback(
-    Output(component_id="File", component_property='options'),
-    Output(component_id='Vect', component_property='options'),
-    #Output(component_id="file_checklist", component_property='option', allow_duplicate=True),
-    #Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
-    #Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
-    Input(component_id='filestorage', component_property='data'),
-    prevent_initial_call=True)
-
-def update_dropdowns(data):
-
-    if data is None:
-        raise PreventUpdate
-
-    vect_options = ['Ux', 'Uy', 'Uz']
-
-    file_dropdown_options = data[1]
-
-    file_checklist = file_dropdown_options
-
-    clear_file_check = file_checklist
-
-    vel_checklist = ['Ux', 'Uy', 'Uz', 't']
-
-    file_val = file_checklist[0]
-
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check, file_val
-
-
-
 # @app.callback(
-#         Output(component_id="vel_checklist", component_property='value'),
-#         Output(component_id='all_vel_checklist', component_property='value'),
-#         Input(component_id="vel_checklist", component_property='value'),
-#         Input(component_id='all_vel_checklist', component_property='value'),
-#         prevent_initial_call=True
-#         )
+#     Output(component_id="File", component_property='options'),
+#     Output(component_id='Vect', component_property='options'),
+#     Output(component_id="file_checklist", component_property='option', allow_duplicate=True),
+#     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+#     Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+#     Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
+#     Input(component_id='filestorage', component_property='data'),
+#     prevent_initial_call=True)
 #
+# def update_dropdowns(data):
 #
-# def vel_sync_checklist(vel_check, all_vel_checklist):
+#     if data is None:
+#         raise PreventUpdate
 #
-#     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+#     vect_options = ['Ux', 'Uy', 'Uz']
 #
-#     vel_type = ['Ux','Uy','Uz','t']
+#     file_dropdown_options = data[1]
 #
-#     if input_id == "vel_checklist":
+#     file_checklist = file_dropdown_options
 #
-#         all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
+#     clear_file_check = file_checklist
 #
-#     else:
+#     vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 #
-#         vel_check = vel_type if all_vel_checklist else []
+#     file_val = file_checklist[0]
 #
-#     return vel_check, all_vel_checklist
+#     return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check, file_val
+
+
+
+@app.callback(
+        Output(component_id="vel_checklist", component_property='value'),
+        Output(component_id='all_vel_checklist', component_property='value'),
+        Input(component_id="vel_checklist", component_property='value'),
+        Input(component_id='all_vel_checklist', component_property='value'),
+        prevent_initial_call=True
+        )
+
+
+def vel_sync_checklist(vel_check, all_vel_checklist):
+
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    vel_type = ['Ux','Uy','Uz','t']
+
+    if input_id == "vel_checklist":
+
+        all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
+
+    else:
+
+        vel_check = vel_type if all_vel_checklist else []
+
+    return vel_check, all_vel_checklist
 
 
 @app.callback(
@@ -972,9 +992,9 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
         State(component_id="file_name_input", component_property='value'),
         State(component_id="small_t", component_property='value'),
         State(component_id="big_t", component_property='value'),
-        #State(component_id="vel_checklist", component_property='value'),
-        #State(component_id="vel_checklist", component_property='options'),
-       # State(component_id="file_checklist", component_property='value'),
+        State(component_id="vel_checklist", component_property='value'),
+        State(component_id="vel_checklist", component_property='options'),
+        State(component_id="file_checklist", component_property='value'),
         State(component_id="type_checklist", component_property='value'),
         State(component_id='filestorage', component_property='data'),
         prevent_initial_call=True)
@@ -1147,8 +1167,8 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id='Vect', component_property='options', allow_duplicate=True),
         Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
         #Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-        #Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-        #Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
+        Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
         Output(component_id='New_name', component_property='value', allow_duplicate=True),
         Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
         Output(component_id="small_t", component_property='value', allow_duplicate=True),
@@ -1246,8 +1266,8 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
         open1 = True
 
     return file_val, vect_val, file_dropdown_options, vect_options, fig\
-        , title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness,\
-        clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata, file_download_val
+        , title_name, new_legname, vel_checklist, all_vel_checklist, file_name_inp, in_val_S, in_val_L, line_thickness,\
+        clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata, file_download_val,
 
 
 # Run app
