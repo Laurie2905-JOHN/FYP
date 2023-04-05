@@ -320,7 +320,7 @@ dbc.Row([
 
             dbc.Col([
                 dbc.Alert(
-                        id="alert",
+                        id="ClearFiles_alert",
                         is_open=False,
                         dismissable=True,
                         duration=20000),
@@ -415,7 +415,7 @@ dbc.Row([
 
             dbc.Col([
                 dbc.Alert(
-                        id="alert",
+                        id="Download_alert",
                         is_open=False,
                         dismissable=True,
                         duration=20000),
@@ -482,16 +482,15 @@ dbc.Row([
         # return "No tab selected"
 
 @app.callback(
-        Output(component_id = 'newfilestorage', component_property = 'data'),
-        Output(component_id='alert', component_property='children'),
-        Output(component_id='alert', component_property='color'),
-        Output(component_id='alert', component_property='is_open'),
-        Input(component_id="upload_file_checklist", component_property='value'),
-        Input(component_id = 'submit_files',component_property = 'contents'),
+        Output(component_id="upload_file_checklist", component_property='value'),
         State(component_id = 'submit_files', component_property ='filename'),
         prevent_initial_call = True)
 
+def file_checklist(file_names):
 
+    upload_file_checklist = file_names
+
+    return file_names
 
 
 
@@ -680,31 +679,31 @@ def content(n_clicks, newData, data):
 
         return data, newData, error, color, open1
 
-@app.callback(
-        Output(component_id="upload_file_checklist", component_property='value'),
-        Output(component_id='all_upload_file_checklist', component_property='value'),
-        Input(component_id="upload_file_checklist", component_property='value'),
-        Input(component_id='all_upload_file_checklist', component_property='value'),
-        Input(component_id = 'submit_files', component_property ='filename'),
-        prevent_initial_call=True
-        )
-
-def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploaded_filenames):
-
-    if Uploaded_filenames is None:
-        raise PreventUpdate
-
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    if input_id == "upload_file_check":
-
-        all_upload_file_check = ["All"] if set(upload_file_check) == set(Uploaded_filenames) else []
-
-    else:
-
-        upload_file_check = Uploaded_filenames if all_upload_file_check else []
-
-    return upload_file_check, all_upload_file_check
+# @app.callback(
+#         Output(component_id="upload_file_checklist", component_property='value'),
+#         Output(component_id='all_upload_file_checklist', component_property='value'),
+#         Input(component_id="upload_file_checklist", component_property='value'),
+#         Input(component_id='all_upload_file_checklist', component_property='value'),
+#         Input(component_id = 'submit_files', component_property ='filename'),
+#         prevent_initial_call=True
+#         )
+#
+# def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploaded_filenames):
+#
+#     if Uploaded_filenames is None:
+#         raise PreventUpdate
+#
+#     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+#
+#     if input_id == "upload_file_check":
+#
+#         all_upload_file_check = ["All"] if set(upload_file_check) == set(Uploaded_filenames) else []
+#
+#     else:
+#
+#         upload_file_check = Uploaded_filenames if all_upload_file_check else []
+#
+#     return upload_file_check, all_upload_file_check
 
 @app.callback(
         Output(component_id="clear_file_checklist", component_property='value'),
