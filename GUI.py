@@ -266,68 +266,28 @@ dbc.Row(
 ]),
 ])
 
-    ], justify="center", align="center"),
+    ], className = 'mb-2', justify="center", align="center"),
+
+dbc.Row([
+    dbc.Col(
+    html.Hr(),
+    width = 12),
+    ], className = 'mb-2'),
+
+dbc.Tabs(
+    [
+        dbc.Tab(label="Upload", tab_id="Upload"),
+        dbc.Tab(label="Download", tab_id="Download"),
+    ],
+    id="tabs",
+    active_tab="Upload",
+),
+html.Div(id="tab-content", className="p-4"),
+
+])
 
 
 
-    ])
-
-
-
-
-
-
-
-
-
-
-
-
-#
-#
-
-#
-
-#         html.Div(className="mb-3"),
-#     ]),
-#
-
-# ]),
-# ],fluid=True),
-#
-#
-# dbc.Row([
-#     dbc.Col(
-#     html.Hr(),
-#     width = 12),
-#     ], className = 'mb-2'),
-#
-# dbc.Tabs(
-#     [
-#         dbc.Tab(label="Upload", tab_id="Upload"),
-#         dbc.Tab(label="Download", tab_id="Download"),
-#     ],
-#     id="tabs",
-#     active_tab="Upload",
-# ),
-# html.Div(id="tab-content", className="p-4"),
-
-
-
-
-
-
-    # Create a button for downloading data
-#     html.Button("Update Title", id="btn_title_update", n_clicks=0),
-#
-# ]),
-#
-#     html.Div("", className="mb-2"),
-#
-#     dbc.Row([
-#         html.Label("Legend"),
-#
-#     dcc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
 
 
 #
@@ -342,12 +302,10 @@ dbc.Row(
 # ),
 
 
-
-
 # # Create a component for downloading data
-# dcc.Download(id="download"),
-# dcc.Store(id='newfilestorage', storage_type='memory'),
-# dcc.Store(id='filestorage', storage_type='session'),
+dcc.Download(id="download"),
+dcc.Store(id='newfilestorage', storage_type='memory'),
+dcc.Store(id='filestorage', storage_type='session'),
 
 @app.callback(
     Output(component_id = "tab-content", component_property = "children"),
@@ -355,6 +313,7 @@ dbc.Row(
 )
 
 def render_tab_content(active_tab):
+    print(active_tab)
 
     if active_tab is not None:
         if active_tab == "Upload":
@@ -362,16 +321,19 @@ def render_tab_content(active_tab):
 
                 dbc.Col(
 
-                    html.H5('Upload/Clear Files'),
+                html.H5('Upload/Clear Files', className = 'center-text'),
 
                 width = 12, className ="text-center" ),
 
-        dbc.Col(
+                dbc.Col(
+                    html.Hr(), width = 12,
+                ),
+
+        dbc.Col([
 
             dcc.Upload(
                 id='submit_files',
                 children=html.Div([
-                    'Drag/Drop or ',
                     html.A('Select Files')
                 ]),
                 style={
@@ -382,66 +344,54 @@ def render_tab_content(active_tab):
                     'borderRadius': '5px',
                     'textAlign': 'center',
                     'margin': '20px',
-                    'width': '100%',
+                    'width': '90%',
                 },
+                className="text-primary",
                 # Allow multiple files to be uploaded
-                multiple=True), className = 'ms-2'),
+                multiple=True)],  width = 3),
 
-        dbc.Col([
-
-
-
-            dbc.Row(
-
-                dbc.Button(
-                    "Clear Selected Files",
-                    id='clear_files',
-                    outline=True,
-                    color="secondary",
-                    className="me-1",
-                    n_clicks=0),
-
-            className = 'ms-2'),
-
-            html.Div(className = 'mb-3'),
-
-            dbc.Row([
-                # Create a checklist for selecting a velocity
-                html.Label("Select files to clear"),
-                dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
-                dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
-            ]),
-
-        ]),
-
-        dbc.Col([
-
-            dbc.Row(
-
+        dbc.Col(
+            dbc.Stack([
                 dbc.Button(
                     "Upload Selected Files",
                     id='newfile',
                     outline=True,
                     color="primary",
                     className="me-1",
-                    n_clicks=0), className = 'ms-2'
-            ),
+                    n_clicks=0),
 
-
-            dbc.Row([
-                # Create a checklist for selecting a velocity
                 html.Label("Select files to upload"),
+
                 dcc.Checklist(["All"], [], id="all_upload_file_checklist", inline=True),
+
                 dcc.Checklist(value=[], id="upload_file_checklist", inline=True),
-            ]),
-        ]),
 
+            ], gap = 2),
+        width = 3),
 
-    ], align ='center'),
+        dbc.Col(
+            dbc.Stack([
+                dbc.Button(
+                    "Clear Selected Files",
+                    id='clear_files',
+                    outline=True,
+                    color="primary",
+                    className="me-1",
+                    n_clicks=0),
 
+                html.Label("Select files to clear", className='center-text'),
+
+                dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
+
+                dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
+
+            ], gap=2),
+
+            width=3),
+
+            ], align = 'center', justify = 'evenly'),
 
         elif active_tab == "Download":
-
             return dbc.Col([
 
                 dbc.Row(
@@ -578,7 +528,7 @@ def render_tab_content(active_tab):
 
                 ]),
             ])
-    return "No tab selected"
+        return "No tab selected"
 
 
 @app.callback(
