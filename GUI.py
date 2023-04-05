@@ -172,7 +172,7 @@ app.layout = dbc.Container([
 
         dbc.Col([
 
-            html.Label("Plot Options"),
+            html.Label("Data Options"),
 
             dcc.Dropdown(
                 id="File",
@@ -234,7 +234,7 @@ app.layout = dbc.Container([
 
                 ]),
 
-            ], justify="end"),
+            ], justify="center"),
 
         ], width  = 4),
 
@@ -306,7 +306,20 @@ dbc.Row([
     html.Hr(),
     width = 12),
     ]),
+
+    dbc.Tabs(
+        [
+            dbc.Tab(label="Upload", tab_id="Upload"),
+            dbc.Tab(label="Download", tab_id="Download"),
+        ],
+        id="tabs",
+        active_tab="Upload",
+    ),
+    html.Div(id="tab-content", className="p-4"),
+
     ])
+
+
 
 
     # Create a button for downloading data
@@ -322,96 +335,6 @@ dbc.Row([
 #     dcc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
 
 
-#
-
-
-
-# ]
-# ),
-#
-# ]),
-
-
-
-# <body class="m-3">
-#     <div class="container text-center">
-#         <h1 class="text-success">GeeksforGeeks</h1>
-#         <h5>Bootstrap 5 Dropdowns Split button</h5>
-#     </div>
-#     <div class="p-3 border bg-light" style="height:120px;">
-#         <div class="btn-group">
-#             <button type="button" class="btn btn-success">
-#                 Action
-#             </button>
-#             <button type="button" class="btn btn-secondary
-#                     dropdown-toggle dropdown-toggle-split"
-#                     data-bs-toggle="dropdown">
-#                 <span class="visually-hidden">
-#                     Toggle Dropdown
-#                 </span>
-#             </button>
-#             <ul class="dropdown-menu">
-#                 <li><a class="dropdown-item" href="#">
-#                     Option</a>
-#                 </li>
-#                 <li><a class="dropdown-item" href="#">
-#                     Other option</a>
-#                 </li>
-#                 <li><a class="dropdown-item" href="#">
-#                     Something related to the option</a>
-#                 </li>
-#             </ul>
-#         </div>
-#         <div class="btn-group">
-#             <button type="button" class="btn btn-primary">
-#                 Action</button>
-#             <button type="button" class="btn btn-dark
-#                 dropdown-toggle dropdown-toggle-split"
-#                 data-bs-toggle="dropdown">
-#                 <span class="visually-hidden">
-#                     Toggle Dropdown
-#                 </span>
-#             </button>
-#             <ul class="dropdown-menu">
-#                 <li><a class="dropdown-item" href="#">
-#                     Option</a></li>
-#                 <li><a class="dropdown-item" href="#">
-#                     Other option</a></li>
-#                 <li><a class="dropdown-item" href="#">
-#                     Something related to the option</a>
-#                 </li>
-
-
-
-    # dbc.Row([
-    #
-    #     dcc.Input(
-    #         id="New_LegName",
-    #         type='text',
-    #         placeholder="Enter New Legend",
-    #         debounce=True,
-    #     ),
-    #
-    #     # Create a button for downloading data
-    #     html.Button("Update Legend", id="btn_leg_update", n_clicks=0),
-    #
-    #     ])
-
-
-
-
-
-
-
-        # dbc.Tabs(
-        #     [
-        #         dbc.Tab(label="Upload", tab_id="upload_Tab"),
-        #         dbc.Tab(label="Download", tab_id="download_Tab"),
-        #     ],
-        #     id="tabs",
-        #     active_tab="scatter",
-        # ),
-        # html.Div(id="tab-content", className="p-4"),
 #
 # dbc.Row(
 #
@@ -433,229 +356,229 @@ dcc.Download(id="download"),
 dcc.Store(id='newfilestorage', storage_type='memory'),
 dcc.Store(id='filestorage', storage_type='session'),
 
-# @app.callback(
-#     Output("tab-content", "children"),
-#     [Input("tabs", "active_tab")]
-# )
-# def render_tab_content(active_tab, data):
-#     """
-#     This callback takes the 'active_tab' property as input, as well as the
-#     stored graphs, and renders the tab content depending on what the value of
-#     'active_tab' is.
-#     """
-#     if active_tab and data is not None:
-#         if active_tab == "Upload":
-#             return dbc.Row([
-#
-#         dbc.Col(
-#
-#             dcc.Upload(
-#                 id='submit_files',
-#                 children=html.Div([
-#                     'Drag/Drop or ',
-#                     html.A('Select Files')
-#                 ]),
-#                 style={
-#                     'height': '60px',
-#                     'lineHeight': '60px',
-#                     'borderWidth': '1px',
-#                     'borderStyle': 'dashed',
-#                     'borderRadius': '5px',
-#                     'textAlign': 'center',
-#                     'margin': '10px'
-#                 },
-#                 # Allow multiple files to be uploaded
-#                 multiple=True), width=3),
-#
-#         dbc.Col([
-#
-#             dbc.Row(
-#
-#                 dbc.Button(
-#                     "Upload new Files",
-#                     id='newfile',
-#                     outline=True,
-#                     color="primary",
-#                     className="me-1",
-#                     n_clicks=0),
-#             ),
-#
-#             dbc.Row(
-#
-#                 dbc.Button(
-#                     "Clear Files",
-#                     id='clear_files',
-#                     outline=True,
-#                     color="secondary",
-#                     className="me-1",
-#                     n_clicks=0),
-#
-#             ),
-#         ]),
-#
-#         dbc.Col([
-#
-#             dbc.Row([
-#                 # Create a checklist for selecting a velocity
-#                 html.Label("Select files to clear"),
-#                 dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
-#                 dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
-#             ]),
-#
-#             dbc.Row([
-#                 # Create a checklist for selecting a velocity
-#                 html.Label("Select files to upload"),
-#                 dcc.Checklist(["All"], [], id="all_upload_file_checklist", inline=True),
-#                 dcc.Checklist(value=[], id="upload_file_checklist", inline=True),
-#             ]),
-#         ]),
-#
-#         dbc.Col(
-#
-#             html.Label('Error/instructions')
-#         ),
-#
-#     ]),
-#
-#         elif active_tab == "Download":
-#
-#             return dbc.Col([
-#
-#                 dbc.Row(
-#
-#                     # Create a label for downloading data
-#                     html.Label("Download Options"),
-#
-#                 ),
-#
-#                 dbc.Row(
-#
-#                     # Create a label for downloading data
-#                     html.Label("Instructions"),
-#
-#                 ),
-#
-#
-#                 dbc.Col([
-#
-#                     dbc.Row(
-#
-#                         html.Label("Choose data file"),
-#
-#                     ),
-#
-#
-#                     dbc.Row(
-#
-#                         # Create a label for selecting a data file
-#                         dcc.RadioItems(value='', id="file_checklist", inline=True),
-#
-#                     ),
-#
-#                     dbc.Row(
-#
-#                         # Create a label for selecting a data file
-#                         html.Label("Filename"),
-#
-#                     ),
-#
-#                     dbc.Row(
-#
-#                         # Create a label for selecting a data file
-#                         dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
-#
-#                     ),
-#
-#                     dbc.Row(
-#
-#                         # Create a button for downloading data
-#                         html.Button("Download", id="btn_download"),
-#
-#                     ),
-#
-#                 ]),
-#
-#                 dbc.Col([
-#
-#                     dbc.Row(
-#
-#                         html.Label("Choose quantity"),
-#
-#                     ),
-#
-#                     dbc.Row([
-#
-#                         # Create a checklist for selecting a velocity
-#                         dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
-#
-#                         dcc.Checklist(value=[], id="vel_checklist", inline=True),
-#
-#                     ]),
-#
-#                     dbc.Row(
-#
-#                         html.Label("Choose file type"),
-#
-#                     ),
-#
-#                     dbc.Row(
-#
-#                         # Create a label for selecting a data file
-#                         dcc.RadioItems(options=['CSV', 'Excel', '.txt'], value='CSV', id="type_checklist", inline=True),
-#
-#                     ),
-#
-#                     dbc.Row(
-#
-#                         html.Label("Time Range"),
-#
-#                     ),
-#
-#                     dbc.Row([
-#
-#                         dbc.Col([
-#
-#                             dbc.Row(
-#
-#                                 html.Label("Max"),
-#
-#                             ),
-#
-#                             dbc.Row(
-#
-#                                 dcc.Input(id="big_t", min=0, type="number", placeholder="Maximum Time", debounce=True, ),
-#
-#                             ),
-#
-#                         ]),
-#
-#                         dbc.Col([
-#
-#                             dbc.Row(
-#
-#                                 html.Label("Min"),
-#
-#                             ),
-#
-#                             dbc.Row(
-#
-#                                 dcc.Input(id="small_t", type="number", placeholder="Minimum Time", debounce=True,
-#                                           style={'marginRight': '10px'}),
-#                             ),
-#
-#                         ]),
-#
-#                     ]),
-#
-#                     dbc.Row(
-#
-#                         html.Label('error'),
-#
-#                     ),
-#
-#                 ]),
-#             ])
-#     return "No tab selected"
+@app.callback(
+    Output(component_id = "tab-content", component_property = "children"),
+    [Input(component_id ="tabs", component_property = "active_tab")]
+)
+
+def render_tab_content(active_tab):
+
+    print(active_tab)
+
+    if active_tab is not None:
+        if active_tab == "Upload":
+            return dbc.Row([
+
+        dbc.Col(
+
+            dcc.Upload(
+                id='submit_files',
+                children=html.Div([
+                    'Drag/Drop or ',
+                    html.A('Select Files')
+                ]),
+                style={
+                    'height': '60px',
+                    'lineHeight': '60px',
+                    'borderWidth': '1px',
+                    'borderStyle': 'dashed',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    'margin': '10px'
+                },
+                # Allow multiple files to be uploaded
+                multiple=True), width=3),
+
+        dbc.Col([
+
+            dbc.Row(
+
+                dbc.Button(
+                    "Upload new Files",
+                    id='newfile',
+                    outline=True,
+                    color="primary",
+                    className="me-1",
+                    n_clicks=0),
+            ),
+
+            dbc.Row(
+
+                dbc.Button(
+                    "Clear Files",
+                    id='clear_files',
+                    outline=True,
+                    color="secondary",
+                    className="me-1",
+                    n_clicks=0),
+
+            ),
+        ]),
+
+        dbc.Col([
+
+            dbc.Row([
+                # Create a checklist for selecting a velocity
+                html.Label("Select files to clear"),
+                dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
+                dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
+            ]),
+
+            dbc.Row([
+                # Create a checklist for selecting a velocity
+                html.Label("Select files to upload"),
+                dcc.Checklist(["All"], [], id="all_upload_file_checklist", inline=True),
+                dcc.Checklist(value=[], id="upload_file_checklist", inline=True),
+            ]),
+        ]),
+
+        dbc.Col(
+
+            html.Label('Error/instructions')
+        ),
+
+    ]),
+
+
+        elif active_tab == "Download":
+
+            return dbc.Col([
+
+                dbc.Row(
+
+                    # Create a label for downloading data
+                    html.Label("Download Options"),
+
+                ),
+
+                dbc.Row(
+
+                    # Create a label for downloading data
+                    html.Label("Instructions"),
+
+                ),
+
+
+                dbc.Col([
+
+                    dbc.Row(
+
+                        html.Label("Choose data file"),
+
+                    ),
+
+
+                    dbc.Row(
+
+                        # Create a label for selecting a data file
+                        dcc.RadioItems(value='', id="file_checklist", inline=True),
+
+                    ),
+
+                    dbc.Row(
+
+                        # Create a label for selecting a data file
+                        html.Label("Filename"),
+
+                    ),
+
+                    dbc.Row(
+
+                        # Create a label for selecting a data file
+                        dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
+
+                    ),
+
+                    dbc.Row(
+
+                        # Create a button for downloading data
+                        html.Button("Download", id="btn_download"),
+
+                    ),
+
+                ]),
+
+                dbc.Col([
+
+                    dbc.Row(
+
+                        html.Label("Choose quantity"),
+
+                    ),
+
+                    dbc.Row([
+
+                        # Create a checklist for selecting a velocity
+                        dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
+
+                        dcc.Checklist(value=[], id="vel_checklist", inline=True),
+
+                    ]),
+
+                    dbc.Row(
+
+                        html.Label("Choose file type"),
+
+                    ),
+
+                    dbc.Row(
+
+                        # Create a label for selecting a data file
+                        dcc.RadioItems(options=['CSV', 'Excel', '.txt'], value='CSV', id="type_checklist", inline=True),
+
+                    ),
+
+                    dbc.Row(
+
+                        html.Label("Time Range"),
+
+                    ),
+
+                    dbc.Row([
+
+                        dbc.Col([
+
+                            dbc.Row(
+
+                                html.Label("Max"),
+
+                            ),
+
+                            dbc.Row(
+
+                                dcc.Input(id="big_t", min=0, type="number", placeholder="Maximum Time", debounce=True, ),
+
+                            ),
+
+                        ]),
+
+                        dbc.Col([
+
+                            dbc.Row(
+
+                                html.Label("Min"),
+
+                            ),
+
+                            dbc.Row(
+
+                                dcc.Input(id="small_t", type="number", placeholder="Minimum Time", debounce=True,
+                                          style={'marginRight': '10px'}),
+                            ),
+
+                        ]),
+
+                    ]),
+
+                    dbc.Row(
+
+                        html.Label('error'),
+
+                    ),
+
+                ]),
+            ])
+    return "No tab selected"
 
 
 @app.callback(
