@@ -118,7 +118,6 @@ def cal_velocity(contents, file_names):
 
 
 
-
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -126,198 +125,196 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 # Define layout of the app
 app.layout = dbc.Container([
 
-    dbc.Row([
 
-        # Create a title
+    dbc.Row([
         dbc.Col(
-
-            html.H1("BARNACLE SENSOR ANALYSIS DASHBOARD",className='text-center font-weight-bolder, mb-1'),width = 12)
-
-
+            html.H1("BARNACLE SENSOR ANALYSIS DASHBOARD",
+                    className='text-center font-weight-bolder, mb-1'),
+            width=12),
     ]),
-
     dbc.Row([
-
         dbc.Col(
             dcc.Graph(id='Velocity_Graph', figure={}),
-            width = 12),
-
+            width=12),
     ]),
 
     dbc.Row([
 
-        html.Div("Graph Time Slider", className="mb-1", style={'text-align': 'center'}),
+        dbc.Col(
+            html.H5('Graph Options', className="text-center"),
+        width = 12),
 
-    ]),
+        dbc.Col(
+            html.Hr(),
+        width = 12),
 
-    dbc.Row([
+        dbc.Col(
+        dbc.Label("Time Slider", className="text-center mb-1"),
+            width = 12,),
 
-        dcc.RangeSlider(
+        dbc.Col(
+            dcc.RangeSlider(
             id='time-range',
             min=1,
             max=10,
             value=[1, 10],
             tooltip={"placement": "bottom", "always_visible": True},
-            updatemode='drag',
-        ),
+            updatemode='drag'
+        ), width = 12, className="mb-2"),
 
-        html.Div("", className="mb-2"),
 
-        html.Hr(),
 
-    ]),
-
+]),
 
     dbc.Row([
 
-        dbc.Col([
+    dbc.Col([
 
-            html.Label("Data Options"),
+        dbc.Stack([
+
+            dbc.Label("Data Options",
+            className='text-center'),
+
+        dbc.Stack([
 
             dcc.Dropdown(
                 id="File",
                 options=[],
                 multi=True,
                 value=[],
-                placeholder="Select a dataset",
-            ),
-
-            html.Div(className="mb-2"),
+                placeholder="Select a dataset"),
 
             dcc.Dropdown(
                 id="Vect",
                 options=[],
                 multi=True,
                 value=[],
-                placeholder="Select a quantity",
-            ),
-
-
-        ], width = 4),
-
-
-        dbc.Col([
-
-            dbc.Col([
-
-                dbc.Row(
-
-                    html.Label('Line Thickness'),
-
-                ),
-                dbc.Row(
-
-                    dcc.Slider(min=0.5, max=5,
-                               value=1,
-                               step=0.1,
-                               id="line_thick",
-                               marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
-                               updatemode='drag'),
-                ),
-
-            ]),
-
-
-            dbc.Row([
-
-                dbc.Col([
-
-                    html.Label("Title"),
-                    dbc.RadioItems(id='title_onoff', value='On', options=['On', 'Off'], inline=True),
-
-                ]),
-
-                dbc.Col([
-                    html.Label("Legend"),
-
-                    dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
-
-                ]),
-
-            ], justify="center"),
-
-        ], width  = 4),
-
-
-        dbc.Col([
-
-            dbc.Row(
-                html.Label('Update Title or Legend')
-            ),
-
-            dbc.Row([
-
-                dbc.InputGroup(
-
-                    [
-                        dbc.DropdownMenu([
-                            dbc.DropdownMenuItem("Update", id="dropdown_title_update"),
-                            dbc.DropdownMenuItem("Clear", id="dropdown_title_clear"),
-                        ],
-                            label="Generate"),
-
-                        dcc.Input(
-                            id="New_Titlename",
-                            type='text',
-                            placeholder="Enter new title",
-                            debounce=True,
-                        ),
-                    ],
-
-                ),
-
-                html.Div(className="mb-2"),
-
-            ]),
-
-
-            dbc.Row([
-
-                dbc.InputGroup(
-
-                    [
-
-                        dbc.DropdownMenu([
-                            dbc.DropdownMenuItem("Update", id="dropdown_legend_update"),
-                            dbc.DropdownMenuItem("Clear", id="dropdown_legend_clear"),
-                        ],
-                            label="Generate"),
-
-
-                        dcc.Input(
-                            id="New_Legend",
-                            type='text',
-                            placeholder="Enter new legend",
-                            debounce=True,
-                        ),
-                    ],
-
-                ),
-
-            ]),
+                placeholder="Select a quantity"),
+        ], gap = 3)
 
         ]),
 
-    ]),
+]),
+
+dbc.Col([
+
+    dbc.Stack([
+
+        dbc.Label('Line Thickness', className="text-center"),
+
+        dcc.Slider(
+            min=0.5,
+            max=5,
+            value=1,
+            step=0.1,
+            id="line_thick",
+            marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
+            updatemode='drag'),
+
+        html.Hr(),
 
 
 dbc.Row([
+
     dbc.Col(
-    html.Hr(),
-    width = 12),
+
+    dbc.Stack([
+
+    dbc.Label("Title", className="text-start"),
+
+    dbc.RadioItems(id='title_onoff', value='On', options=['On', 'Off'], inline=True)
+
     ]),
 
-    dbc.Tabs(
-        [
-            dbc.Tab(label="Upload", tab_id="Upload"),
-            dbc.Tab(label="Download", tab_id="Download"),
-        ],
-        id="tabs",
-        active_tab="Upload",
     ),
-    html.Div(id="tab-content", className="p-4"),
+        dbc.Col(
 
+        dbc.Stack([
+
+            dbc.Label('Legend', className="text-start"),
+
+            dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
+
+        ]),
+
+
+        ),
     ])
+
+        ]),
+]),
+
+
+    dbc.Col([
+
+        dbc.Stack([
+
+            dbc.Label("Update Title or Legend", class_name="center-text"),
+
+        dbc.Stack([
+
+        dbc.Stack([
+            dbc.InputGroup([
+                    dbc.DropdownMenu([
+                    dbc.DropdownMenuItem("Update", id="dropdown_title_update"),
+                    dbc.DropdownMenuItem("Clear", id="dropdown_title_clear"),
+        ],
+            label="Generate"),
+            dcc.Input(
+            id="New_Titlename",
+            type='text',
+            placeholder="Enter new title",
+            debounce=True),
+    ]),
+            ], direction="horizontal"),
+
+            ])
+
+        ])
+        ])
+
+
+
+
+])
+    ])
+
+
+
+
+
+
+
+#
+#
+
+#
+
+#         html.Div(className="mb-3"),
+#     ]),
+#
+
+# ]),
+# ],fluid=True),
+#
+#
+# dbc.Row([
+#     dbc.Col(
+#     html.Hr(),
+#     width = 12),
+#     ], className = 'mb-2'),
+#
+# dbc.Tabs(
+#     [
+#         dbc.Tab(label="Upload", tab_id="Upload"),
+#         dbc.Tab(label="Download", tab_id="Download"),
+#     ],
+#     id="tabs",
+#     active_tab="Upload",
+# ),
+# html.Div(id="tab-content", className="p-4"),
+
+
 
 
 
@@ -349,12 +346,10 @@ dbc.Row([
 
 
 
-
-
-# Create a component for downloading data
-dcc.Download(id="download"),
-dcc.Store(id='newfilestorage', storage_type='memory'),
-dcc.Store(id='filestorage', storage_type='session'),
+# # Create a component for downloading data
+# dcc.Download(id="download"),
+# dcc.Store(id='newfilestorage', storage_type='memory'),
+# dcc.Store(id='filestorage', storage_type='session'),
 
 @app.callback(
     Output(component_id = "tab-content", component_property = "children"),
@@ -363,11 +358,15 @@ dcc.Store(id='filestorage', storage_type='session'),
 
 def render_tab_content(active_tab):
 
-    print(active_tab)
-
     if active_tab is not None:
         if active_tab == "Upload":
             return dbc.Row([
+
+                dbc.Col(
+
+                    html.H5('Upload/Clear Files'),
+
+                width = 12, className ="text-center" ),
 
         dbc.Col(
 
@@ -384,38 +383,29 @@ def render_tab_content(active_tab):
                     'borderStyle': 'dashed',
                     'borderRadius': '5px',
                     'textAlign': 'center',
-                    'margin': '10px'
+                    'margin': '20px',
+                    'width': '100%',
                 },
                 # Allow multiple files to be uploaded
-                multiple=True), width=3),
+                multiple=True), className = 'ms-2'),
 
         dbc.Col([
 
-            dbc.Row(
 
-                dbc.Button(
-                    "Upload new Files",
-                    id='newfile',
-                    outline=True,
-                    color="primary",
-                    className="me-1",
-                    n_clicks=0),
-            ),
 
             dbc.Row(
 
                 dbc.Button(
-                    "Clear Files",
+                    "Clear Selected Files",
                     id='clear_files',
                     outline=True,
                     color="secondary",
                     className="me-1",
                     n_clicks=0),
 
-            ),
-        ]),
+            className = 'ms-2'),
 
-        dbc.Col([
+            html.Div(className = 'mb-3'),
 
             dbc.Row([
                 # Create a checklist for selecting a velocity
@@ -423,6 +413,22 @@ def render_tab_content(active_tab):
                 dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
                 dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
             ]),
+
+        ]),
+
+        dbc.Col([
+
+            dbc.Row(
+
+                dbc.Button(
+                    "Upload Selected Files",
+                    id='newfile',
+                    outline=True,
+                    color="primary",
+                    className="me-1",
+                    n_clicks=0), className = 'ms-2'
+            ),
+
 
             dbc.Row([
                 # Create a checklist for selecting a velocity
@@ -432,12 +438,8 @@ def render_tab_content(active_tab):
             ]),
         ]),
 
-        dbc.Col(
 
-            html.Label('Error/instructions')
-        ),
-
-    ]),
+    ], align ='center'),
 
 
         elif active_tab == "Download":
