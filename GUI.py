@@ -120,7 +120,9 @@ def cal_velocity(contents, file_names):
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+
+app.config.suppress_callback_exceptions=True
 
 # Define layout of the app
 app.layout = dbc.Container([
@@ -147,6 +149,14 @@ app.layout = dbc.Container([
         dbc.Col(
             html.Hr(),
         width = 12),
+
+        dbc.Col([
+            dbc.Alert(
+                id="alert",
+                is_open=False,
+                dismissable=True,
+                duration=20000),
+        ], width=12),
 
         dbc.Col(
         dbc.Label("Time Slider", className="text-center mb-1"),
@@ -250,9 +260,9 @@ dbc.Row(
                 dbc.InputGroup([
                     dbc.DropdownMenu([
                         dbc.DropdownMenuItem("Update Title", id="dropdown_legend_update"),
-                        dbc.DropdownMenuItem("Update Legend", id="dropdown_legend_clear"),
+                        dbc.DropdownMenuItem("Update Legend", id="dropdown_title_update"),
                     ],
-                        label="Generate"),
+                        label="Update"),
                     dbc.Input(
                         id="New_name",
                         type='text',
@@ -284,28 +294,15 @@ dbc.Tabs(
 ),
 html.Div(id="tab-content", className="p-4"),
 
-])
-
-
-
-
-
-#
-# dbc.Row(
-#
-#     dbc.Alert(
-#         id="alert",
-#         is_open=False,
-#         dismissable=True,
-#         duration=20000,
-#     ),
-# ),
-
-
 # # Create a component for downloading data
 dcc.Download(id="download"),
 dcc.Store(id='newfilestorage', storage_type='memory'),
 dcc.Store(id='filestorage', storage_type='session'),
+
+])
+
+
+
 
 @app.callback(
     Output(component_id = "tab-content", component_property = "children"),
@@ -318,6 +315,14 @@ def render_tab_content(active_tab):
     if active_tab is not None:
         if active_tab == "Upload":
             return dbc.Row([
+
+            dbc.Col([
+                dbc.Alert(
+                        id="alert",
+                        is_open=False,
+                        dismissable=True,
+                        duration=20000),
+                ], width = 12),
 
                 dbc.Col(
 
@@ -367,6 +372,7 @@ def render_tab_content(active_tab):
                 dcc.Checklist(value=[], id="upload_file_checklist", inline=True),
 
             ], gap = 2),
+
         width = 3),
 
         dbc.Col(
@@ -404,20 +410,29 @@ def render_tab_content(active_tab):
                     html.Hr(), width = 12,
                 ),
 
+            dbc.Col([
+                dbc.Alert(
+                        id="alert",
+                        is_open=False,
+                        dismissable=True,
+                        duration=20000),
+                ], width = 12),
+
+
             dbc.Col(
 
                 dbc.Stack([
 
                     html.Label("Select data file to download"),
 
-                    dbc.RadioItems(value='', id="file_checklist", inline=True),
+                    dbc.RadioItems(value='what', id="file_checklist", inline=True),
 
                     html.Label("Choose quantity"),
 
                     # Create a checklist for selecting a velocity
                     dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
 
-                    dbc.Checklist(value=[], id="vel_checklist", inline=True),
+                    dbc.Checklist(value=[],options = [], id = "vel_checklist", inline=True),
 
                     html.Label("Choose file type"),
 
@@ -472,7 +487,10 @@ def render_tab_content(active_tab):
         State(component_id = 'submit_files', component_property ='filename'),
         prevent_initial_call = True)
 
+
+
 def new_contents(filenames, contents, ALL_filenames):
+
 
     if "submit_files" == ctx.triggered_id:
 
@@ -699,10 +717,10 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 @app.callback(
     Output(component_id="File", component_property='options'),
     Output(component_id='Vect', component_property='options'),
-    Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+    #Output(component_id="file_checklist", component_property='option', allow_duplicate=True),
+    #Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
+    #Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
     Input(component_id='filestorage', component_property='data'),
     prevent_initial_call=True)
 
@@ -727,30 +745,30 @@ def update_dropdowns(data):
 
 
 
-@app.callback(
-        Output(component_id="vel_checklist", component_property='value'),
-        Output(component_id='all_vel_checklist', component_property='value'),
-        Input(component_id="vel_checklist", component_property='value'),
-        Input(component_id='all_vel_checklist', component_property='value'),
-        prevent_initial_call=True
-        )
-
-
-def vel_sync_checklist(vel_check, all_vel_checklist):
-
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    vel_type = ['Ux','Uy','Uz','t']
-
-    if input_id == "vel_checklist":
-
-        all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
-
-    else:
-
-        vel_check = vel_type if all_vel_checklist else []
-
-    return vel_check, all_vel_checklist
+# @app.callback(
+#         Output(component_id="vel_checklist", component_property='value'),
+#         Output(component_id='all_vel_checklist', component_property='value'),
+#         Input(component_id="vel_checklist", component_property='value'),
+#         Input(component_id='all_vel_checklist', component_property='value'),
+#         prevent_initial_call=True
+#         )
+#
+#
+# def vel_sync_checklist(vel_check, all_vel_checklist):
+#
+#     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+#
+#     vel_type = ['Ux','Uy','Uz','t']
+#
+#     if input_id == "vel_checklist":
+#
+#         all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
+#
+#     else:
+#
+#         vel_check = vel_type if all_vel_checklist else []
+#
+#     return vel_check, all_vel_checklist
 
 
 @app.callback(
@@ -783,8 +801,8 @@ def update_In(Sin_val, Lin_val):
         Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
-        Output(component_id='btn_title_update', component_property='n_clicks'),
-        Output(component_id='btn_leg_update', component_property='n_clicks'),
+        Output(component_id='dropdown_title_update', component_property='n_clicks'),
+        Output(component_id='dropdown_legend_update', component_property='n_clicks'),
         Output(component_id='alert', component_property='children', allow_duplicate=True),
         Output(component_id='alert', component_property='color', allow_duplicate=True),
         Output(component_id='alert', component_property='is_open', allow_duplicate=True)],
@@ -795,17 +813,16 @@ def update_In(Sin_val, Lin_val):
         Input(component_id='line_thick', component_property='value'),
         Input(component_id='legend_onoff', component_property='value'),
         Input(component_id='title_onoff', component_property='value'),
-        Input(component_id='btn_title_update', component_property='n_clicks'),
-        Input(component_id='btn_leg_update', component_property='n_clicks'),
+        Input(component_id='dropdown_title_update', component_property='n_clicks'),
+        Input(component_id='dropdown_legend_update', component_property='n_clicks'),
         State(component_id='alert', component_property='children'),
         State(component_id='alert', component_property='color'),
         State(component_id='alert', component_property='is_open'),
-        State(component_id='New_Titlename', component_property='value'),
-        State(component_id='New_LegName', component_property='value')],
+        State(component_id='New_name', component_property='value')],
         prevent_initial_call = True)
 
 def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, error,
-                     color, open1, NewTit_name, NewLeg_name):
+                     color, open1, New_name_Title_or_Leg):
 
     if data is None or {}:
         raise PreventUpdate
@@ -896,8 +913,8 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
         if title == 'Off':
             fig.layout.update(title='')
 
-        elif title =='On' and n_clicks >= 1  and NewTit_name !='' and NewTit_name !=None:
-            fig.layout.update(title=NewTit_name)
+        elif title =='On' and n_clicks >= 1  and New_name_Title_or_Leg !='' and New_name_Title_or_Leg !=None:
+            fig.layout.update(title=New_name_Title_or_Leg)
 
         elif title == 'On':
             fig.layout.update(title='Barnacle Data')
@@ -906,9 +923,9 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
         if leg == 'Off':
             fig.layout.update(showlegend=False)
 
-        elif leg =='On' and n_clicks1 >= 1 and NewLeg_name !='' and NewLeg_name !=None:
+        elif leg =='On' and n_clicks1 >= 1 and New_name_Title_or_Leg !='' and New_name_Title_or_Leg !=None:
 
-            NewLeg_name_list = NewLeg_name.split(',')
+            NewLeg_name_list = New_name_Title_or_Leg.split(',')
 
             newname_result = {}
 
@@ -955,9 +972,9 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
         State(component_id="file_name_input", component_property='value'),
         State(component_id="small_t", component_property='value'),
         State(component_id="big_t", component_property='value'),
-        State(component_id="vel_checklist", component_property='value'),
-        State(component_id="vel_checklist", component_property='options'),
-        State(component_id="file_checklist", component_property='value'),
+        #State(component_id="vel_checklist", component_property='value'),
+        #State(component_id="vel_checklist", component_property='options'),
+       # State(component_id="file_checklist", component_property='value'),
         State(component_id="type_checklist", component_property='value'),
         State(component_id='filestorage', component_property='data'),
         prevent_initial_call=True)
@@ -1129,11 +1146,10 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id="File", component_property='options', allow_duplicate=True),
         Output(component_id='Vect', component_property='options', allow_duplicate=True),
         Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
-        Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-        Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-        Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
-        Output(component_id='New_Titlename', component_property='value', allow_duplicate=True),
-        Output(component_id='New_LegName', component_property='value', allow_duplicate=True),
+        #Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+        #Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+        #Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
+        Output(component_id='New_name', component_property='value', allow_duplicate=True),
         Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
         Output(component_id="small_t", component_property='value', allow_duplicate=True),
         Output(component_id="big_t", component_property='value', allow_duplicate=True),
@@ -1145,7 +1161,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id='alert', component_property='color', allow_duplicate=True),
         Output(component_id='alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-        Output(component_id="file_checklist", component_property='value'),
+        #Output(component_id="file_checklist", component_property='value'),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
@@ -1229,8 +1245,8 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
         open1 = True
 
-    return file_val, vect_val, file_dropdown_options, vect_options, fig, file_checklist,\
-        vel_checklist, all_vel_checklist, title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness,\
+    return file_val, vect_val, file_dropdown_options, vect_options, fig\
+        , title_name, new_legname, file_name_inp, in_val_S, in_val_L, line_thickness,\
         clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata, file_download_val
 
 
