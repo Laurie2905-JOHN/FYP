@@ -238,46 +238,44 @@ dbc.Row([
         ]),
 
 
-        ),
-    ])
-
-        ]),
-]),
-
-
-    dbc.Col([
-
-        dbc.Stack([
-
-            dbc.Label("Update Title or Legend", class_name="center-text"),
-
-        dbc.Stack([
-
-        dbc.Stack([
-            dbc.InputGroup([
-                    dbc.DropdownMenu([
-                    dbc.DropdownMenuItem("Update", id="dropdown_title_update"),
-                    dbc.DropdownMenuItem("Clear", id="dropdown_title_clear"),
-        ],
-            label="Generate"),
-            dcc.Input(
-            id="New_Titlename",
-            type='text',
-            placeholder="Enter new title",
-            debounce=True),
+        className = 'mb-3'),
     ]),
+
+
+
+dbc.Row(
+
+
+            dbc.Stack([
+                dbc.InputGroup([
+                    dbc.DropdownMenu([
+                        dbc.DropdownMenuItem("Update Title", id="dropdown_legend_update"),
+                        dbc.DropdownMenuItem("Update Legend", id="dropdown_legend_clear"),
+                    ],
+                        label="Generate"),
+                    dbc.Input(
+                        id="New_name",
+                        type='text',
+                        placeholder="Enter text to update legend or title",
+                        debounce=True),
+                ]),
             ], direction="horizontal"),
 
-            ])
+)
 
-        ])
-        ])
-
-
-
-
+]),
 ])
+
+    ], justify="center", align="center"),
+
+
+
     ])
+
+
+
+
+
 
 
 
