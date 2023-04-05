@@ -392,142 +392,73 @@ def render_tab_content(active_tab):
             ], align = 'center', justify = 'evenly'),
 
         elif active_tab == "Download":
-            return dbc.Col([
+            return dbc.Row([
 
-                dbc.Row(
+                dbc.Col(
 
-                    # Create a label for downloading data
-                    html.Label("Download Options"),
+                html.H5('Download Files', className = 'center-text'),
 
+                width = 12, className ="text-center" ),
+
+                dbc.Col(
+                    html.Hr(), width = 12,
                 ),
 
-                dbc.Row(
+            dbc.Col(
 
-                    # Create a label for downloading data
-                    html.Label("Instructions"),
+                dbc.Stack([
 
-                ),
+                    html.Label("Select data file to download"),
 
+                    dbc.RadioItems(value='', id="file_checklist", inline=True),
 
-                dbc.Col([
+                    html.Label("Choose quantity"),
 
-                    dbc.Row(
+                    # Create a checklist for selecting a velocity
+                    dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
 
-                        html.Label("Choose data file"),
+                    dbc.Checklist(value=[], id="vel_checklist", inline=True),
 
-                    ),
+                    html.Label("Choose file type"),
 
+                    # Create a label for selecting a data file
+                    dbc.RadioItems(options=['CSV', 'Excel', '.txt'], value='CSV', id="type_checklist", inline=True),
 
-                    dbc.Row(
+                ], gap=2)),
 
-                        # Create a label for selecting a data file
-                        dcc.RadioItems(value='', id="file_checklist", inline=True),
-
-                    ),
-
-                    dbc.Row(
-
-                        # Create a label for selecting a data file
-                        html.Label("Filename"),
-
-                    ),
-
-                    dbc.Row(
+                dbc.Col(
+                    dbc.Stack([
 
                         # Create a label for selecting a data file
-                        dcc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
+                        html.Label("If required, input filename and time range to cut data"),
 
-                    ),
+                        dbc.Row([
 
-                    dbc.Row(
+                        dbc.Col(
+
+                        dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True, ),
+
+                        ),
+
+                            dbc.Col(
+
+                        dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True,
+                                  style={'marginRight': '10px'}),
+
+                            ),
+                            ]),
+
+                        # Create a label for selecting a data file
+                        dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
 
                         # Create a button for downloading data
-                        html.Button("Download", id="btn_download"),
+                        dbc.Button("Download File", id="btn_download", size="lg"),
 
-                    ),
+                        ], gap = 3)
 
-                ]),
+                ),
+                ], align = 'center', justify = 'start'),
 
-                dbc.Col([
-
-                    dbc.Row(
-
-                        html.Label("Choose quantity"),
-
-                    ),
-
-                    dbc.Row([
-
-                        # Create a checklist for selecting a velocity
-                        dcc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
-
-                        dcc.Checklist(value=[], id="vel_checklist", inline=True),
-
-                    ]),
-
-                    dbc.Row(
-
-                        html.Label("Choose file type"),
-
-                    ),
-
-                    dbc.Row(
-
-                        # Create a label for selecting a data file
-                        dcc.RadioItems(options=['CSV', 'Excel', '.txt'], value='CSV', id="type_checklist", inline=True),
-
-                    ),
-
-                    dbc.Row(
-
-                        html.Label("Time Range"),
-
-                    ),
-
-                    dbc.Row([
-
-                        dbc.Col([
-
-                            dbc.Row(
-
-                                html.Label("Max"),
-
-                            ),
-
-                            dbc.Row(
-
-                                dcc.Input(id="big_t", min=0, type="number", placeholder="Maximum Time", debounce=True, ),
-
-                            ),
-
-                        ]),
-
-                        dbc.Col([
-
-                            dbc.Row(
-
-                                html.Label("Min"),
-
-                            ),
-
-                            dbc.Row(
-
-                                dcc.Input(id="small_t", type="number", placeholder="Minimum Time", debounce=True,
-                                          style={'marginRight': '10px'}),
-                            ),
-
-                        ]),
-
-                    ]),
-
-                    dbc.Row(
-
-                        html.Label('error'),
-
-                    ),
-
-                ]),
-            ])
         return "No tab selected"
 
 
