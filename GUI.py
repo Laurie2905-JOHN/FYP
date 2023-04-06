@@ -259,8 +259,10 @@ dbc.Row(
             dbc.Stack([
                 dbc.InputGroup([
                     dbc.DropdownMenu([
-                        dbc.DropdownMenuItem("Update Title", id="dropdown_legend_update"),
-                        dbc.DropdownMenuItem("Update Legend", id="dropdown_title_update"),
+                        dbc.DropdownMenuItem("Update Title", id="dropdown_title_update"),
+                        dbc.DropdownMenuItem("Update Legend", id="dropdown_legend_update"),
+                        dbc.DropdownMenuItem(divider=True),
+                        dbc.DropdownMenuItem("Clear", id="dropdown_clear"),
                     ],
                         label="Update"),
                     dbc.Input(
@@ -490,43 +492,6 @@ def file_checklist(file_names):
     upload_file_checklist = file_names
 
     return upload_file_checklist
-
-
-
-
-# @app.callback(
-#         Output(component_id = 'newfilestorage', component_property = 'data'),
-#         Output(component_id='alert', component_property='children'),
-#         Output(component_id='alert', component_property='color'),
-#         Output(component_id='alert', component_property='is_open'),
-#         Input(component_id = 'submit_files',component_property = 'contents'),
-#         State(component_id="upload_file_checklist", component_property='value'),
-#         prevent_initial_call = True)
-#
-#
-#
-# def new_contents(contents, filenames):
-#
-#
-#     if "submit_files" == ctx.triggered_id:
-#
-#
-#
-#         # contain_text = []
-#         #
-#         # for name in ALL_filenames:
-#         #     if 'txt' not in name:
-#         #         contain_text.append(name)
-#         #
-#         # error = 'WARNING: Files: (' + ', '.join(
-#         #     contain_text) + ') ' + '\n  unsupported file type. \n Please upload .txt files'
-#         #
-#         # color = "danger"
-#         #
-#         # open1 = True
-#         #
-#         # return no_update, error, color, open1
-
 
 
 @app.callback(
@@ -816,11 +781,10 @@ def update_In(Sin_val, Lin_val):
         Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
-        Output(component_id='dropdown_title_update', component_property='n_clicks'),
-        Output(component_id='dropdown_legend_update', component_property='n_clicks'),
         Output(component_id='alert', component_property='children', allow_duplicate=True),
         Output(component_id='alert', component_property='color', allow_duplicate=True),
-        Output(component_id='alert', component_property='is_open', allow_duplicate=True)],
+        Output(component_id='alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='New_name', component_property='value')],
         [Input(component_id = 'filestorage', component_property = 'data'),
         Input(component_id = 'File', component_property = 'value'),
         Input(component_id = 'Vect', component_property = 'value'),
@@ -828,20 +792,20 @@ def update_In(Sin_val, Lin_val):
         Input(component_id='line_thick', component_property='value'),
         Input(component_id='legend_onoff', component_property='value'),
         Input(component_id='title_onoff', component_property='value'),
-        Input(component_id='dropdown_title_update', component_property='n_clicks'),
-        Input(component_id='dropdown_legend_update', component_property='n_clicks'),
+        Input(component_id="dropdown_legend_update", component_property='n_clicks'),
+        Input(component_id="dropdown_title_update", component_property='n_clicks'),
+        Input(component_id="dropdown_clear", component_property='n_clicks'),
+        State(component_id='New_name', component_property='value'),
         State(component_id='alert', component_property='children'),
         State(component_id='alert', component_property='color'),
-        State(component_id='alert', component_property='is_open'),
-        State(component_id='New_name', component_property='value')],
+        State(component_id='alert', component_property='is_open')],
         prevent_initial_call = True)
 
-def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, n_clicks, n_clicks1, error,
-                     color, open1, New_name_Title_or_Leg):
+def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, legend_update, title_update, dropdown_clear, New_name_Title_or_Leg, error,
+                     color, open1):
 
     if data is None or {}:
         raise PreventUpdate
-
 
     if user_inputs == [] or user_inputs1 == []:
 
@@ -858,6 +822,8 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
         max_sl = 10
 
         value =[1, 10]
+
+        name_input = no_update
 
     else:
 
@@ -924,12 +890,22 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
                 xanchor="center"),
         )
 
+        if ctx.triggered_id == 'dropdown_clear':
+            name_input = ''
+        else:
+            name_input = no_update
+
+
 
         if title == 'Off':
             fig.layout.update(title='')
 
-        elif title =='On' and n_clicks >= 1  and New_name_Title_or_Leg !='' and New_name_Title_or_Leg !=None:
+        elif title =='On' and New_name_Title_or_Leg !='' and New_name_Title_or_Leg is not None and ctx.triggered_id == 'dropdown_title_update':
             fig.layout.update(title=New_name_Title_or_Leg)
+
+            error = 'Title Updated'
+
+            color = "success"
 
         elif title == 'On':
             fig.layout.update(title='Barnacle Data')
@@ -938,7 +914,7 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
         if leg == 'Off':
             fig.layout.update(showlegend=False)
 
-        elif leg =='On' and n_clicks1 >= 1 and New_name_Title_or_Leg !='' and New_name_Title_or_Leg !=None:
+        elif leg =='On' and New_name_Title_or_Leg !='' and New_name_Title_or_Leg is not None and ctx.triggered_id == 'dropdown_legend_update':
 
             NewLeg_name_list = New_name_Title_or_Leg.split(',')
 
@@ -975,7 +951,7 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 
             fig.layout.update(showlegend=True)
 
-    return fig, min_sl, max_sl, value, n_clicks, n_clicks1, error, color, open1,
+    return fig, min_sl, max_sl, value, error, color, open1, name_input
 
 
 @app.callback(
