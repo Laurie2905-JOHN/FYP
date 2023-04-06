@@ -155,13 +155,26 @@ app.layout = dbc.Container([
                 is_open=False,
                 dismissable=True,
                 duration=20000),
+
         ], width=12),
 
-        dbc.Col(
-        dbc.Label("Time Slider", className="text-center mb-1"),
-            width = 12,),
 
-        dbc.Col(
+        dbc.Row([
+
+
+            dbc.Col(
+            dbc.Row(
+
+
+            dbc.Label("Time Slider", className="text-center mb-1"),
+
+            ),
+            ),
+
+            dbc.Row(
+
+            dbc.Col(
+
             dcc.RangeSlider(
             id='time-range',
             min=1,
@@ -170,6 +183,10 @@ app.layout = dbc.Container([
             tooltip={"placement": "bottom", "always_visible": True},
             updatemode='drag'
         ), width = 12, className="mb-2"),
+
+            ),
+
+            ])
 
 
 
@@ -285,37 +302,13 @@ dbc.Row([
     width = 12),
     ], className = 'mb-2'),
 
-dbc.Tabs(
-    [
-        dbc.Tab(label="Upload", tab_id="Upload"),
-        dbc.Tab(label="Download", tab_id="Download"),
-    ],
-    id="tabs",
-    active_tab="Upload",
-),
-html.Div(id="tab-content", className="p-4"),
 
 # # Create a component for downloading data
 dcc.Download(id="download"),
 dcc.Store(id='newfilestorage', storage_type='memory'),
 dcc.Store(id='filestorage', storage_type='session'),
 
-#])
 
-
-
-# @app.callback(
-#     Output(component_id = "tab-content", component_property = "children"),
-#     [Input(component_id ="tabs", component_property = "active_tab")]
-# )
-#
-# def render_tab_content(active_tab):
-#     print(active_tab)
-#
-#     if active_tab is not None:
-#         if active_tab == "Upload":
-#             return
-#
 dbc.Row([
 
                 dbc.Col(
@@ -333,7 +326,7 @@ dbc.Row([
             id="ClearFiles_alert",
             is_open=False,
             dismissable=True,
-            duration=20000),
+            duration=30000),
     ], width=12),
 
         dbc.Col([
@@ -399,85 +392,105 @@ dbc.Row([
 
             ], align = 'center', justify = 'evenly'),
 
-        # elif active_tab == "Download":
-        #     return \
+
+
 dbc.Row([
+
+    dbc.Col(
+    html.Hr(),
+    width = 12),
+    ], className = 'mb-2'),
+
+    dbc.Row(
 
                 dbc.Col(
 
                 html.H5('Download Files', className = 'center-text'),
 
                 width = 12, className ="text-center" ),
+    ),
+
+    dbc.Row(
 
                 dbc.Col(
                     html.Hr(), width = 12,
                 ),
+    ),
 
-
+dbc.Row(
             dbc.Col([
                 dbc.Alert(
                         id="Download_alert",
                     is_open=False,
                     dismissable=True,
-                    duration=20000),
+                    duration=30000),
             ], width=12),
 
+),
 
-            dbc.Col(
+dbc.Row([
+
+            dbc.Col([
 
                 dbc.Stack([
 
-                    html.Label("Select data file to download"),
+                    html.Label("Choose Data File"),
 
                     dbc.RadioItems(id="file_checklist", inline=True),
 
-                    html.Label("Choose quantity"),
+                    html.Label("Choose Quantity"),
 
                     # Create a checklist for selecting a velocity
                     dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
 
                     dbc.Checklist(value=[],options = [], id = "vel_checklist", inline=True),
 
-                    html.Label("Choose file type"),
+                    html.Label("Choose File Type"),
 
                     # Create a label for selecting a data file
                     dbc.RadioItems(options=['CSV', 'Excel', '.txt'], value='CSV', id="type_checklist", inline=True),
 
-                ], gap=2)),
+                ], gap=2),
 
-                dbc.Col(
-                    dbc.Stack([
-
-                        # Create a label for selecting a data file
-                        html.Label("If required input filename and time range to cut data"),
-
-                        dbc.Row([
-
-                        dbc.Col(
-
-                            dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True)
+    ], width = 6),
 
 
-                        ),
+    dbc.Col([
 
-                            dbc.Col(
-
-                                dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True),
-
-                            ),
-
-                            ]),
+            dbc.Stack([
 
                         # Create a label for selecting a data file
-                        dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
-
                         # Create a button for downloading data
-                        dbc.Button("Download File", id="btn_download", size="lg"),
+                        dbc.Button("Download", id="btn_download", size="lg"),
 
-                        ], gap = 3)
 
-                ),
-                ], align = 'center', justify = 'start'),
+                    # Create a label for selecting a data file
+                    dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
+
+
+
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True)
+                    ),
+
+                    dbc.Col(
+
+                        dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True)
+
+                    ),
+
+                ], justify="center"),
+
+            ], gap=2),
+
+
+], width = 6),
+
+
+                ], align = 'center', justify = 'evenly'),
+
+
 
     ])
 
@@ -508,6 +521,8 @@ def file_checklist(file_names):
 
 
 def content(n_clicks, data, contents, filenames):
+
+    print(contents)
 
     if n_clicks is None:
         raise PreventUpdate
@@ -577,10 +592,10 @@ def content(n_clicks, data, contents, filenames):
                     error_list_complete = contain_text + repeated_value + error_file
 
                     error_start = 'There was an error processing files: \n ' \
-                                   '(' + ', '.join(error_list_complete) + ')\n'
+                                   '(' + ', '.join(error_list_complete) + ').'
 
                     error_repeat = ' Please check that files are not repeated: \n ' \
-                                   '(' + ', '.join(repeated_value) + '). '
+                                   '(' + ', '.join(repeated_value) + ').'
 
                     error_txt = ' Please check the file type of: \n' \
                                 '(' + ', '.join(contain_text) + '). '
@@ -591,31 +606,31 @@ def content(n_clicks, data, contents, filenames):
 
                     if contain_text != [] and repeated_value != [] and error_file != []:
 
-                        error = error_start + error_repeat + error_txt + error_process
+                        error = error_start + '\n' + error_repeat + '\n' + error_txt + '\n' + error_process
 
                     elif contain_text != [] and error_file != []:
 
-                        error = error_start + error_txt + error_process
+                        error = error_start + '\n' + error_txt + '\n' + error_process
 
                     elif error_file != [] and repeated_value != []:
 
-                        error = error_start + error_repeat + error_txt
+                        error = error_start + '\n' + error_repeat + '\n' + error_txt
 
                     elif contain_text != [] and repeated_value != []:
 
-                        error = error_start + error_repeat + error_txt
+                        error = error_start + '\n' + error_repeat + '\n' + error_txt
 
                     elif error_file != []:
 
-                        error = error_start + error_process
+                        error = error_start + '\n' + error_process
 
                     elif contain_text != []:
 
-                        error = error_start + error_txt
+                        error = error_start + '\n' + error_txt
 
                     elif repeated_value != []:
 
-                        error = error_start + error_repeat
+                        error = error_start + '\n' + error_repeat
 
                 else:
 
@@ -1125,6 +1140,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         return text, error1[0], error1[1], True,
 
 @app.callback(
+        Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
         Output(component_id="File", component_property='options', allow_duplicate=True),
         Output(component_id='Vect', component_property='options', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
@@ -1132,6 +1148,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
         Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+        Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
         Input(component_id="File", component_property='options'),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
@@ -1143,6 +1160,10 @@ def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
 
     if "clear_files" != ctx.triggered_id:
         raise PreventUpdate
+
+    upload_file_check = []
+
+    fig = {}
 
     if allclear == ['All']:
 
@@ -1158,6 +1179,7 @@ def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
 
         vect_opt = []
 
+
         if len(whatclear) == 0:
 
             error = 'No files deleted'
@@ -1171,6 +1193,7 @@ def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
             file_drop_opt = []
 
             vect_opt = []
+
 
     elif len(whatclear) >= 1:
 
@@ -1209,10 +1232,8 @@ def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
 
     open1 = True
 
-    print(file_drop)
 
-
-    return file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main
+    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_file_check
 
 
 # Run app
