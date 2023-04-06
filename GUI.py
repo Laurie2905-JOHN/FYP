@@ -65,16 +65,15 @@ def cal_velocity(contents, file_names):
     zeros['pr_mean'] = np.mean(zeros['pr_raw'][1300:1708, :], axis=0)
 
     # Loading actual Barnacle data
-
+    content_string = contents
+    decoded = base64.b64decode(content_string)
+    decoded_str = decoded.removeprefix(b'u\xabZ\xb5\xecm\xfe\x99Z\x8av\xda\xb1\xee\xb8')
+    lines = decoded_str.decode().split('\r\n')[:-1]
     prb = {}
     prb_final = {}
 
     for i, file_name in enumerate(file_names):
         prb[file_name] = {'raw': {}}
-        content_string = contents[i]
-        decoded = base64.b64decode(content_string)
-        decoded_str = decoded.removeprefix(b'u\xabZ\xb5\xecm\xfe\x99Z\x8av\xda\xb1\xee\xb8')
-        lines = decoded_str.decode().split('\r\n')[:-1]
         prb[file_name]['raw'] = np.array([list(map(float, line.split(','))) for line in lines])
         prb[file_name]['raw'] -= zeros['pr_mean']
         # Data analysis
@@ -104,15 +103,15 @@ def cal_velocity(contents, file_names):
 
         # Taking data needed
         # Taking data needed
-        prb_final[file_name] = {'Ux': {}}
-        prb_final[file_name] = {'Uy': {}}
-        prb_final[file_name] = {'Uz': {}}
-        prb_final[file_name] = {'t': {}}
-        prb_final[file_name]['Ux'] = prb[file_name]['Ux']
-        prb_final[file_name]['Uy'] = prb[file_name]['Uy']
-        prb_final[file_name]['Uz'] = prb[file_name]['Uz']
-        prb_final[file_name]['t'] = prb[file_name]['t']
+        prb_final = {'Ux': {}}
+        prb_final = {'Uy': {}}
+        prb_final = {'Uz': {}}
+        prb_final = {'t': {}}
 
+        prb_final['Ux'] = prb[file_name]['Ux']
+        prb_final['Uy'] = prb[file_name]['Uy']
+        prb_final['Uz'] = prb[file_name]['Uz']
+        prb_final['t'] = prb[file_name]['t']
 
     return prb_final
 
@@ -155,7 +154,7 @@ app.layout = dbc.Container([
                 id="alert",
                 is_open=False,
                 dismissable=True,
-                duration=10000),
+                duration=20000),
         ], width=12),
 
         dbc.Col(
@@ -334,7 +333,7 @@ dbc.Row([
             id="ClearFiles_alert",
             is_open=False,
             dismissable=True,
-            duration=10000),
+            duration=20000),
     ], width=12),
 
         dbc.Col([
@@ -420,7 +419,7 @@ dbc.Row([
                         id="Download_alert",
                     is_open=False,
                     dismissable=True,
-                    duration=10000),
+                    duration=20000),
             ], width=12),
 
 
@@ -515,7 +514,10 @@ def content(n_clicks, data, contents, filenames):
 
     if "newfile" == ctx.triggered_id:
 
-        if filenames is None or filenames == []:
+        if data is None:
+            data = [{}, []]
+
+        if filenames is None or filenames == [] or contents is None or contents == []:
 
             error = 'No files selected for upload'
 
@@ -527,116 +529,104 @@ def content(n_clicks, data, contents, filenames):
 
         else:
 
-            try:
+            prb = data[0]
 
-                contain_text = []
+            Oldfilenames = data[1]
 
-                for name1 in filenames:
-                    if 'txt' not in name1:
-                        contain_text.append(name1)
+            combined_filenames = Oldfilenames.copy()
 
-                if contain_text != []:
+            new_value = []
 
-                    error = 'There was an error processing files: (' + ', '.join(
-                        contain_text) + ') ' + '\nPlease check file type'
+            repeated_value = []
+
+            contain_text = []
+
+            error_file = []
+
+            for i, value in enumerate(filenames):
+
+                if value in combined_filenames:
+                    repeated_value.append(value)
+
+                if 'txt' not in value:
+                    contain_text.append(value)
+
+
+                # Check if the value is already in the combined list
+                if value not in combined_filenames:
+                    if value not in contain_text:
+
+                        try:
+                            prb[value] = {value: {}}
+                            prb[value] = cal_velocity(contents[i], filenames[i])
+                            new_value.append(value)
+                            combined_filenames.append(value)
+
+                        except Exception:
+
+                            error_file.append(value)
+
+                if contain_text != [] or repeated_value != [] or error_file != []:
+
+                    data = [prb, combined_filenames]
 
                     color = "danger"
 
                     open1 = True
 
-                    data = no_update
+                    error_list_complete = contain_text + repeated_value + error_file
+
+                    error_start = 'There was an error processing files: \n ' \
+                                   '(' + ', '.join(error_list_complete) + ')\n'
+
+                    error_repeat = ' Please check that files are not repeated: \n ' \
+                                   '(' + ', '.join(repeated_value) + '). '
+
+                    error_txt = ' Please check the file type of: \n' \
+                                '(' + ', '.join(contain_text) + '). '
+
+                    error_process = ' Please check the file format of: \n' \
+                                '(' + ', '.join(error_file) + '). '
+
+
+                    if contain_text != [] and repeated_value != [] and error_file != []:
+
+                        error = error_start + error_repeat + error_txt + error_process
+
+                    elif contain_text != [] and error_file != []:
+
+                        error = error_start + error_txt + error_process
+
+                    elif error_file != [] and repeated_value != []:
+
+                        error = error_start + error_repeat + error_txt
+
+                    elif contain_text != [] and repeated_value != []:
+
+                        error = error_start + error_repeat + error_txt
+
+                    elif error_file != []:
+
+                        error = error_start + error_process
+
+                    elif contain_text != []:
+
+                        error = error_start + error_txt
+
+                    elif repeated_value != []:
+
+                        error = error_start + error_repeat
 
                 else:
 
-                    if filenames and contents is not None:
+                    error = ', '.join(new_value) + ' uploaded'
 
-                        prb = cal_velocity(contents, filenames)
+                    color = "success"
 
-                        newdata = [prb, filenames]
+                    open1 = True
 
-                        if newdata is None or newdata == []:
+                    data = [prb, combined_filenames]
 
-                            error = 'There was an error processing the files, please try again'
-
-                            color = "danger"
-
-                            open1 = True
-
-                        else:
-
-                            if data is None:
-
-
-                                new_prb = newdata[0]
-
-                                new_filenames = newdata[1]
-
-                                data = [new_prb, new_filenames]
-
-                                error = ', '.join(new_filenames) + ' uploaded'
-
-                                color = "primary"
-
-                                open1 = True
-
-                            else:
-
-                                new_prb = newdata[0]
-
-                                new_filenames = newdata[1]
-
-                                prb = data[0]
-
-                                filenames = data[1]
-
-                                # Create a new list to hold the combined values
-                                combined_filenames = filenames.copy()
-                                new_value = []
-                                repeated_value = []
-
-                                for i, value in enumerate(new_filenames):
-                                    # Check if the value is already in the combined list
-                                    if value not in combined_filenames:
-                                        new_value.append(value)
-                                        prb[value] = {value: {}}
-                                        prb[value] = new_prb[value]
-                                        combined_filenames.append(value)
-                                    if value in combined_filenames:
-                                        repeated_value.append(value)
-
-                                if len(new_value) != len(repeated_value):
-
-                                    if len(new_value) == 0:
-
-                                        error = ', '.join(repeated_value) + ' not uploaded as repeated filenames were found'
-                                    else:
-                                        error = ', '.join(new_value) + ' uploaded successfully ,but' + ', '.join(
-                                            repeated_value) + \
-                                                ' not uploaded as repeated filenames were found'
-
-                                    color = "danger"
-
-                                    open1 = True
-
-                                else:
-
-                                    error = ', '.join(new_value) + ' uploaded'
-
-                                    color = "primary"
-
-                                    data = [prb, combined_filenames]
-
-                                    open1 = True
-
-            except Exception:
-
-                data = no_update
-
-                error = 'There was an error processing the files, please try again'
-
-                color = "danger"
-
-                open1 = True
 
         return data, error, color, open1
 
@@ -709,19 +699,29 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 def update_dropdowns(data):
 
     if data is None:
-        raise PreventUpdate
 
-    vect_options = ['Ux', 'Uy', 'Uz']
+        vect_options = []
 
-    file_dropdown_options = data[1]
+        file_dropdown_options = []
 
-    file_checklist = file_dropdown_options
+        file_checklist = []
 
-    clear_file_check = file_checklist
+        clear_file_check = []
 
-    vel_checklist = ['Ux', 'Uy', 'Uz', 't']
+        vel_checklist = []
 
-    # file_val = file_checklist[0]
+    else:
+
+        vect_options = ['Ux', 'Uy', 'Uz']
+
+        file_dropdown_options = data[1]
+
+        file_checklist = file_dropdown_options
+
+        clear_file_check = file_checklist
+
+        vel_checklist = ['Ux', 'Uy', 'Uz', 't']
+
 
     return file_dropdown_options, vect_options, file_checklist,  vel_checklist, clear_file_check,
 
@@ -1141,13 +1141,28 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
 def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
 
-    if "clear_files" == ctx.triggered_id:
+    if "clear_files" != ctx.triggered_id:
+        raise PreventUpdate
 
-        if allclear == ['All']:
+    if allclear == ['All']:
 
-            error = 'All files cleared'
+        error = 'All files cleared'
 
-            color = "success"
+        color = "success"
+
+        newmaindata = no_update
+
+        clear_data_main = True
+
+        file_drop_opt = []
+
+        vect_opt = []
+
+        if len(whatclear) == 0:
+
+            error = 'No files deleted'
+
+            color = "danger"
 
             newmaindata = no_update
 
@@ -1157,47 +1172,47 @@ def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
 
             vect_opt = []
 
-        elif len(whatclear) >= 1:
+    elif len(whatclear) >= 1:
 
-            df1 = maindata[0]
-            df2 = maindata[1]
+        df1 = maindata[0]
+        df2 = maindata[1]
 
-            for what in whatclear:
-                del df1[what]
-                df2.remove(what)
+        for what in whatclear:
+            del df1[what]
+            df2.remove(what)
 
-            newmaindata = [df1, df2]
+        newmaindata = [df1, df2]
 
-            error = ', '.join(whatclear) + ' deleted'
+        error = ', '.join(whatclear) + ' deleted'
 
-            color = "success"
+        color = "success"
 
-            clear_data_main = False
+        clear_data_main = False
 
-            file_drop_opt = no_update
+        file_drop_opt = no_update
 
-            vect_opt = no_update
+        vect_opt = no_update
 
-        else:
+    else:
 
-            newmaindata = no_update
+        newmaindata = no_update
 
-            error = 'No files deleted as none were selected'
+        error = 'No files deleted as none were selected'
 
-            clear_data_main = False
+        clear_data_main = False
 
-            color = "danger"
+        color = "danger"
 
-            file_drop_opt = no_update
+        file_drop_opt = no_update
 
-            vect_opt = no_update
+        vect_opt = no_update
 
-        open1 = True
+    open1 = True
 
-        print(file_drop)
+    print(file_drop)
 
 
-        return file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main
+    return file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main
 
 
 # Run app
