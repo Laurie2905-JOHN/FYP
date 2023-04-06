@@ -303,7 +303,6 @@ dcc.Store(id='filestorage', storage_type='session'),
 
 
 
-
 # @app.callback(
 #     Output(component_id = "tab-content", component_property = "children"),
 #     [Input(component_id ="tabs", component_property = "active_tab")]
@@ -318,14 +317,6 @@ dcc.Store(id='filestorage', storage_type='session'),
 #
 dbc.Row([
 
-            dbc.Col([
-                dbc.Alert(
-                        id="ClearFiles_alert",
-                        is_open=False,
-                        dismissable=True,
-                        duration=20000),
-                ], width = 12),
-
                 dbc.Col(
 
                 html.H5('Upload/Clear Files', className = 'center-text'),
@@ -335,6 +326,14 @@ dbc.Row([
                 dbc.Col(
                     html.Hr(), width = 12,
                 ),
+
+    dbc.Col([
+        dbc.Alert(
+            id="ClearFiles_alert",
+            is_open=False,
+            dismissable=True,
+            duration=20000),
+    ], width=12),
 
         dbc.Col([
 
@@ -347,7 +346,7 @@ dbc.Row([
                     'height': '60px',
                     'lineHeight': '60px',
                     'borderWidth': '1px',
-                    'borderStyle': 'dashed',
+                    'borderStyle': 'solid',
                     'borderRadius': '5px',
                     'textAlign': 'center',
                     'margin': '20px',
@@ -369,9 +368,9 @@ dbc.Row([
 
                 html.Label("Select files to upload"),
 
-                dcc.Checklist(["All"], [], id="all_upload_file_checklist", inline=True),
+                dbc.Checklist(["All"], [], id="all_upload_file_checklist", inline=True),
 
-                dcc.Checklist(value=[], id="upload_file_checklist", inline=True),
+                dbc.Checklist(value=[], id="upload_file_checklist", inline=True),
 
             ], gap = 2),
 
@@ -389,9 +388,9 @@ dbc.Row([
 
                 html.Label("Select files to clear", className='center-text'),
 
-                dcc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
+                dbc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
 
-                dcc.Checklist(value=[], id="clear_file_checklist", inline=True),
+                dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
 
             ], gap=2),
 
@@ -428,7 +427,7 @@ dbc.Row([
 
                     html.Label("Select data file to download"),
 
-                    dbc.RadioItems(value='what', id="file_checklist", inline=True),
+                    dbc.RadioItems(id="file_checklist", inline=True),
 
                     html.Label("Choose quantity"),
 
@@ -482,228 +481,225 @@ dbc.Row([
         # return "No tab selected"
 
 @app.callback(
-        Output(component_id="upload_file_checklist", component_property='value'),
-        State(component_id = 'submit_files', component_property ='filename'),
+        Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
+        Input(component_id = 'submit_files', component_property ='filename'),
         prevent_initial_call = True)
 
 def file_checklist(file_names):
 
     upload_file_checklist = file_names
 
-    return file_names
+    return upload_file_checklist
 
 
 
-@app.callback(
-        Output(component_id = 'newfilestorage', component_property = 'data'),
-        Output(component_id='alert', component_property='children'),
-        Output(component_id='alert', component_property='color'),
-        Output(component_id='alert', component_property='is_open'),
-        Input(component_id="upload_file_checklist", component_property='value'),
-        Input(component_id = 'submit_files',component_property = 'contents'),
-        State(component_id = 'submit_files', component_property ='filename'),
-        prevent_initial_call = True)
 
-
-
-def new_contents(filenames, contents, ALL_filenames):
-
-
-    if "submit_files" == ctx.triggered_id and filenames != []:
-
-        try:
-
-            contain_text = []
-
-            for name1 in filenames:
-                if 'txt' not in name1:
-                    contain_text.append(name1)
-
-            if contain_text != []:
-
-                error = 'There was an error processing files: (' + ', '.join(contain_text) + ') ' + '\nPlease check file type'
-
-                color = "danger"
-
-                open1 = True
-
-                newdata = []
-
-            else:
-
-                if filenames and contents is not None:
-
-                    prb = cal_velocity(contents, filenames)
-
-                    newdata = [prb, filenames]
-
-                    filename_str = ', '.join(filenames)
-
-                    error = filename_str + ' selected, please upload for analysis'
-
-                    color = "primary"
-
-                    open1 = True
-
-                else:
-
-                    newdata = []
-
-                    error = 'There was an error processing the files, please try again.'
-
-                    color = "danger"
-
-                    open1 = True
-
-        except Exception:
-
-            newdata = []
-
-            error = 'There was an error processing the files, please try again.'
-
-            color = "danger"
-
-            open1 = True
-
-        return newdata, error, color, open1
-
-    else:
-
-        raise PreventUpdate
-
-        # contain_text = []
-        #
-        # for name in ALL_filenames:
-        #     if 'txt' not in name:
-        #         contain_text.append(name)
-        #
-        # error = 'WARNING: Files: (' + ', '.join(
-        #     contain_text) + ') ' + '\n  unsupported file type. \n Please upload .txt files'
-        #
-        # color = "danger"
-        #
-        # open1 = True
-        #
-        # return no_update, error, color, open1
+# @app.callback(
+#         Output(component_id = 'newfilestorage', component_property = 'data'),
+#         Output(component_id='alert', component_property='children'),
+#         Output(component_id='alert', component_property='color'),
+#         Output(component_id='alert', component_property='is_open'),
+#         Input(component_id = 'submit_files',component_property = 'contents'),
+#         State(component_id="upload_file_checklist", component_property='value'),
+#         prevent_initial_call = True)
+#
+#
+#
+# def new_contents(contents, filenames):
+#
+#
+#     if "submit_files" == ctx.triggered_id:
+#
+#
+#
+#         # contain_text = []
+#         #
+#         # for name in ALL_filenames:
+#         #     if 'txt' not in name:
+#         #         contain_text.append(name)
+#         #
+#         # error = 'WARNING: Files: (' + ', '.join(
+#         #     contain_text) + ') ' + '\n  unsupported file type. \n Please upload .txt files'
+#         #
+#         # color = "danger"
+#         #
+#         # open1 = True
+#         #
+#         # return no_update, error, color, open1
 
 
 
 @app.callback(
     Output(component_id='filestorage', component_property='data'),
-    Output(component_id='newfilestorage', component_property='clear_data', allow_duplicate=True),
-    Output(component_id='alert', component_property='children', allow_duplicate=True),
-    Output(component_id='alert', component_property='color', allow_duplicate=True),
-    Output(component_id='alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='newfile', component_property='n_clicks'),
-    State(component_id='newfilestorage', component_property='data'),
     State(component_id='filestorage', component_property='data'),
+    State(component_id = 'submit_files',component_property = 'contents'),
+    State(component_id="upload_file_checklist", component_property='value'),
     prevent_initial_call=True)
 
-def content(n_clicks, newData, data):
 
+def content(n_clicks, data, contents, filenames):
 
     if n_clicks is None:
         raise PreventUpdate
 
     if "newfile" == ctx.triggered_id:
 
-        if newData is not None and newData != []:
+        if filenames is None or filenames == []:
 
-            if data is None:
-
-                new_prb = newData[0]
-
-                new_filenames = newData[1]
-
-                data = [new_prb, new_filenames]
-
-                error = ', '.join(new_filenames) + ' uploaded'
-
-                color = "primary"
-
-            else:
-
-                new_prb = newData[0]
-
-                new_filenames = newData[1]
-
-                prb = data[0]
-
-                filenames = data[1]
-
-                # Create a new list to hold the combined values
-                combined_filenames = filenames.copy()
-                new_value = []
-                repeated_value = []
-
-                for i, value in enumerate(new_filenames):
-                    # Check if the value is already in the combined list
-                    if value not in combined_filenames:
-                        new_value.append(value)
-                        prb[value] = {value: {}}
-                        prb[value] = new_prb[value]
-                        combined_filenames.append(value)
-                    if value in combined_filenames:
-                        repeated_value.append(value)
-
-                if len(new_value) != len(repeated_value):
-
-                    if len(new_value) == 0:
-
-                        error = ', '.join(repeated_value) + ' not uploaded as repeated filenames were found'
-                    else:
-                        error = ', '.join(new_value) + ' uploaded successfully ,but' + ', '.join(repeated_value) +\
-                                ' not uploaded as repeated filenames were found'
-
-                    color = "danger"
-
-                else:
-
-                    error = ', '.join(new_value) + ' uploaded'
-
-                    color = "primary"
-
-                data = [prb, combined_filenames]
-
-        else:
-
-            error = 'No files selected to upload'
+            error = 'No files selected for upload'
 
             color = "danger"
 
-            data = data
+            open1 = True
 
-        newData = True
+            data = no_update
 
-        open1 = True
+        else:
 
-        return data, newData, error, color, open1
+            try:
 
-# @app.callback(
-#         Output(component_id="upload_file_checklist", component_property='value'),
-#         Output(component_id='all_upload_file_checklist', component_property='value'),
-#         Input(component_id="upload_file_checklist", component_property='value'),
-#         Input(component_id='all_upload_file_checklist', component_property='value'),
-#         Input(component_id = 'submit_files', component_property ='filename'),
-#         prevent_initial_call=True
-#         )
-#
-# def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploaded_filenames):
-#
-#     if Uploaded_filenames is None:
-#         raise PreventUpdate
-#
-#     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-#
-#     if input_id == "upload_file_check":
-#
-#         all_upload_file_check = ["All"] if set(upload_file_check) == set(Uploaded_filenames) else []
-#
-#     else:
-#
-#         upload_file_check = Uploaded_filenames if all_upload_file_check else []
-#
-#     return upload_file_check, all_upload_file_check
+                contain_text = []
+
+                for name1 in filenames:
+                    if 'txt' not in name1:
+                        contain_text.append(name1)
+
+                if contain_text != []:
+
+                    error = 'There was an error processing files: (' + ', '.join(
+                        contain_text) + ') ' + '\nPlease check file type'
+
+                    color = "danger"
+
+                    open1 = True
+
+                    data = no_update
+
+                else:
+
+                    if filenames and contents is not None:
+
+                        prb = cal_velocity(contents, filenames)
+
+                        newdata = [prb, filenames]
+
+                        if newdata is None or newdata == []:
+
+                            error = 'There was an error processing the files, please try again'
+
+                            color = "danger"
+
+                            open1 = True
+
+                        else:
+
+                            if data is None:
+
+
+                                new_prb = newdata[0]
+
+                                new_filenames = newdata[1]
+
+                                data = [new_prb, new_filenames]
+
+                                error = ', '.join(new_filenames) + ' uploaded'
+
+                                color = "primary"
+
+                                open1 = True
+
+                            else:
+
+                                new_prb = newdata[0]
+
+                                new_filenames = newdata[1]
+
+                                prb = data[0]
+
+                                filenames = data[1]
+
+                                # Create a new list to hold the combined values
+                                combined_filenames = filenames.copy()
+                                new_value = []
+                                repeated_value = []
+
+                                for i, value in enumerate(new_filenames):
+                                    # Check if the value is already in the combined list
+                                    if value not in combined_filenames:
+                                        new_value.append(value)
+                                        prb[value] = {value: {}}
+                                        prb[value] = new_prb[value]
+                                        combined_filenames.append(value)
+                                    if value in combined_filenames:
+                                        repeated_value.append(value)
+
+                                if len(new_value) != len(repeated_value):
+
+                                    if len(new_value) == 0:
+
+                                        error = ', '.join(repeated_value) + ' not uploaded as repeated filenames were found'
+                                    else:
+                                        error = ', '.join(new_value) + ' uploaded successfully ,but' + ', '.join(
+                                            repeated_value) + \
+                                                ' not uploaded as repeated filenames were found'
+
+                                    color = "danger"
+
+                                    open1 = True
+
+                                else:
+
+                                    error = ', '.join(new_value) + ' uploaded'
+
+                                    color = "primary"
+
+                                    data = [prb, combined_filenames]
+
+                                    open1 = True
+
+            except Exception:
+
+                data = no_update
+
+                error = 'There was an error processing the files, please try again'
+
+                color = "danger"
+
+                open1 = True
+
+        return data, error, color, open1
+
+
+@app.callback(
+        Output(component_id="upload_file_checklist", component_property='value'),
+        Output(component_id='all_upload_file_checklist', component_property='value'),
+        Input(component_id="upload_file_checklist", component_property='value'),
+        Input(component_id='all_upload_file_checklist', component_property='value'),
+        State(component_id = 'submit_files', component_property ='filename'),
+        prevent_initial_call=True
+        )
+
+def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploaded_filenames):
+
+
+    if Uploaded_filenames is None:
+        raise PreventUpdate
+
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if input_id == "upload_file_checklist":
+
+        all_upload_file_check = ["All"] if set(upload_file_check) == set(Uploaded_filenames) else []
+
+    else:
+
+        upload_file_check = Uploaded_filenames if all_upload_file_check else []
+
+    return upload_file_check, all_upload_file_check
 
 @app.callback(
         Output(component_id="clear_file_checklist", component_property='value'),
@@ -733,34 +729,34 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 
     return clear_file_check, all_clear_check
 
-# @app.callback(
-#     Output(component_id="File", component_property='options'),
-#     Output(component_id='Vect', component_property='options'),
-#     Output(component_id="file_checklist", component_property='option', allow_duplicate=True),
-#     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-#     Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
-#     Output(component_id="file_checklist", component_property='value', allow_duplicate=True),
-#     Input(component_id='filestorage', component_property='data'),
-#     prevent_initial_call=True)
-#
-# def update_dropdowns(data):
-#
-#     if data is None:
-#         raise PreventUpdate
-#
-#     vect_options = ['Ux', 'Uy', 'Uz']
-#
-#     file_dropdown_options = data[1]
-#
-#     file_checklist = file_dropdown_options
-#
-#     clear_file_check = file_checklist
-#
-#     vel_checklist = ['Ux', 'Uy', 'Uz', 't']
-#
-#     file_val = file_checklist[0]
-#
-#     return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check, file_val
+@app.callback(
+    Output(component_id="File", component_property='options'),
+    Output(component_id='Vect', component_property='options'),
+    Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+    Input(component_id='filestorage', component_property='data'),
+    prevent_initial_call=True)
+
+
+def update_dropdowns(data):
+
+    if data is None:
+        raise PreventUpdate
+
+    vect_options = ['Ux', 'Uy', 'Uz']
+
+    file_dropdown_options = data[1]
+
+    file_checklist = file_dropdown_options
+
+    clear_file_check = file_checklist
+
+    vel_checklist = ['Ux', 'Uy', 'Uz', 't']
+
+    # file_val = file_checklist[0]
+
+    return file_dropdown_options, vect_options, file_checklist,  vel_checklist, clear_file_check,
 
 
 
@@ -1160,26 +1156,26 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
             return text, error1[0], True, error1[1],
 
 @app.callback(
-        Output(component_id="File", component_property='value', allow_duplicate=True),
-        Output(component_id='Vect', component_property='value', allow_duplicate=True),
-        Output(component_id="File", component_property='options', allow_duplicate=True),
-        Output(component_id='Vect', component_property='options', allow_duplicate=True),
-        Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
-        #Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-        Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-        Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
-        Output(component_id='New_name', component_property='value', allow_duplicate=True),
-        Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
-        Output(component_id="small_t", component_property='value', allow_duplicate=True),
-        Output(component_id="big_t", component_property='value', allow_duplicate=True),
-        Output(component_id="line_thick", component_property='value', allow_duplicate=True),
-        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        Output(component_id='newfilestorage', component_property='clear_data', allow_duplicate=True),
-        Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
-        Output(component_id='alert', component_property='children', allow_duplicate=True),
-        Output(component_id='alert', component_property='color', allow_duplicate=True),
-        Output(component_id='alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+        # Output(component_id="File", component_property='value', allow_duplicate=True),
+        # Output(component_id='Vect', component_property='value', allow_duplicate=True),
+        # Output(component_id="File", component_property='options', allow_duplicate=True),
+        # Output(component_id='Vect', component_property='options', allow_duplicate=True),
+        # Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
+        # #Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+        # Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+        # Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
+        # Output(component_id='New_name', component_property='value', allow_duplicate=True),
+        # Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
+        # Output(component_id="small_t", component_property='value', allow_duplicate=True),
+        # Output(component_id="big_t", component_property='value', allow_duplicate=True),
+        # Output(component_id="line_thick", component_property='value', allow_duplicate=True),
+        # Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+        # Output(component_id='newfilestorage', component_property='clear_data', allow_duplicate=True),
+        # Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+        # Output(component_id='alert', component_property='children', allow_duplicate=True),
+        # Output(component_id='alert', component_property='color', allow_duplicate=True),
+        # Output(component_id='alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
         #Output(component_id="file_checklist", component_property='value'),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
@@ -1191,82 +1187,88 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
     if "clear_files" == ctx.triggered_id:
 
-        if allclear == ['All']:
+        clear_data_main = True
 
-            newmaindata = []
+        # if allclear == ['All']:
+        #
+        #     newmaindata = []
+        #
+        #     clear_data_main = True
+        #
+        #     clear_data = True
+        #
+        #     error = 'All files cleared'
+        #
+        # elif len(whatclear) >= 1:
+        #
+        #     df1 = maindata[0]
+        #     df2 = maindata[1]
+        #
+        #     for what in whatclear:
+        #         del df1[what]
+        #         df2.remove(what)
+        #
+        #     newmaindata = [df1, df2]
+        #
+        #     error = ', '.join(whatclear) + ' deleted'
+        #
+        #     clear_data_main = False
+        #
+        #     clear_data = True
+        #
+        # else:
+        #
+        #     newmaindata = maindata
+        #
+        #     error = 'No files deleted as none were selected'
+        #
+        #     clear_data_main = False
+        #
+        #     clear_data = True
+        #
+        # file_download_val = ''
+        #
+        # vect_val = []
+        #
+        # file_val = []
+        #
+        # file_dropdown_options = []
+        #
+        # vect_options = []
+        #
+        # fig = {}
+        #
+        # file_checklist = []
+        #
+        # vel_checklist = []
+        #
+        # all_vel_checklist = []
+        #
+        # in_val_S = 0
+        #
+        # in_val_L = 1
+        #
+        # title_name = ''
+        #
+        # new_legname = ''
+        #
+        # file_name_inp = ''
+        #
+        # line_thickness = 1
+        #
+        # clear_opt = []
+        #
+        # color = "success"
+        #
+        # open1 = True
 
-            clear_data_main = True
+    # return file_val, vect_val, file_dropdown_options, vect_options, fig\
+    #     , title_name, new_legname, vel_checklist, all_vel_checklist, file_name_inp, in_val_S, in_val_L, line_thickness,\
+    #     clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata, file_download_val,
 
-            clear_data = True
+    return clear_data_main
 
-            error = 'All files cleared'
 
-        elif len(whatclear) >= 1:
-
-            df1 = maindata[0]
-            df2 = maindata[1]
-
-            for what in whatclear:
-                del df1[what]
-                df2.remove(what)
-
-            newmaindata = [df1, df2]
-
-            error = ', '.join(whatclear) + ' deleted'
-
-            clear_data_main = False
-
-            clear_data = True
-
-        else:
-
-            newmaindata = maindata
-
-            error = 'No files deleted as none were selected'
-
-            clear_data_main = False
-
-            clear_data = True
-
-        file_download_val = ''
-
-        vect_val = []
-
-        file_val = []
-
-        file_dropdown_options = []
-
-        vect_options = []
-
-        fig = {}
-
-        file_checklist = []
-
-        vel_checklist = []
-
-        all_vel_checklist = []
-
-        in_val_S = 0
-
-        in_val_L = 1
-
-        title_name = ''
-
-        new_legname = ''
-
-        file_name_inp = ''
-
-        line_thickness = 1
-
-        clear_opt = []
-
-        color = "success"
-
-        open1 = True
-
-    return file_val, vect_val, file_dropdown_options, vect_options, fig\
-        , title_name, new_legname, vel_checklist, all_vel_checklist, file_name_inp, in_val_S, in_val_L, line_thickness,\
-        clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata, file_download_val,
 
 
 # Run app
