@@ -120,9 +120,9 @@ def cal_velocity(contents, file_names):
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-app.config.suppress_callback_exceptions=True
+#app.config.suppress_callback_exceptions=True
 
 # Define layout of the app
 app.layout = dbc.Container([
@@ -155,7 +155,7 @@ app.layout = dbc.Container([
                 id="alert",
                 is_open=False,
                 dismissable=True,
-                duration=20000),
+                duration=10000),
         ], width=12),
 
         dbc.Col(
@@ -334,7 +334,7 @@ dbc.Row([
             id="ClearFiles_alert",
             is_open=False,
             dismissable=True,
-            duration=20000),
+            duration=10000),
     ], width=12),
 
         dbc.Col([
@@ -414,13 +414,14 @@ dbc.Row([
                     html.Hr(), width = 12,
                 ),
 
+
             dbc.Col([
                 dbc.Alert(
                         id="Download_alert",
-                        is_open=False,
-                        dismissable=True,
-                        duration=20000),
-                ], width = 12),
+                    is_open=False,
+                    dismissable=True,
+                    duration=10000),
+            ], width=12),
 
 
             dbc.Col(
@@ -449,22 +450,23 @@ dbc.Row([
                     dbc.Stack([
 
                         # Create a label for selecting a data file
-                        html.Label("If required, input filename and time range to cut data"),
+                        html.Label("If required input filename and time range to cut data"),
 
                         dbc.Row([
 
                         dbc.Col(
 
-                        dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True, ),
+                            dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True)
+
 
                         ),
 
                             dbc.Col(
 
-                        dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True,
-                                  style={'marginRight': '10px'}),
+                                dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True),
 
                             ),
+
                             ]),
 
                         # Create a label for selecting a data file
@@ -895,8 +897,6 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
         else:
             name_input = no_update
 
-
-
         if title == 'Off':
             fig.layout.update(title='')
 
@@ -956,9 +956,9 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
 
 @app.callback(
         Output(component_id="download", component_property='data', allow_duplicate=True),
-        Output(component_id='alert', component_property='children', allow_duplicate=True),
-        Output(component_id='alert', component_property='color', allow_duplicate=True),
-        Output(component_id='alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
         State(component_id="file_name_input", component_property='value'),
         State(component_id="small_t", component_property='value'),
@@ -974,25 +974,18 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
     if "btn_download" == ctx.triggered_id:
 
-        if file == '':
+        if file is None:
 
-            error = 'No data to download'
+            text = no_update
 
-            color = 'danger'
+            error1 = ['No data to download', 'danger']
 
-            open1 = True
-
-            return no_update, error, open1, color
 
         if vels == [] or vels is None:
 
-            error = 'No data selected'
+            text = no_update
 
-            color = 'danger'
-
-            open1 = True
-
-            return no_update, error, open1, color
+            error1 = ['No data to download', "danger"]
 
         else:
 
@@ -1129,46 +1122,40 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                     ty = '.csv'
                     text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
 
-            return text, error1[0], True, error1[1],
+        return text, error1[0], error1[1], True,
 
 @app.callback(
-        Output(component_id="File", component_property='value', allow_duplicate=True),
-        Output(component_id='Vect', component_property='value', allow_duplicate=True),
         Output(component_id="File", component_property='options', allow_duplicate=True),
         Output(component_id='Vect', component_property='options', allow_duplicate=True),
-        Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
-        Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-        Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-        Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
-        Output(component_id='New_name', component_property='value', allow_duplicate=True),
-        Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
-        Output(component_id="small_t", component_property='value', allow_duplicate=True),
-        Output(component_id="big_t", component_property='value', allow_duplicate=True),
-        Output(component_id="line_thick", component_property='value', allow_duplicate=True),
-        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-        Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+        Input(component_id="File", component_property='options'),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
         State(component_id="all_clear_file_checklist", component_property='value'),
         prevent_initial_call=True)
 
-def clear_files(n_clicks, maindata, whatclear, allclear):
+def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
 
     if "clear_files" == ctx.triggered_id:
 
         if allclear == ['All']:
 
-            clear_data_main = True
-
             error = 'All files cleared'
 
+            color = "success"
+
             newmaindata = no_update
+
+            clear_data_main = True
+
+            file_drop_opt = []
+
+            vect_opt = []
 
         elif len(whatclear) >= 1:
 
@@ -1183,8 +1170,13 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
             error = ', '.join(whatclear) + ' deleted'
 
+            color = "success"
+
             clear_data_main = False
 
+            file_drop_opt = no_update
+
+            vect_opt = no_update
 
         else:
 
@@ -1194,46 +1186,19 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
             clear_data_main = False
 
+            color = "danger"
 
-        vect_val = []
+            file_drop_opt = no_update
 
-        file_val = []
-
-        file_dropdown_options = []
-
-        vect_options = []
-
-        fig = {}
-
-        download_filecheck = []
-
-        vel_checklist = []
-
-        all_vel_checklist = []
-
-        in_val_S = 0
-
-        in_val_L = 1
-
-        leg_or_titleName = ''
-
-        file_name_inp = ''
-
-        line_thickness = 1
-
-        clear_opt = []
-
-        color = "success"
+            vect_opt = no_update
 
         open1 = True
 
-        newmaindata = no_update
+        print(file_drop)
 
-        upload_check = []
 
-    return file_val, vect_val, file_dropdown_options, vect_options, fig,\
-        download_filecheck, vel_checklist, all_vel_checklist, leg_or_titleName, file_name_inp, in_val_S, in_val_L, line_thickness,\
-        clear_data_main, clear_opt, error, color, open1, newmaindata, upload_check
+        return file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main
+
 
 # Run app
 if __name__== '__main__':
