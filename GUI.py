@@ -1,38 +1,29 @@
-#file_paths = ['C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 1.txt', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Example 2.txt']
-
-#file_names = ['Example 1.txt', 'Example 2.txt']
+# Import libs
 from dash import Dash, dcc, Output, Input, ctx, State
 from dash.dash import no_update
 from dash.exceptions import PreventUpdate
-import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
-import dash_daq as daq
 from dash.dependencies import Input, Output, State
-import plotly.express as px
 import pandas as pd
-import plotly.graph_objects as go
 import sys
 import dash_bootstrap_components as dbc
-from tkinter import *
-from tkinter import ttk
-import tkinter.filedialog as fd
 import numpy as np
-import scipy.io as sio
-from pathlib import Path, PureWindowsPath
 import plotly.graph_objects as go
-import base64
-import datetime
-import io
 import warnings
+# Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
-import dash_mantine_components as dmc
 
 
 def cal_velocity(contents, file_names):
+
+    ## function to calculate velocities from Barnacle voltage data
+
+    # Import libs
     import base64
     import numpy as np
     import scipy.io as sio
+    from scipy import interpolate
 
     # Constants
     rho = 997
@@ -44,7 +35,6 @@ def cal_velocity(contents, file_names):
     CalFolder = ZeroFolder
     CalFile = 'IanYawAndDynCalMk2.mat'
     Cal = sio.loadmat(CalFolder + CalFile)
-
     Cal = Cal["Cal"]
     Dynfit = Cal[0][0][0].flatten()
     Yawfit = Cal[0][0][1].flatten()
@@ -61,33 +51,41 @@ def cal_velocity(contents, file_names):
 
     # Importing Zeroes
     zeros = {}
+    # Raw data which is zero reading data from slack water
     zeros['pr_raw'] = np.loadtxt(ZeroFolder + ZeroFile, delimiter=',')
-    zeros['pr_mean'] = np.mean(zeros['pr_raw'][1300:1708, :], axis=0)
+    # Taking average of zero readings for each transducer
+    zeros['pr_mean'] = np.mean(zeros['pr_raw'][1300:1708, :], axis=0) # 1300-1708 was genuinely slack water
 
     # Loading actual Barnacle data
+    # Decoding Barnacle data
     content_string = contents
     decoded = base64.b64decode(content_string)
     decoded_str = decoded.removeprefix(b'u\xabZ\xb5\xecm\xfe\x99Z\x8av\xda\xb1\xee\xb8')
     lines = decoded_str.decode().split('\r\n')[:-1]
+
+    # Assigning dictionaries
     prb = {}
     prb_final = {}
-
+    # Calculating velocities
+    # For loop allows calculation for multiple files if needed
     for i, file_name in enumerate(file_names):
         prb[file_name] = {'raw': {}}
+        # Assigning numpy array to dictionary
         prb[file_name]['raw'] = np.array([list(map(float, line.split(','))) for line in lines])
+        # Subtracting zero readings from the data
         prb[file_name]['raw'] -= zeros['pr_mean']
         # Data analysis
+        # Calculating the mean of each row of the angled probes
         prb[file_name]['denom'] = np.mean(prb[file_name]['raw'][:, :4], axis=1)
+        # Calculating Lyaw and Lpitch
         prb[file_name]['Lyaw'] = (prb[file_name]['raw'][:, 1] - prb[file_name]['raw'][:, 3]) / prb[file_name]['denom']
         prb[file_name]['Lpitch'] = (prb[file_name]['raw'][:, 0] - prb[file_name]['raw'][:, 2]) / prb[file_name]['denom']
-
-
-        from scipy import interpolate
-
+        # Interpolating for each yaw and pitch angle
         ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
         apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
         prb[file_name]['ayaw'] = ayaw_interp(prb[file_name]['Lyaw'])
         prb[file_name]['apitch'] = apitch_interp(prb[file_name]['Lpitch'])
+        # Bodge: whatever one is bigger interpolate for Ldyn
         prb[file_name]['pitchbigger'] = np.abs(prb[file_name]['apitch']) > np.abs(prb[file_name]['ayaw'])
         prb[file_name]['amax'] = prb[file_name]['pitchbigger'] * prb[file_name]['apitch'] + (1 - prb[file_name]['pitchbigger']) * prb[file_name]['ayaw']
         ldyn_interp = interpolate.interp1d(yawcal[:, 0], dyncal, kind='linear', fill_value='extrapolate')
@@ -101,7 +99,6 @@ def cal_velocity(contents, file_names):
         prb[file_name]['Uz'] = prb[file_name]['U1'] * np.sin(np.deg2rad(prb[file_name]['apitch']))
         prb[file_name]['t'] = np.linspace(0, prb[file_name]['raw'].shape[0] / fs, prb[file_name]['raw'].shape[0]);
 
-        # Taking data needed
         # Taking data needed
         prb_final = {'Ux': {}}
         prb_final = {'Uy': {}}
@@ -117,220 +114,191 @@ def cal_velocity(contents, file_names):
 
 
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
+# Create the Dash app object
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-#app.config.suppress_callback_exceptions=True
-
-# Define layout of the app
+# Define the layout of the app
 app.layout = dbc.Container([
 
-
+    # Header row with title
     dbc.Row([
         dbc.Col(
             html.H1("BARNACLE SENSOR ANALYSIS DASHBOARD",
                     className='text-center font-weight-bolder, mb-1'),
             width=12),
     ]),
+
+    # Graph row
     dbc.Row([
         dbc.Col(
             dcc.Graph(id='Velocity_Graph', figure={}),
             width=12),
     ]),
 
+    # Options row
     dbc.Row([
-
+        # Graph options header
         dbc.Col(
             html.H5('Graph Options', className="text-center"),
-        width = 12),
+            width = 12),
 
+        # Horizontal line
         dbc.Col(
             html.Hr(),
-        width = 12),
+            width = 12),
 
+        # Alert box
         dbc.Col([
             dbc.Alert(
                 id="alert",
                 is_open=False,
                 dismissable=True,
                 duration=20000),
-
         ], width=12),
 
-
+        # Time slider row
         dbc.Row([
-
-
+            # Time slider label
             dbc.Col(
-            dbc.Row(
-
-
-            dbc.Label("Time Slider", className="text-center mb-1"),
-
-            ),
+                dbc.Row(
+                    dbc.Label("Time Slider", className="text-center mb-1"),
+                ),
             ),
 
-            dbc.Row(
-
+            # Time slider component
             dbc.Col(
-
-            dcc.RangeSlider(
-            id='time-range',
-            min=1,
-            max=10,
-            value=[1, 10],
-            tooltip={"placement": "bottom", "always_visible": True},
-            updatemode='drag'
-        ), width = 12, className="mb-2"),
-
+                dcc.RangeSlider(
+                    id='time-range',
+                    min=1,
+                    max=10,
+                    value=[1, 10],
+                    tooltip={"placement": "bottom", "always_visible": True},
+                    updatemode='drag'
+                ),
+                width = 12,
+                className="mb-2"
             ),
+        ]),
+    ]),
 
-            ])
+    # Create a row with one column
+    dbc.Row([
+        dbc.Col([
+            # Stack two elements vertically
+            dbc.Stack([
+                # Label for the dropdowns
+                dbc.Label("Data Options", className='text-center'),
+                # Stack two dropdowns vertically
+                dbc.Stack([
+                    dcc.Dropdown(
+                        id="File",
+                        options=[],
+                        multi=True,
+                        value=[],
+                        placeholder="Select a dataset"),
+                    dcc.Dropdown(
+                        id="Vect",
+                        options=[],
+                        multi=True,
+                        value=[],
+                        placeholder="Select a quantity"),
+                ], gap=3)
+            ]),
+        ]),
+
+        dbc.Col([
+            dbc.Stack([
+                dbc.Label('Line Thickness', className="text-center"),
+                dcc.Slider(
+                    min=0.5,
+                    max=5,
+                    value=1,
+                    step=0.1,
+                    id="line_thick",
+                    marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
+                    updatemode='drag'
+                ),
+                html.Hr(),
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Stack([
+                            dbc.Label("Title", className="text-start"),
+                            dbc.RadioItems(id='title_onoff', value='On', options=['On', 'Off'], inline=True)
+                        ])
+                    ),
+                    dbc.Col(
+                        dbc.Stack([
+                            dbc.Label('Legend', className="text-start"),
+                            dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
+                        ]),
+                        className='mb-3'
+                    ),
+                ]),
+
+                dbc.Row(
+                    # Stack of input elements for updating the title or legend
+                    dbc.Stack([
+                        dbc.InputGroup([
+                            # Dropdown menu for selecting the update action
+                            dbc.DropdownMenu([
+                                dbc.DropdownMenuItem("Update Title", id="dropdown_title_update"),
+                                dbc.DropdownMenuItem("Update Legend", id="dropdown_legend_update"),
+                                dbc.DropdownMenuItem(divider=True),
+                                dbc.DropdownMenuItem("Clear", id="dropdown_clear"),
+                            ],
+                                label="Update"),
+                            # Input element for entering the new title or legend
+                            dbc.Input(
+                                id="New_name",
+                                type='text',
+                                placeholder="Enter text to update legend or title",
+                                debounce=True
+                            ),
+                        ]),
+                        # Horizontal direction of the stack
+                    ], direction="horizontal"),
+                ),
+
+            ]),
+        ])], className = 'mb-2', justify="center", align="center"),
+
+    # Empty row with a horizontal line
+    dbc.Row([
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
+    ], className='mb-2'),
 
 
-
-]),
 
     dbc.Row([
 
-    dbc.Col([
-
-        dbc.Stack([
-
-            dbc.Label("Data Options",
-            className='text-center'),
-
-        dbc.Stack([
-
-            dcc.Dropdown(
-                id="File",
-                options=[],
-                multi=True,
-                value=[],
-                placeholder="Select a dataset"),
-
-            dcc.Dropdown(
-                id="Vect",
-                options=[],
-                multi=True,
-                value=[],
-                placeholder="Select a quantity"),
-        ], gap = 3)
-
-        ]),
-
-]),
-
-dbc.Col([
-
-    dbc.Stack([
-
-        dbc.Label('Line Thickness', className="text-center"),
-
-        dcc.Slider(
-            min=0.5,
-            max=5,
-            value=1,
-            step=0.1,
-            id="line_thick",
-            marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
-            updatemode='drag'),
-
-        html.Hr(),
-
-
-dbc.Row([
-
-    dbc.Col(
-
-    dbc.Stack([
-
-    dbc.Label("Title", className="text-start"),
-
-    dbc.RadioItems(id='title_onoff', value='On', options=['On', 'Off'], inline=True)
-
-    ]),
-
-    ),
+        # Column for "Upload/Clear Files" title
         dbc.Col(
+            html.H5('Upload/Clear Files', className='center-text'),
+            width=12,
+            className="text-center"
+        ),
 
-        dbc.Stack([
+        # Horizontal line
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
 
-            dbc.Label('Legend', className="text-start"),
-
-            dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
-
-        ]),
-
-
-        className = 'mb-3'),
-    ]),
-
-
-
-dbc.Row(
-
-
-            dbc.Stack([
-                dbc.InputGroup([
-                    dbc.DropdownMenu([
-                        dbc.DropdownMenuItem("Update Title", id="dropdown_title_update"),
-                        dbc.DropdownMenuItem("Update Legend", id="dropdown_legend_update"),
-                        dbc.DropdownMenuItem(divider=True),
-                        dbc.DropdownMenuItem("Clear", id="dropdown_clear"),
-                    ],
-                        label="Update"),
-                    dbc.Input(
-                        id="New_name",
-                        type='text',
-                        placeholder="Enter text to update legend or title",
-                        debounce=True),
-                ]),
-            ], direction="horizontal"),
-
-)
-
-]),
-])
-
-    ], className = 'mb-2', justify="center", align="center"),
-
-dbc.Row([
-    dbc.Col(
-    html.Hr(),
-    width = 12),
-    ], className = 'mb-2'),
-
-
-# # Create a component for downloading data
-dcc.Download(id="download"),
-dcc.Store(id='newfilestorage', storage_type='memory'),
-dcc.Store(id='filestorage', storage_type='session'),
-
-
-dbc.Row([
-
-                dbc.Col(
-
-                html.H5('Upload/Clear Files', className = 'center-text'),
-
-                width = 12, className ="text-center" ),
-
-                dbc.Col(
-                    html.Hr(), width = 12,
-                ),
-
-    dbc.Col([
-        dbc.Alert(
-            id="ClearFiles_alert",
-            is_open=False,
-            dismissable=True,
-            duration=30000),
-    ], width=12),
-
+        # Column for alert message (hidden by default)
         dbc.Col([
+            dbc.Alert(
+                id="ClearFiles_alert",
+                is_open=False,
+                dismissable=True,
+                duration=30000
+            ),
+        ], width=12),
 
+        # Column for file selection/upload
+        dbc.Col([
             dcc.Upload(
                 id='submit_files',
                 children=html.Div([
@@ -348,8 +316,11 @@ dbc.Row([
                 },
                 className="text-primary",
                 # Allow multiple files to be uploaded
-                multiple=True)],  width = 3),
+                multiple=True
+            )
+        ], width=3),
 
+        # Column for uploading files
         dbc.Col(
             dbc.Stack([
                 dbc.Button(
@@ -358,18 +329,23 @@ dbc.Row([
                     outline=True,
                     color="primary",
                     className="me-1",
-                    n_clicks=0),
+                    n_clicks=0
+                ),
 
                 html.Label("Select files to upload"),
 
-                dbc.Checklist(["All"], [], id="all_upload_file_checklist", inline=True),
+                # Checkbox for uploading all files
+                dbc.Checklist(
+                    ["All"], [], id="all_upload_file_checklist", inline=True
+                ),
 
+                # Checkbox for selecting individual files to upload
                 dbc.Checklist(value=[], id="upload_file_checklist", inline=True),
+            ], gap=2),
+            width=3
+        ),
 
-            ], gap = 2),
-
-        width = 3),
-
+        # Column for clearing files
         dbc.Col(
             dbc.Stack([
                 dbc.Button(
@@ -378,128 +354,118 @@ dbc.Row([
                     outline=True,
                     color="primary",
                     className="me-1",
-                    n_clicks=0),
+                    n_clicks=0
+                ),
 
                 html.Label("Select files to clear", className='center-text'),
 
-                dbc.Checklist(["All"], [], id="all_clear_file_checklist", inline=True),
-
-                dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
-
-            ], gap=2),
-
-            width=3),
-
-            ], align = 'center', justify = 'evenly'),
-
-
-
-dbc.Row([
-
-    dbc.Col(
-    html.Hr(),
-    width = 12),
-    ], className = 'mb-2'),
-
-    dbc.Row(
-
-                dbc.Col(
-
-                html.H5('Download Files', className = 'center-text'),
-
-                width = 12, className ="text-center" ),
-    ),
-
-    dbc.Row(
-
-                dbc.Col(
-                    html.Hr(), width = 12,
+                # Checkbox for clearing all files
+                dbc.Checklist(
+                    ["All"], [], id="all_clear_file_checklist", inline=True
                 ),
+
+                # Checkbox for selecting individual files to clear
+                dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
+            ], gap=2),
+            width=3
+        ),
+
+    ], align='center', justify='evenly'),
+
+
+
+    dbc.Row([
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),  # Horizontal rule to separate content
+    ], className='mb-2'),
+
+    dbc.Row(
+        dbc.Col(
+            html.H5('Download Files', className='center-text'),
+            width=12,
+            className="text-center"
+        ),  # Column containing the header for the download files section
     ),
 
-dbc.Row(
-            dbc.Col([
-                dbc.Alert(
-                        id="Download_alert",
-                    is_open=False,
-                    dismissable=True,
-                    duration=30000),
-            ], width=12),
+    dbc.Row(
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),  # Horizontal rule to separate content
+    ),
 
-),
+    dbc.Row(
+        dbc.Col([
+            dbc.Alert(
+                id="Download_alert",
+                is_open=False,
+                dismissable=True,
+                duration=30000
+            ),  # Alert component to show status of file download
+        ], width=12),
+    ),
 
-dbc.Row([
-
-            dbc.Col([
-
-                dbc.Stack([
-
-                    html.Label("Choose Data File"),
-
-                    dbc.RadioItems(id="file_checklist", inline=True),
-
-                    html.Label("Choose Quantity"),
-
-                    # Create a checklist for selecting a velocity
-                    dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
-
-                    dbc.Checklist(value=[],options = [], id = "vel_checklist", inline=True),
-
-                    html.Label("Choose File Type"),
-
-                    # Create a label for selecting a data file
-                    dbc.RadioItems(options=['CSV', 'Excel', '.txt'], value='CSV', id="type_checklist", inline=True),
-
-                ], gap=2),
-
-    ], width = 6),
-
-
-    dbc.Col([
-
+    dbc.Row([
+        dbc.Col([
             dbc.Stack([
+                html.Label("Choose Data File"),  # Label for selecting data file
 
-                        # Create a label for selecting a data file
-                        # Create a button for downloading data
-                        dbc.Button("Download", id="btn_download", size="lg"),
+                dbc.RadioItems(id="file_checklist", inline=True),  # Radio buttons for selecting data file
 
+                html.Label("Choose Quantity"),  # Label for selecting quantity of data to download
 
-                    # Create a label for selecting a data file
-                    dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
+                dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),  # Checkbox to select all data
 
+                dbc.Checklist(value=[], options=[], id="vel_checklist", inline=True),  # Checkbox to select specific data
 
+                html.Label("Choose File Type"),  # Label for selecting file type
+
+                dbc.RadioItems(
+                    options=['CSV', 'Excel', '.txt'],
+                    value='CSV',
+                    id="type_checklist",
+                    inline=True
+                ),  # Radio buttons for selecting file type
+            ], gap=2),
+        ], width=6),
+
+        dbc.Col([
+            dbc.Stack([
+                dbc.Button("Download", id="btn_download", size="lg"),  # Button for downloading selected data
+
+                dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),  # Input field for file name
 
                 dbc.Row([
                     dbc.Col(
                         dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True)
-                    ),
+                    ),  # Input field for minimum time
 
                     dbc.Col(
-
                         dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True)
+                    ),  # Input field for maximum time
 
-                    ),
-
-                ], justify="center"),
+                ], justify="center"),  # Row for input fields for minimum and maximum times
 
             ], gap=2),
+        ], width=6),
+    ], align='center', justify='evenly'),  # Row containing columns for selecting and downloading data files
 
+    # # Components for storing and downloading data
+    dcc.Download(id="download"),
+    dcc.Store(id='newfilestorage', storage_type='memory'),
+    dcc.Store(id='filestorage', storage_type='session'),
 
-], width = 6),
+])
 
-
-                ], align = 'center', justify = 'evenly'),
-
-
-
-    ])
-
-        # return "No tab selected"
 
 @app.callback(
         Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
         Input(component_id = 'submit_files', component_property ='filename'),
         prevent_initial_call = True)
+
+# Call back to update upload file checklist once files are selected
 
 def file_checklist(file_names):
 
@@ -519,102 +485,103 @@ def file_checklist(file_names):
     State(component_id="upload_file_checklist", component_property='value'),
     prevent_initial_call=True)
 
-
+# Callback to analyse and update data
 def content(n_clicks, data, contents, filenames):
 
-    print(contents)
-
+    # Check if the function was triggered by a button click
     if n_clicks is None:
         raise PreventUpdate
 
+    # Check if the "newfile" button was clicked
     if "newfile" == ctx.triggered_id:
 
+        # Initialize data dictionary if it is None
         if data is None:
             data = [{}, []]
 
+        # Check if no files were uploaded
         if filenames is None or filenames == [] or contents is None or contents == []:
 
             error = 'No files selected for upload'
-
             color = "danger"
-
             open1 = True
 
+            # Return the same data if no files were uploaded
             data = no_update
 
         else:
 
-            prb = data[0]
+            prb = data[0] # Get existing data dictionary
+            Oldfilenames = data[1] # Get existing file names
 
-            Oldfilenames = data[1]
+            combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
 
-            combined_filenames = Oldfilenames.copy()
+            new_value = [] # List of newly uploaded file names
+            repeated_value = [] # List of repeated file names
+            contain_text = [] # List of file names that don't have 'txt' in them
+            error_file = [] # List of files with invalid formats
 
-            new_value = []
-
-            repeated_value = []
-
-            contain_text = []
-
-            error_file = []
-
+            # Loop through uploaded files and process them
             for i, value in enumerate(filenames):
 
+                # Check for repeated file names
                 if value in combined_filenames:
                     repeated_value.append(value)
 
+                # Check for file names without 'txt' in them
                 if 'txt' not in value:
                     contain_text.append(value)
 
-
-                # Check if the value is already in the combined list
+                # Check if the file name is already in the combined list
                 if value not in combined_filenames:
+                    # Check if file name is not in the list of names that don't have 'txt' in them
                     if value not in contain_text:
 
+                        # Try to process the file
                         try:
                             prb[value] = {value: {}}
                             prb[value] = cal_velocity(contents[i], filenames[i])
                             new_value.append(value)
                             combined_filenames.append(value)
 
+                        # If there's an error processing the file, add it to the error list
                         except Exception:
-
                             error_file.append(value)
 
-                if contain_text != [] or repeated_value != [] or error_file != []:
+            # If there are errors, return error messages
+            if contain_text != [] or repeated_value != [] or error_file != []:
 
-                    data = [prb, combined_filenames]
+                data = [prb, combined_filenames]
 
-                    color = "danger"
+                color = "danger"
+                open1 = True
 
-                    open1 = True
+                error_list_complete = contain_text + repeated_value + error_file
 
-                    error_list_complete = contain_text + repeated_value + error_file
+                error_start = 'There was an error processing files: \n ' \
+                               '(' + ', '.join(error_list_complete) + ').'
 
-                    error_start = 'There was an error processing files: \n ' \
-                                   '(' + ', '.join(error_list_complete) + ').'
+                error_repeat = ' Please check that files are not repeated: \n ' \
+                               '(' + ', '.join(repeated_value) + ').'
 
-                    error_repeat = ' Please check that files are not repeated: \n ' \
-                                   '(' + ', '.join(repeated_value) + ').'
+                error_txt = ' Please check the file type of: \n' \
+                            '(' + ', '.join(contain_text) + '). '
 
-                    error_txt = ' Please check the file type of: \n' \
-                                '(' + ', '.join(contain_text) + '). '
-
-                    error_process = ' Please check the file format of: \n' \
-                                '(' + ', '.join(error_file) + '). '
+                error_process = ' Please check the file format of: \n' \
+                            '(' + ', '.join(error_file) + '). '
 
 
-                    if contain_text != [] and repeated_value != [] and error_file != []:
+                if contain_text != [] and repeated_value != [] and error_file != []:
 
-                        error = error_start + '\n' + error_repeat + '\n' + error_txt + '\n' + error_process
+                    error = error_start + '\n' + error_repeat + '\n' + error_txt + '\n' + error_process
 
-                    elif contain_text != [] and error_file != []:
+                elif contain_text != [] and error_file != []:
 
-                        error = error_start + '\n' + error_txt + '\n' + error_process
+                    error = error_start + '\n' + error_txt + '\n' + error_process
 
-                    elif error_file != [] and repeated_value != []:
+                elif error_file != [] and repeated_value != []:
 
-                        error = error_start + '\n' + error_repeat + '\n' + error_txt
+                    error = error_start + '\n' + error_repeat + '\n' + error_txt
 
                     elif contain_text != [] and repeated_value != []:
 
