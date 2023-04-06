@@ -1156,27 +1156,26 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
             return text, error1[0], True, error1[1],
 
 @app.callback(
-        # Output(component_id="File", component_property='value', allow_duplicate=True),
-        # Output(component_id='Vect', component_property='value', allow_duplicate=True),
-        # Output(component_id="File", component_property='options', allow_duplicate=True),
-        # Output(component_id='Vect', component_property='options', allow_duplicate=True),
-        # Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
-        # #Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-        # Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-        # Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
-        # Output(component_id='New_name', component_property='value', allow_duplicate=True),
-        # Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
-        # Output(component_id="small_t", component_property='value', allow_duplicate=True),
-        # Output(component_id="big_t", component_property='value', allow_duplicate=True),
-        # Output(component_id="line_thick", component_property='value', allow_duplicate=True),
-        # Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        # Output(component_id='newfilestorage', component_property='clear_data', allow_duplicate=True),
-        # Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
-        # Output(component_id='alert', component_property='children', allow_duplicate=True),
-        # Output(component_id='alert', component_property='color', allow_duplicate=True),
-        # Output(component_id='alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
-        #Output(component_id="file_checklist", component_property='value'),
+        Output(component_id="File", component_property='value', allow_duplicate=True),
+        Output(component_id='Vect', component_property='value', allow_duplicate=True),
+        Output(component_id="File", component_property='options', allow_duplicate=True),
+        Output(component_id='Vect', component_property='options', allow_duplicate=True),
+        Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
+        Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id='all_vel_checklist', component_property='value', allow_duplicate=True),
+        Output(component_id='New_name', component_property='value', allow_duplicate=True),
+        Output(component_id='file_name_input', component_property='value', allow_duplicate=True),
+        Output(component_id="small_t", component_property='value', allow_duplicate=True),
+        Output(component_id="big_t", component_property='value', allow_duplicate=True),
+        Output(component_id="line_thick", component_property='value', allow_duplicate=True),
+        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+        Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+        Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
@@ -1187,89 +1186,78 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
     if "clear_files" == ctx.triggered_id:
 
-        clear_data_main = True
+        if allclear == ['All']:
 
-        # if allclear == ['All']:
-        #
-        #     newmaindata = []
-        #
-        #     clear_data_main = True
-        #
-        #     clear_data = True
-        #
-        #     error = 'All files cleared'
-        #
-        # elif len(whatclear) >= 1:
-        #
-        #     df1 = maindata[0]
-        #     df2 = maindata[1]
-        #
-        #     for what in whatclear:
-        #         del df1[what]
-        #         df2.remove(what)
-        #
-        #     newmaindata = [df1, df2]
-        #
-        #     error = ', '.join(whatclear) + ' deleted'
-        #
-        #     clear_data_main = False
-        #
-        #     clear_data = True
-        #
-        # else:
-        #
-        #     newmaindata = maindata
-        #
-        #     error = 'No files deleted as none were selected'
-        #
-        #     clear_data_main = False
-        #
-        #     clear_data = True
-        #
-        # file_download_val = ''
-        #
-        # vect_val = []
-        #
-        # file_val = []
-        #
-        # file_dropdown_options = []
-        #
-        # vect_options = []
-        #
-        # fig = {}
-        #
-        # file_checklist = []
-        #
-        # vel_checklist = []
-        #
-        # all_vel_checklist = []
-        #
-        # in_val_S = 0
-        #
-        # in_val_L = 1
-        #
-        # title_name = ''
-        #
-        # new_legname = ''
-        #
-        # file_name_inp = ''
-        #
-        # line_thickness = 1
-        #
-        # clear_opt = []
-        #
-        # color = "success"
-        #
-        # open1 = True
+            clear_data_main = True
 
-    # return file_val, vect_val, file_dropdown_options, vect_options, fig\
-    #     , title_name, new_legname, vel_checklist, all_vel_checklist, file_name_inp, in_val_S, in_val_L, line_thickness,\
-    #     clear_data_main, clear_data, clear_opt, error, color, open1, newmaindata, file_download_val,
+            error = 'All files cleared'
 
-    return clear_data_main
+            newmaindata = no_update
+
+        elif len(whatclear) >= 1:
+
+            df1 = maindata[0]
+            df2 = maindata[1]
+
+            for what in whatclear:
+                del df1[what]
+                df2.remove(what)
+
+            newmaindata = [df1, df2]
+
+            error = ', '.join(whatclear) + ' deleted'
+
+            clear_data_main = False
 
 
+        else:
 
+            newmaindata = no_update
+
+            error = 'No files deleted as none were selected'
+
+            clear_data_main = False
+
+
+        vect_val = []
+
+        file_val = []
+
+        file_dropdown_options = []
+
+        vect_options = []
+
+        fig = {}
+
+        download_filecheck = []
+
+        vel_checklist = []
+
+        all_vel_checklist = []
+
+        in_val_S = 0
+
+        in_val_L = 1
+
+        leg_or_titleName = ''
+
+        file_name_inp = ''
+
+        line_thickness = 1
+
+        clear_opt = []
+
+        color = "success"
+
+        open1 = True
+
+        newmaindata = no_update
+
+        upload_check = []
+
+    return file_val, vect_val, file_dropdown_options, vect_options, fig,\
+        download_filecheck, vel_checklist, all_vel_checklist, leg_or_titleName, file_name_inp, in_val_S, in_val_L, line_thickness,\
+        clear_data_main, clear_opt, error, color, open1, newmaindata, upload_check
 
 # Run app
 if __name__== '__main__':
