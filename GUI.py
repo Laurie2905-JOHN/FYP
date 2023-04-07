@@ -460,12 +460,11 @@ app.layout = dbc.Container([
 ])
 
 
+# Call back to update upload file checklist once files are selected
 @app.callback(
         Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
         Input(component_id = 'submit_files', component_property ='filename'),
         prevent_initial_call = True)
-
-# Call back to update upload file checklist once files are selected
 
 def file_checklist(file_names):
 
@@ -473,7 +472,7 @@ def file_checklist(file_names):
 
     return upload_file_checklist
 
-
+# Callback to analyse and update data
 @app.callback(
     Output(component_id='filestorage', component_property='data'),
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
@@ -485,7 +484,6 @@ def file_checklist(file_names):
     State(component_id="upload_file_checklist", component_property='value'),
     prevent_initial_call=True)
 
-# Callback to analyse and update data
 def content(n_clicks, data, contents, filenames):
 
     # Check if the function was triggered by a button click
@@ -613,7 +611,8 @@ def content(n_clicks, data, contents, filenames):
 
         return data, error, color, open1
 
-
+# Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
+# If all files are clicked all will be selected
 @app.callback(
         Output(component_id="upload_file_checklist", component_property='value'),
         Output(component_id='all_upload_file_checklist', component_property='value'),
@@ -623,8 +622,6 @@ def content(n_clicks, data, contents, filenames):
         prevent_initial_call=True
         )
 
-# Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
-# If all files are clicked all will be selected
 def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploaded_filenames):
     # Prevent update if there are no file names
     if Uploaded_filenames is None:
@@ -642,6 +639,7 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploade
 
     # Return the updated upload file checklist and all upload file checklist
     return upload_file_check, all_upload_file_check
+
 
 # Callback which syncs the all button of the clear file checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
@@ -675,6 +673,33 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
     # Return the updated clear file checklist and all clear checklist
     return clear_file_check, all_clear_check
 
+# Callback which syncs the all button of the vel checklist. If all is clicked all options will be selected.
+# If all options are clicked all will be selected
+@app.callback(
+    Output(component_id="vel_checklist", component_property='value'),
+    Output(component_id='all_vel_checklist', component_property='value'),
+    Input(component_id="vel_checklist", component_property='value'),
+    Input(component_id='all_vel_checklist', component_property='value'),
+    prevent_initial_call=True
+)
+
+def vel_sync_checklist(vel_check, all_vel_checklist):
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    vel_type = ['Ux', 'Uy', 'Uz', 't']
+
+    if input_id == "vel_checklist":
+        # If the velocity checklist input triggered the callback, update the all velocity checklist
+        all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
+    else:
+        # If the all velocity checklist input triggered the callback, update the velocity checklist
+        vel_check = vel_type if all_vel_checklist else []
+
+    # Return the updated velocity checklist and all velocity checklist
+    return vel_check, all_vel_checklist
+
+
+# Callback which updates dropdowns of graph
 @app.callback(
     Output(component_id="File", component_property='options'),
     Output(component_id='Vect', component_property='options'),
@@ -684,64 +709,28 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
     Input(component_id='filestorage', component_property='data'),
     prevent_initial_call=True)
 
-
 def update_dropdowns(data):
 
     if data is None:
-
+        # If the data is None, set all dropdown options to empty lists
         vect_options = []
-
         file_dropdown_options = []
-
         file_checklist = []
-
         clear_file_check = []
-
         vel_checklist = []
-
     else:
-
+        # If the data is not None, set the dropdown options and checklists accordingly
         vect_options = ['Ux', 'Uy', 'Uz']
-
         file_dropdown_options = data[1]
-
         file_checklist = file_dropdown_options
-
         clear_file_check = file_checklist
-
         vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 
-
-    return file_dropdown_options, vect_options, file_checklist,  vel_checklist, clear_file_check,
-
-
-
-@app.callback(
-        Output(component_id="vel_checklist", component_property='value'),
-        Output(component_id='all_vel_checklist', component_property='value'),
-        Input(component_id="vel_checklist", component_property='value'),
-        Input(component_id='all_vel_checklist', component_property='value'),
-        prevent_initial_call=True
-        )
+    # Return the updated dropdown options and checklists
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,
 
 
-def vel_sync_checklist(vel_check, all_vel_checklist):
-
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    vel_type = ['Ux','Uy','Uz','t']
-
-    if input_id == "vel_checklist":
-
-        all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
-
-    else:
-
-        vel_check = vel_type if all_vel_checklist else []
-
-    return vel_check, all_vel_checklist
-
-
+# Call back which updates the download time range to prevent error
 @app.callback(
         Output(component_id="big_t", component_property='value', allow_duplicate=True),
         Output(component_id="small_t", component_property='value', allow_duplicate=True),
@@ -749,24 +738,27 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
         Input(component_id="big_t", component_property='value'),
         prevent_initial_call=True)
 
+def update_In(small_val, large_val):
+    # If both inputs are None, prevent update
+    if large_val is None and small_val is None:
+        raise PreventUpdate
 
-def update_In(Sin_val, Lin_val):
+    # If large input is None, set it to 0
+    if large_val is None:
+        large_val = 0
 
-    if Lin_val is None and Sin_val is None:
-         raise PreventUpdate
+    # If small input is None, set it to 0
+    if small_val is None:
+        small_val = 0
 
-    if Lin_val is None:
-        Lin_val = 0
+    # If large input is less than small input, set large input equal to small input
+    if large_val < small_val:
+        large_val = small_val
 
-    if Sin_val is None:
-        Sin_val = 0
+    # Return the updated large and small input values
+    return large_val, small_val
 
-    if Lin_val < Sin_val:
-        Lin_val = Sin_val
-
-    return Lin_val, Sin_val,
-
-
+# Callback which updates the graph based on graph options
 @app.callback(
         [Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
