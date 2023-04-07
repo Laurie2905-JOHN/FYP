@@ -784,66 +784,52 @@ def update_In(small_val, large_val):
         State(component_id='alert', component_property='is_open')],
         prevent_initial_call = True)
 
-def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg, title, legend_update, title_update, dropdown_clear, New_name_Title_or_Leg, error,
-                     color, open1):
-
+def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, leg, title, legend_update, title_update, dropdown_clear, New_name_Title_or_Leg, error, color, open1):
+    # Check if data is not empty or None
     if data is None or {}:
         raise PreventUpdate
 
+    # Check if user_inputs and user_inputs1 are empty
     if user_inputs == [] or user_inputs1 == []:
-
         error = error
-
         color = color
-
         open1 = open1
-
         fig = {}
-
         min_sl = 1
-
         max_sl = 10
-
-        value =[1, 10]
-
+        value = [1, 10]
         name_input = no_update
-
     else:
-
+        # Get data from the selected file
         df = data[0]
-
         max1 = []
-
         min1 = []
-
         fig = go.Figure()
-
         current_names = []
 
-
+        # Check if file or vector dropdown is selected
         if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
-
+            # Iterate through user_inputs and user_inputs1
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
+                    # Get the values and time
                     V = df[user_input][user_input1]
                     t = df[user_input]['t']
                     max1.append(np.round(np.amax(t)))
                     min1.append(np.round(np.amin(t)))
-                    fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
-                                            line=dict(
-                                            width=line_thick),
-                                            name=f"{user_input}{' '}{user_input1}"))
+                    # Add trace to the figure
+                    fig.add_trace(go.Scatter(x=t, y=V, mode='lines', line=dict(width=line_thick), name=f"{user_input}{' '}{user_input1}"))
                     current_names.append(f"{user_input}{' '}{user_input1}")
-
+            # Set the slider values
             min_sl = min(min1)
             max_sl = max(max1)
-
             value = [min_sl, max_sl]
 
         else:
-
+            # Iterate through user_inputs and user_inputs1
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
+                    # Get the values and time
                     V = np.array(df[user_input][user_input1])
                     t = np.array(df[user_input]['t'])
                     max1.append(np.round(np.amax(t)))
@@ -851,55 +837,27 @@ def update_dropdowns(data, user_inputs, user_inputs1,time_input,line_thick, leg,
                     mask = (t >= time_input[0]) & (t < time_input[1])
                     t2 = t[mask]
                     V2 = V[mask]
-                    fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
-                                            line=dict(
-                                            width=line_thick),
-                                            name=f"{user_input}{' '}{user_input1}"))
+                    # Add trace to the figure
+                    fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines', line=dict(width=line_thick), name=f"{user_input}{' '}{user_input1}"))
                     current_names.append(f"{user_input}{' '}{user_input1}")
-
-
+            # Set the slider values
             value = time_input
             min_sl = min(min1)
             max_sl = max(max1)
 
-        fig.update_layout(
-            xaxis_title="Time (s)",
-            yaxis_title="Velocity (m/s)",
-            legend=dict(
-                y=1,
-                x=0.5,
-                orientation="h",
-                yanchor="bottom",
-                xanchor="center"),
-        )
+        # Update the figure layout
+        fig.update_layout(xaxis_title="Time (s)", yaxis_title="Velocity (m/s)",
+                          legend=dict(y=1, x=0.5, orientation="h", yanchor="bottom", xanchor="center"), )
 
+        # Check if the clear dropdown is selected
         if ctx.triggered_id == 'dropdown_clear':
             name_input = ''
         else:
             name_input = no_update
 
+        # Check if the title switch is off
         if title == 'Off':
             fig.layout.update(title='')
-
-        elif title =='On' and New_name_Title_or_Leg !='' and New_name_Title_or_Leg is not None and ctx.triggered_id == 'dropdown_title_update':
-            fig.layout.update(title=New_name_Title_or_Leg)
-
-            error = 'Title Updated'
-
-            color = "success"
-
-        elif title == 'On':
-            fig.layout.update(title='Barnacle Data')
-
-
-        if leg == 'Off':
-            fig.layout.update(showlegend=False)
-
-        elif leg =='On' and New_name_Title_or_Leg !='' and New_name_Title_or_Leg is not None and ctx.triggered_id == 'dropdown_legend_update':
-
-            NewLeg_name_list = New_name_Title_or_Leg.split(',')
-
-            newname_result = {}
 
             if len(current_names) == len(NewLeg_name_list):
 
