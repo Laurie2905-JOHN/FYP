@@ -583,31 +583,31 @@ def content(n_clicks, data, contents, filenames):
 
                     error = error_start + '\n' + error_repeat + '\n' + error_txt
 
-                    elif contain_text != [] and repeated_value != []:
+                elif contain_text != [] and repeated_value != []:
 
-                        error = error_start + '\n' + error_repeat + '\n' + error_txt
+                    error = error_start + '\n' + error_repeat + '\n' + error_txt
 
-                    elif error_file != []:
+                elif error_file != []:
 
-                        error = error_start + '\n' + error_process
+                    error = error_start + '\n' + error_process
 
-                    elif contain_text != []:
+                elif contain_text != []:
 
-                        error = error_start + '\n' + error_txt
+                    error = error_start + '\n' + error_txt
 
-                    elif repeated_value != []:
+                elif repeated_value != []:
 
-                        error = error_start + '\n' + error_repeat
+                    error = error_start + '\n' + error_repeat
 
-                else:
+            else:
 
-                    error = ', '.join(new_value) + ' uploaded'
+                error = ', '.join(new_value) + ' uploaded'
 
-                    color = "success"
+                color = "success"
 
-                    open1 = True
+                open1 = True
 
-                    data = [prb, combined_filenames]
+                data = [prb, combined_filenames]
 
 
         return data, error, color, open1
