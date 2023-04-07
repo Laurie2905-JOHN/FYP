@@ -516,7 +516,7 @@ def content(n_clicks, data, contents, filenames):
 
             combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
 
-            new_value = [] # List of newly uploaded file names
+            new_value = [] # List of uploaded file names which aren't repeated
             repeated_value = [] # List of repeated file names
             contain_text = [] # List of file names that don't have 'txt' in them
             error_file = [] # List of files with invalid formats
@@ -601,6 +601,7 @@ def content(n_clicks, data, contents, filenames):
 
             else:
 
+                # If no errors display success message
                 error = ', '.join(new_value) + ' uploaded'
 
                 color = "success"
@@ -622,24 +623,28 @@ def content(n_clicks, data, contents, filenames):
         prevent_initial_call=True
         )
 
+# Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
+# If all files are clicked all will be selected
 def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploaded_filenames):
-
-
+    # Prevent update if there are no file names
     if Uploaded_filenames is None:
         raise PreventUpdate
 
+    # Split up the triggered callback
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if input_id == "upload_file_checklist":
-
+        # If the upload file checklist input triggered the callback, update the all upload file checklist
         all_upload_file_check = ["All"] if set(upload_file_check) == set(Uploaded_filenames) else []
-
     else:
-
+        # If the all upload file checklist input triggered the callback, update the upload file checklist
         upload_file_check = Uploaded_filenames if all_upload_file_check else []
 
+    # Return the updated upload file checklist and all upload file checklist
     return upload_file_check, all_upload_file_check
 
+# Callback which syncs the all button of the clear file checklist. If all is clicked all files will be selected.
+# If all files are clicked all will be selected
 @app.callback(
         Output(component_id="clear_file_checklist", component_property='value'),
         Output(component_id='all_clear_file_checklist', component_property='value'),
@@ -650,22 +655,24 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, Uploade
         )
 
 def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
-
+    # If stored data is none prevent update
     if data is None:
         raise PreventUpdate
 
+    # Extract the ID of the input that triggered the callback
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
+    # Extract the file options from the data dictionary
     file_options = data[1]
 
     if input_id == "clear_file_checklist":
-
+        # If the clear file checklist input triggered the callback, update the all clear checklist
         all_clear_check = ["All"] if set(clear_file_check) == set(file_options) else []
-
     else:
-
+        # If the all clear checklist input triggered the callback, update the clear file checklist
         clear_file_check = file_options if all_clear_check else []
 
+    # Return the updated clear file checklist and all clear checklist
     return clear_file_check, all_clear_check
 
 @app.callback(
@@ -1115,22 +1122,25 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
         Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
-        Input(component_id="File", component_property='options'),
+        Output(component_id='submit_files', component_property='filename'),
+        Output(component_id='submit_files', component_property='contents'),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
         State(component_id="all_clear_file_checklist", component_property='value'),
         prevent_initial_call=True)
 
-def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
+def clear_files( n_clicks, maindata, whatclear, allclear):
 
     if "clear_files" != ctx.triggered_id:
         raise PreventUpdate
 
-    upload_file_check = []
-
     fig = {}
+
+    upload_filename = []
+
+    upload_contents = []
+
 
     if allclear == ['All']:
 
@@ -1200,7 +1210,7 @@ def clear_files(file_drop, n_clicks, maindata, whatclear, allclear):
     open1 = True
 
 
-    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_file_check
+    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents
 
 
 # Run app
