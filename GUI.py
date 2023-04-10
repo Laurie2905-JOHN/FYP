@@ -456,6 +456,7 @@ app.layout = dbc.Container([
     dcc.Download(id="download"),
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
+    dcc.Store(id='current_names', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
 
 ])
@@ -766,6 +767,7 @@ def update_In(small_val, large_val):
         Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
+        Output(component_id='current_names', component_property='data', allow_duplicate=True),
         # Output(component_id='alert', component_property='children', allow_duplicate=True),
         # Output(component_id='alert', component_property='color', allow_duplicate=True),
         # Output(component_id='alert', component_property='is_open', allow_duplicate=True),
@@ -911,7 +913,7 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
             elif title == 'On':
                 fig.layout.update(title=title_data)
 
-    return fig, min_sl, max_sl, value,
+    return fig, min_sl, max_sl, value, current_names
 
 
 @app.callback(
@@ -921,44 +923,34 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
      Output(component_id='New_name', component_property='value'),
      Output(component_id='legend_Data', component_property='data'),
      Output(component_id='title_Data', component_property='data'),
-     Input(component_id='Velocity_Graph', component_property='figure'),
      Input(component_id='filestorage', component_property='data'),
-     Input(component_id='legend_Data', component_property='data'),
-     Input(component_id='title_Data', component_property='data'),
-     Input(component_id='legend_onoff', component_property='value'),
-     Input(component_id='title_onoff', component_property='value'),
+     Input(component_id='current_names', component_property='data'),
      Input(component_id="dropdown_legend_update", component_property='n_clicks'),
      Input(component_id="dropdown_title_update", component_property='n_clicks'),
      Input(component_id="dropdown_clear", component_property='n_clicks'),
-     Input(component_id='File', component_property='value'),
-     Input(component_id='Vect', component_property='value'),
      State(component_id='New_name', component_property='value'),
      prevent_initial_call = True)
 
-def update_leg_title_data(fig, data, legend_data, title_data, leg, title, n_click, n_clicks1, n_clicks2,user_inputs, user_inputs1,  name_input):
+def update_leg_title_data(data, current_names, legend_data, title_data, n_click, n_clicks1, n_clicks2,  name_input):
 
-
-
+    if data is None:
+        raise PreventUpdate
 
     if ctx.triggered_id == 'dropdown_legend_update':
 
         legend_name_list = legend_data.split(',')
 
-    if len(current_names) == len(NewLeg_name_list):
+        if len(current_names) != len(legend_name_list):
 
-        error = 'Legend Updated'
+            error = 'Number of legend entries do not match'
 
-        color = "success"
+            color = "danger"
+
+            legend_data = current_names
+
+        else:
 
 
-
-    else:
-
-        error = 'Number of legend entries do not match'
-
-        color = "danger"
-
-    open1 = True
 
 
 
@@ -996,6 +988,8 @@ def update_leg_title_data(fig, data, legend_data, title_data, leg, title, n_clic
     else:
         name_input = no_update
 
+
+    return error, color, True, legend_data, title_data
 
 
 @app.callback(
