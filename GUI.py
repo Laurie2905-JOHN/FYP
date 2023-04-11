@@ -909,9 +909,11 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
         else:
             # If there is legend data
 
+            # If legend is off
             if leg == 'Off':
                 fig.layout.update(showlegend=False)
 
+                # No error message
                 error1 = no_update
 
                 color = no_update
@@ -919,15 +921,18 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
                 open1 = False
 
             elif leg == 'On':
-
+                # Split string when there is a comma
                 legend_name_list = legend_data.split(',')
+                # Create empty dictionary for new legend name
                 newname_result = {}
-                if len(current_names) == len(legend_name_list):
 
+                # If the length of the list of new legend entries is eqaul to the number of lines
+                if len(current_names) == len(legend_name_list):
+                    # For each legend name create a dictionary of the current names and their replacements
                     for i, current_name in enumerate(current_names):
                         newnames = {current_name: legend_name_list[i]}
                         newname_result.update(newnames)
-
+                    # Update legend names
                     fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
                                                           legendgroup=newname_result[t.name],
                                                           hovertemplate=t.hovertemplate.replace(t.name, newname_result[
@@ -936,6 +941,7 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
 
                     fig.layout.update(showlegend=True)
 
+                    # No error message
                     error1 = no_update
 
                     color = no_update
@@ -944,33 +950,35 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
 
                 else:
 
+                    # If legend entries do not match display error message
                     error1 = 'Number of legend entries do not match'
 
                     color = 'danger'
 
                     open1 = True
-
+        # If title data is empty
         if title_data is None:
 
             # Turn graph title off
             if title == 'Off':
                 fig.layout.update(title='')
-
+            # If title is on display original title
             elif title == 'On':
                 fig.layout.update(title='Plot of ' + ', '.join(user_inputs) + ' Data')
 
+        # If title data isn't empty
         else:
 
             # Turn graph title off
             if title == 'Off':
                 fig.layout.update(title='')
-
+            # Update title with legend data if legend is on
             elif title == 'On':
                 fig.layout.update(title=title_data)
-
+    # return figure, min and max values for slider, and error message
     return fig, min_sl, max_sl, value, error1, color, open1
 
-
+# Callback to update legend or title data
 @app.callback(
      Output(component_id='New_name', component_property='value'),
      Output(component_id='legend_Data', component_property='data'),
@@ -984,35 +992,43 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
 
 def update_leg_title_data(data, n_click, n_clicks1, n_clicks2,  name_input):
 
+    # If data is none prevent update of app
     if data is None:
         raise PreventUpdate
 
+    # If legend update button is pressed
     if ctx.triggered_id == 'dropdown_legend_update':
+        # Update legend data
         legend_data = name_input
+        # No update to title data or name input
         title_data = no_update
         name_input = no_update
-
+    # If title update button is pressed
     elif ctx.triggered_id == 'dropdown_title_update':
+        # Update title data
         title_data = name_input
+        # No update to legend data or name input
         name_input = no_update
         legend_data = no_update
 
     # If clear dropdown pressed clear input box
     elif ctx.triggered_id == 'dropdown_clear':
+        # Clear title and legend data
         title_data = None
         legend_data = None
+        # Clear input box
         name_input = ''
 
     else:
-
+        # Else no update to any values
         title_data = no_update
         name_input = no_update
         legend_data = no_update
 
-
+    # Return name, legend and title data
     return name_input, legend_data, title_data
 
-
+# Callback for download button
 @app.callback(
         Output(component_id="download", component_property='data', allow_duplicate=True),
         Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
@@ -1031,37 +1047,49 @@ def update_leg_title_data(data, n_click, n_clicks1, n_clicks2,  name_input):
 
 def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_type, data):
 
+    # If download button is pressed
     if "btn_download" == ctx.triggered_id:
 
+        # If no file selected display error message
         if file is None:
 
+            # Display error message and don't download anything
             text = no_update
 
             error1 = ['No data to download', 'danger']
 
-
+        # If quantity is not picked
         if vels == [] or vels is None:
 
+            # Display error message and don't download anything
             text = no_update
 
             error1 = ['No data to download', "danger"]
 
+        # If required values are selected
         else:
 
+            # Assign values
             prb = data[0]
 
+            # Create a dictionary of all options
             dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
 
+            # Create a dictionary of options selected
             df = {file: {vel: [] for vel in vels}}
 
+            # If a time range has been selected
             if smallt is not None or bigt is not None:
-
+                # Assign variables and convert to numpy array
                 t = np.array(dff[file]['t'])
+                # Calculate min and  max
                 max1 = np.amax(t)
                 min1 = np.amin(t)
 
+                # If both smallt and bigt isn't empty
                 if smallt is not None and bigt is not None:
 
+                    # Error messages
                     smallt_error = [
                     file_type + ' File Downloaded.\n' + 'The data has been cut to the minimum time limit because it\n'
                     'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
@@ -1077,6 +1105,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
                     both_t_NO_error = [file_type + ' File Downloaded.\n' + 'Data has been cut to the specified limits', 'primary']
 
+                    # Cut data based on conditions
                     if smallt < min1 and bigt > max1:
                         error1 = both_t_error
                         mask = (t >= min1) & (t <= max1)
@@ -1093,23 +1122,29 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                         mask = (t >= smallt) & (t < bigt)
                         error1 = both_t_NO_error
 
-
+                # For selected options assign data
                 for vel in vels:
                     df[file][vel] = dff[file][vel][mask]
 
+            # If no time range selected
             else:
 
+                # Assign data
                 for vel in vels:
                     df[file][vel] = dff[file][vel]
 
+                # Error message
                 error1 = [file_type + ' File Downloaded', 'primary']
 
                 open1 = True
 
+            # If .txt is not in file name
             if file_type == '.txt':
 
+                # Create an empty list
                 list_all = []
 
+                # Convert data to strings based on initial conditions
                 if len(vels) == 1:
                     stacked = df[file][vels[0]]
                     list_all.append(stacked)
@@ -1137,6 +1172,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                     list_all = np.concatenate(list_all, axis=1)
                     str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
+                # Filter data so it is in the correct format
                 vels_str = ','.join(vels)
                 str_all = vels_str + '\n' + str_all
                 str_all = str_all.replace(' ', '')
@@ -1146,15 +1182,19 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                 str_all = str_all.replace('[', '')
                 str_all = str_all.replace(']', '')
 
+                # If no filename selected, assign filename
                 if selected_name is None or selected_name == '':
                     value = file.split('.')
                     filenameTXT = value[0] + ".txt"
 
+                # If filename is chosen, create filename string
                 else:
                     filenameTXT = selected_name + ".txt"
 
+                # Assign text file to save
                 text = dict(content=str_all, filename = filenameTXT )
 
+            # If chosen file type is excel or CSV
             if file_type == 'Excel' or 'CSV':
 
                 # create an empty list to store dataframes
@@ -1167,6 +1207,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                 # concatenate all dataframes in the list
                 PDdata = pd.concat(pandaData)
 
+                # Assigning filenames
                 if selected_name is None or selected_name == '':
                     value = file.split('.')
                     filename = value[0]
@@ -1183,6 +1224,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
         return text, error1[0], error1[1], True,
 
+# Callback to clear data
 @app.callback(
         Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
         Output(component_id="File", component_property='options', allow_duplicate=True),
@@ -1202,84 +1244,96 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
 def clear_files( n_clicks, maindata, whatclear, allclear):
 
+    # If the clear files button is pressed, prevent update
     if "clear_files" != ctx.triggered_id:
         raise PreventUpdate
 
+    # Clear figure
     fig = {}
 
+    # Clear upload data
     upload_filename = []
-
     upload_contents = []
 
-
+    # If the all checklist is checked
     if allclear == ['All']:
 
+        # display good error message
         error = 'All files cleared'
-
         color = "success"
 
+        # No update to new main data
         newmaindata = no_update
 
+        # Clear all data
         clear_data_main = True
 
+        # Make the file drop options and quantity options empty
         file_drop_opt = []
-
         vect_opt = []
 
-
+        # If no files selected display error message
         if len(whatclear) == 0:
 
+            # display good error message
             error = 'No files deleted'
-
             color = "danger"
 
+            # No update to new main data
             newmaindata = no_update
 
+            # Clear all data
             clear_data_main = True
 
+            # Make the file drop options and quantity options empty
             file_drop_opt = []
-
             vect_opt = []
 
-
+    # If 1 or more files being deleted
     elif len(whatclear) >= 1:
 
+        # Assign data
         df1 = maindata[0]
         df2 = maindata[1]
 
+        # Delete selected data
         for what in whatclear:
             del df1[what]
             df2.remove(what)
 
+        # Assign new data
         newmaindata = [df1, df2]
 
+        # Display error message
         error = ', '.join(whatclear) + ' deleted'
-
         color = "success"
 
+        # Do not clear main data
         clear_data_main = False
 
+        # No option to graph options
         file_drop_opt = no_update
-
         vect_opt = no_update
 
     else:
-
+        # No uodate to new data
         newmaindata = no_update
 
+        # Display error message
         error = 'No files deleted as none were selected'
-
-        clear_data_main = False
-
         color = "danger"
 
-        file_drop_opt = no_update
+        # Do not clear main data
+        clear_data_main = False
 
+        # No option to graph options
+        file_drop_opt = no_update
         vect_opt = no_update
 
+    # Open error message
     open1 = True
 
-
+    # Return required values
     return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents
 
 
