@@ -767,10 +767,9 @@ def update_In(small_val, large_val):
         Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
         Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
-        Output(component_id='current_names', component_property='data', allow_duplicate=True),
-        # Output(component_id='alert', component_property='children', allow_duplicate=True),
-        # Output(component_id='alert', component_property='color', allow_duplicate=True),
-        # Output(component_id='alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='alert', component_property='children', allow_duplicate=True),
+        Output(component_id='alert', component_property='color', allow_duplicate=True),
+        Output(component_id='alert', component_property='is_open', allow_duplicate=True),
         Input(component_id = 'filestorage', component_property = 'data'),
         Input(component_id = 'File', component_property = 'value'),
         Input(component_id = 'Vect', component_property = 'value'),
@@ -789,11 +788,11 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
 
     if user_inputs == [] or user_inputs1 == []:
 
-        # error = error
-        #
-        # color = color
-        #
-        # open1 = open1
+        error1 = no_update
+
+        color = no_update
+
+        open1 = False
 
         fig = {}
 
@@ -874,26 +873,63 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
             if leg == 'Off':
                 fig.layout.update(showlegend=False)
 
+                error1 = no_update
+
+                color = no_update
+
+                open1 = False
+
             elif leg == 'On':
                 fig.layout.update(showlegend=True)
+
+                error1 = no_update
+
+                color = no_update
+
+                open1 = False
 
         else:
 
             if leg == 'Off':
                 fig.layout.update(showlegend=False)
 
+                error1 = no_update
+
+                color = no_update
+
+                open1 = False
+
             elif leg == 'On':
 
-                for i, current_name in enumerate(current_names):
-                    newnames = {current_name: legend_data[i]}
+                legend_name_list = legend_data.split(',')
+                newname_result = {}
+                if len(current_names) == len(legend_name_list):
 
-                fig.for_each_trace(lambda t: t.update(name=newnames[t.name],
-                                                      legendgroup=newnames[t.name],
-                                                      hovertemplate=t.hovertemplate.replace(t.name, newnames[
-                                                          t.name]) if t.hovertemplate is not None else None)
-                                   )
+                    for i, current_name in enumerate(current_names):
+                        newnames = {current_name: legend_name_list[i]}
+                        newname_result.update(newnames)
 
-                fig.layout.update(showlegend=True)
+                    fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
+                                                          legendgroup=newname_result[t.name],
+                                                          hovertemplate=t.hovertemplate.replace(t.name, newname_result[
+                                                              t.name]) if t.hovertemplate is not None else None)
+                                       )
+
+                    fig.layout.update(showlegend=True)
+
+                    error1 = no_update
+
+                    color = no_update
+
+                    open1 = False
+
+                else:
+
+                    error1 = 'Number of legend entries do not match'
+
+                    color = 'danger'
+
+                    open1 = True
 
         if title_data is None:
 
@@ -913,83 +949,49 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
             elif title == 'On':
                 fig.layout.update(title=title_data)
 
-    return fig, min_sl, max_sl, value, current_names
+    return fig, min_sl, max_sl, value, error1, color, open1
 
 
 @app.callback(
-     Output(component_id='alert', component_property='children', allow_duplicate=True),
-     Output(component_id='alert', component_property='color', allow_duplicate=True),
-     Output(component_id='alert', component_property='is_open', allow_duplicate=True),
      Output(component_id='New_name', component_property='value'),
      Output(component_id='legend_Data', component_property='data'),
      Output(component_id='title_Data', component_property='data'),
      Input(component_id='filestorage', component_property='data'),
-     Input(component_id='current_names', component_property='data'),
      Input(component_id="dropdown_legend_update", component_property='n_clicks'),
      Input(component_id="dropdown_title_update", component_property='n_clicks'),
      Input(component_id="dropdown_clear", component_property='n_clicks'),
      State(component_id='New_name', component_property='value'),
      prevent_initial_call = True)
 
-def update_leg_title_data(data, current_names, legend_data, title_data, n_click, n_clicks1, n_clicks2,  name_input):
+def update_leg_title_data(data, n_click, n_clicks1, n_clicks2,  name_input):
 
     if data is None:
         raise PreventUpdate
 
     if ctx.triggered_id == 'dropdown_legend_update':
+        legend_data = name_input
+        title_data = no_update
+        name_input = no_update
 
-        legend_name_list = legend_data.split(',')
-
-        if len(current_names) != len(legend_name_list):
-
-            error = 'Number of legend entries do not match'
-
-            color = "danger"
-
-            legend_data = current_names
-
-        else:
-
-
-
-
-
-    if title_data is None:
-
-        # Turn graph title off
-        if title == 'Off':
-            fig.layout.update(title='')
-
-        elif title == 'On':
-            fig.layout.update(title='Barnacle Data')
-
-    else:
-
-        # Turn graph title off
-        if title == 'Off':
-            fig.layout.update(title='')
-
-        elif title == 'On':
-            fig.layout.update(title=title)
-
-        # Update title if new title is requested
-        elif title == 'On' and New_name_Title_or_Leg != '' and New_name_Title_or_Leg is not None and ctx.triggered_id == 'dropdown_title_update':
-            fig.layout.update(title=New_name_Title_or_Leg)
-
-            error = 'Title Updated'
-
-            color = "success"
-
+    elif ctx.triggered_id == 'dropdown_title_update':
+        title_data = name_input
+        name_input = no_update
+        legend_data = no_update
 
     # If clear dropdown pressed clear input box
-    if ctx.triggered_id == 'dropdown_clear':
+    elif ctx.triggered_id == 'dropdown_clear':
+        title_data = None
+        legend_data = None
         name_input = ''
 
     else:
+
+        title_data = no_update
         name_input = no_update
+        legend_data = no_update
 
 
-    return error, color, True, legend_data, title_data
+    return name_input, legend_data, title_data
 
 
 @app.callback(
