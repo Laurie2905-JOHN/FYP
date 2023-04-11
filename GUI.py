@@ -781,11 +781,12 @@ def update_In(small_val, large_val):
         Input(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
 
 def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, legend_data, title_data, leg, title ):
-    # Check if data is not empty or None
 
+    # Check if data is not empty or None
     if data is None or data == []:
         raise PreventUpdate
 
+    # If no input do not plot graphs
     if user_inputs == [] or user_inputs1 == []:
 
         error1 = no_update
@@ -804,6 +805,7 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
 
     else:
 
+        # Plotting graphs
         df = data[0]
 
         max1 = []
@@ -814,48 +816,58 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
 
         current_names = []
 
-
+        # If user inputs are changed reset time slider and plot full data
         if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
                     V = df[user_input][user_input1]
                     t = df[user_input]['t']
+                    # Calculating max and min of the datasets
                     max1.append(np.round(np.amax(t)))
                     min1.append(np.round(np.amin(t)))
+                    # Plotting data
                     fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
                                             line=dict(
                                             width=line_thick),
                                             name=f"{user_input}{' '}{user_input1}"))
+                    # Creating a list of current legend names
                     current_names.append(f"{user_input}{' '}{user_input1}")
 
+            # Calculating min and max of data
             min_sl = min(min1)
             max_sl = max(max1)
-
+            # Value of slider being put at min and max positions
             value = [min_sl, max_sl]
 
         else:
 
+            # If user inputs haven't changed
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
                     V = np.array(df[user_input][user_input1])
                     t = np.array(df[user_input]['t'])
+                    # Calculating max and min of data set
                     max1.append(np.round(np.amax(t)))
                     min1.append(np.round(np.amin(t)))
+                    # Creating a mask to trim data for the time slider
                     mask = (t >= time_input[0]) & (t < time_input[1])
                     t2 = t[mask]
                     V2 = V[mask]
+                    # Plotting data
                     fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
                                             line=dict(
                                             width=line_thick),
                                             name=f"{user_input}{' '}{user_input1}"))
                     current_names.append(f"{user_input}{' '}{user_input1}")
 
-
+            # No change in slider values
             value = time_input
+            # Calculate max and min of data
             min_sl = min(min1)
             max_sl = max(max1)
 
+        # Update x and y axes labels
         fig.update_layout(
             xaxis_title="Time (s)",
             yaxis_title="Velocity (m/s)",
@@ -867,21 +879,27 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
                 xanchor="center"),
         )
 
+        # Update legend
 
         if legend_data is None:
+            # If no legend data
 
+            # Turn legend off
             if leg == 'Off':
                 fig.layout.update(showlegend=False)
 
+                # No update to error messages
                 error1 = no_update
 
                 color = no_update
 
                 open1 = False
 
+            # Turn legend on
             elif leg == 'On':
                 fig.layout.update(showlegend=True)
 
+                # No update to error messages
                 error1 = no_update
 
                 color = no_update
@@ -889,6 +907,7 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
                 open1 = False
 
         else:
+            # If there is legend data
 
             if leg == 'Off':
                 fig.layout.update(showlegend=False)
