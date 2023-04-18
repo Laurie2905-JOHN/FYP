@@ -568,7 +568,7 @@ def content(n_clicks, data, contents, filenames):
                 error_txt = ' Please check the file type of: \n' \
                             '(' + ', '.join(contain_text) + '). '
 
-                error_process = ' Please check the file format of: \n' \
+                error_process = ' Please check the file for errors: \n' \
                             '(' + ', '.join(error_file) + '). '
 
 
