@@ -1236,6 +1236,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
         Output(component_id='submit_files', component_property='filename'),
         Output(component_id='submit_files', component_property='contents'),
+        Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
@@ -1254,9 +1255,49 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
     # Clear upload data
     upload_filename = []
     upload_contents = []
+    # Clear selected values
+    clear_val = []
 
-    # If the all checklist is checked
-    if allclear == ['All']:
+    # If no files selected display error message
+    if allclear == ['All'] and len(whatclear) == 0:
+
+        # display bad error message
+        error = 'No files deleted'
+        color = "danger"
+
+        # No update to new main data
+        newmaindata = no_update
+
+        # Clear all data
+        clear_data_main = True
+
+        # Make the file drop options and quantity options empty
+        file_drop_opt = []
+        vect_opt = []
+
+        # Open error message
+        open1 = True
+
+    elif allclear == [] and len(whatclear) == 0:
+
+        # display bad error message
+        error = 'No files deleted'
+        color = "danger"
+
+        # No update to new main data
+        newmaindata = no_update
+
+        # Clear all data
+        clear_data_main = True
+
+        # Make the file drop options and quantity options empty
+        file_drop_opt = []
+        vect_opt = []
+
+        # Open error message
+        open1 = True
+
+    elif allclear == ['All'] and len(whatclear) != 0:
 
         # display good error message
         error = 'All files cleared'
@@ -1272,25 +1313,12 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
         file_drop_opt = []
         vect_opt = []
 
-        # If no files selected display error message
-        if len(whatclear) == 0:
+        # Open error message
+        open1 = True
 
-            # display good error message
-            error = 'No files deleted'
-            color = "danger"
-
-            # No update to new main data
-            newmaindata = no_update
-
-            # Clear all data
-            clear_data_main = True
-
-            # Make the file drop options and quantity options empty
-            file_drop_opt = []
-            vect_opt = []
 
     # If 1 or more files being deleted
-    elif len(whatclear) >= 1:
+    elif len(whatclear) >= 1 and allclear != ['All']:
 
         # Assign data
         df1 = maindata[0]
@@ -1315,26 +1343,13 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
         file_drop_opt = no_update
         vect_opt = no_update
 
-    else:
-        # No uodate to new data
-        newmaindata = no_update
+        # Open error message
+        open1 = True
 
-        # Display error message
-        error = 'No files deleted as none were selected'
-        color = "danger"
 
-        # Do not clear main data
-        clear_data_main = False
-
-        # No option to graph options
-        file_drop_opt = no_update
-        vect_opt = no_update
-
-    # Open error message
-    open1 = True
 
     # Return required values
-    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents
+    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents, clear_val
 
 
 # Run app
