@@ -1237,6 +1237,8 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id='submit_files', component_property='filename'),
         Output(component_id='submit_files', component_property='contents'),
         Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
+        Output(component_id="File", component_property='value', allow_duplicate=True),
+        Output(component_id='Vect', component_property='value', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
@@ -1257,6 +1259,8 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
     upload_contents = []
     # Clear selected values
     clear_val = []
+    file_drop_val = []
+    vect_drop_val = []
 
     # If no files selected display error message
     if allclear == ['All'] and len(whatclear) == 0:
@@ -1291,13 +1295,13 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
         clear_data_main = True
 
         # Make the file drop options and quantity options empty
-        file_drop_opt = []
-        vect_opt = []
+        file_drop_opt = no_update
+        vect_opt = no_update
 
         # Open error message
         open1 = True
 
-    elif allclear == ['All'] and len(whatclear) != 0:
+    elif allclear == ['All'] and len(whatclear) > 0:
 
         # display good error message
         error = 'All files cleared'
@@ -1349,7 +1353,7 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
 
 
     # Return required values
-    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents, clear_val
+    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents, clear_val, file_drop_val, vect_drop_val
 
 
 # Run app
