@@ -372,6 +372,70 @@ app.layout = dbc.Container([
 
     ], align='center', justify='evenly'),
 
+    dbc.Row([
+
+        # Horizontal line
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
+
+        # Column for "Upload/Clear Files" title
+        dbc.Col(
+            html.H5('Calibration File Upload', className='center-text'),
+            width=12,
+            className="text-center"
+        ),
+
+        # Horizontal line
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
+
+        # Column for alert message (hidden by default)
+        dbc.Col([
+            dbc.Alert(
+                id="CalFiles_alert",
+                is_open=False,
+                dismissable=True,
+                duration=30000
+            ),
+        ], width=12),
+
+        # Column for file selection/upload
+        dbc.Col([
+            dcc.Upload(
+                id='Cal_Upload_files',
+                children=html.Div([
+                    html.A('Select Files')
+                ]),
+                style={
+                    'height': '60px',
+                    'lineHeight': '60px',
+                    'borderWidth': '1px',
+                    'borderStyle': 'solid',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    'margin': '20px',
+                    'width': '90%',
+                },
+                className="text-primary",
+                # Allow multiple files to be uploaded
+                multiple=False
+            )
+        ], width=3),
+
+    dbc.Col([
+        dcc.Dropdown(
+            id="Cal_file_drop",
+            options=[],
+            multi=True,
+            value=[],
+            placeholder="Select a calibration file"),
+    ], width = 3)
+
+    ], align='center', justify='evenly'),
 
 
     dbc.Row([
@@ -457,7 +521,7 @@ app.layout = dbc.Container([
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
-    dcc.Store(id='UploadStorage', storage_type='memory'),
+    dcc.Store(id='Cal_storage', storage_type='local'),
 
 ])
 
@@ -490,7 +554,7 @@ def content(n_clicks, data, contents, filenames):
 
     # Check if the "newfile" button was clicked
     if "newfile" == ctx.triggered_id:
-        print(filenames)
+
         # Initialise data dictionary if it is None
         if data is None:
             data = [{}, []]
@@ -547,9 +611,9 @@ def content(n_clicks, data, contents, filenames):
             # If there are errors, return error messages
             if contain_text != [] or repeated_value != [] or error_file != []:
 
-                # print(contain_text)
-                # print(repeated_value)
-                # print(error_file)
+                print(contain_text)
+                print(repeated_value)
+                print(error_file)
 
                 data = [prb, combined_filenames]
 
@@ -558,46 +622,53 @@ def content(n_clicks, data, contents, filenames):
 
                 error_list_complete = contain_text + repeated_value + error_file
 
-                error_start = 'There was an error processing files: \n ' \
-                               '(' + ', '.join(error_list_complete) + ').'
+                if new_value != []:
 
-                error_repeat = ' Please check that files are not repeated: \n ' \
-                               '(' + ', '.join(repeated_value) + ').'
+                    error_start = 'Files (' + ', '.join(new_value) + ') uploaded.\n'
+                    'There was an error processing files: \n ' \
+                    '(' + ', '.join(error_list_complete) + ').'
+
+                else:
+
+                    error_start = 'There was an error processing files: \n ' \
+                                   '(' + ', '.join(error_list_complete) + ').'
+
+                error_repeat = ' Please check : ' \
+                               '(' + ', '.join(repeated_value) + ') are not repeated.'
 
                 error_txt = ' Please check the file type of: \n' \
                             '(' + ', '.join(contain_text) + '). '
 
-                error_process = ' Please check the file for errors: \n' \
-                            '(' + ', '.join(error_file) + '). '
+                error_process = ' Please check: \n' \
+                            '(' + ', '.join(error_file) + ') for errors.'
 
-
+                # If all three errors are present
                 if contain_text != [] and repeated_value != [] and error_file != []:
+                    error = error_start + error_repeat + error_txt + error_process
 
-                    error = error_start + '\n' + error_repeat + '\n' + error_txt + '\n' + error_process
+                # If there are invalid file types and errors in files
+                elif contain_text != [] and repeated_value == [] and error_file != []:
+                    error = error_start + error_txt + error_process
 
-                elif contain_text != [] and error_file != []:
+                # If there are invalid file types and repeated files
+                elif contain_text != [] and repeated_value != [] and error_file == []:
+                    error = error_start + error_repeat + error_txt
 
-                    error = error_start + '\n' + error_txt + '\n' + error_process
+                # If there are errors in files and repeated files
+                elif contain_text == [] and repeated_value != [] and error_file != []:
+                    error = error_start + error_repeat + error_process
 
-                elif error_file != [] and repeated_value != []:
-
-                    error = error_start + '\n' + error_repeat + '\n' + error_txt
-
-                elif contain_text != [] and repeated_value != []:
-
-                    error = error_start + '\n' + error_repeat + '\n' + error_txt
-
-                elif error_file != []:
-
-                    error = error_start + '\n' + error_process
-
-                elif contain_text != []:
-
+                # If there are invalid file types
+                elif contain_text != [] and repeated_value == [] and error_file == []:
                     error = error_start + '\n' + error_txt
 
-                elif repeated_value != []:
-
+                # If there are repeated files
+                elif contain_text == [] and repeated_value != [] and error_file == []:
                     error = error_start + '\n' + error_repeat
+
+                # If there are errors in files
+                elif contain_text == [] and repeated_value == [] and error_file != []:
+                    error = error_start + '\n' + error_process
 
             else:
 
