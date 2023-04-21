@@ -270,8 +270,6 @@ app.layout = dbc.Container([
         ),
     ], className='mb-2'),
 
-
-
     dbc.Row([
 
         # Column for "Upload/Clear Files" title
@@ -372,70 +370,6 @@ app.layout = dbc.Container([
 
     ], align='center', justify='evenly'),
 
-    dbc.Row([
-
-        # Horizontal line
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),
-
-        # Column for "Upload/Clear Files" title
-        dbc.Col(
-            html.H5('Calibration File Upload', className='center-text'),
-            width=12,
-            className="text-center"
-        ),
-
-        # Horizontal line
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),
-
-        # Column for alert message (hidden by default)
-        dbc.Col([
-            dbc.Alert(
-                id="CalFiles_alert",
-                is_open=False,
-                dismissable=True,
-                duration=30000
-            ),
-        ], width=12),
-
-        # Column for file selection/upload
-        dbc.Col([
-            dcc.Upload(
-                id='Cal_Upload_files',
-                children=html.Div([
-                    html.A('Select Files')
-                ]),
-                style={
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'solid',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': '20px',
-                    'width': '90%',
-                },
-                className="text-primary",
-                # Allow multiple files to be uploaded
-                multiple=False
-            )
-        ], width=3),
-
-    dbc.Col([
-        dcc.Dropdown(
-            id="Cal_file_drop",
-            options=[],
-            multi=True,
-            value=[],
-            placeholder="Select a calibration file"),
-    ], width = 3)
-
-    ], align='center', justify='evenly'),
 
 
     dbc.Row([
@@ -610,10 +544,6 @@ def content(n_clicks, data, contents, filenames):
 
             # If there are errors, return error messages
             if contain_text != [] or repeated_value != [] or error_file != []:
-
-                print(contain_text)
-                print(repeated_value)
-                print(error_file)
 
                 data = [prb, combined_filenames]
 
