@@ -1056,18 +1056,20 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
             # Display error message and don't download anything
             text = no_update
 
-            error1 = ['No data to download', 'danger']
+            error1 = ['No file selected', 'danger']
 
         # If quantity is not picked
-        if vels == [] or vels is None:
+        elif vels == [] or vels is None:
 
             # Display error message and don't download anything
             text = no_update
 
-            error1 = ['No data to download', "danger"]
+            error1 = ['No data selected', "danger"]
 
-        # If required values are selected
         else:
+
+            print(vels)
+            print(file)
 
             # Assign values
             prb = data[0]
@@ -1135,8 +1137,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
 
                 # Error message
                 error1 = [file_type + ' File Downloaded', 'primary']
-
-                open1 = True
 
             # If .txt is not in file name
             if file_type == '.txt':
@@ -1221,6 +1221,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                 if file_type == 'CSV':
                     ty = '.csv'
                     text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
+
 
         return text, error1[0], error1[1], True,
 
