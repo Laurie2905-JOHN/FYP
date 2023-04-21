@@ -456,11 +456,10 @@ app.layout = dbc.Container([
     dcc.Download(id="download"),
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
-    dcc.Store(id='current_names', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
+    dcc.Store(id='UploadStorage', storage_type='memory'),
 
 ])
-
 
 # Call back to update upload file checklist once files are selected
 @app.callback(
@@ -489,19 +488,15 @@ def file_checklist(file_names):
 
 def content(n_clicks, data, contents, filenames):
 
-    # Check if the function was triggered by a button click
-    if n_clicks is None:
-        raise PreventUpdate
-
     # Check if the "newfile" button was clicked
     if "newfile" == ctx.triggered_id:
-
-        # Initialize data dictionary if it is None
+        print(filenames)
+        # Initialise data dictionary if it is None
         if data is None:
             data = [{}, []]
 
         # Check if no files were uploaded
-        if filenames is None or filenames == [] or contents is None or contents == []:
+        if filenames is None or filenames == []:
 
             error = 'No files selected for upload'
             color = "danger"
@@ -551,6 +546,10 @@ def content(n_clicks, data, contents, filenames):
 
             # If there are errors, return error messages
             if contain_text != [] or repeated_value != [] or error_file != []:
+
+                # print(contain_text)
+                # print(repeated_value)
+                # print(error_file)
 
                 data = [prb, combined_filenames]
 
@@ -1050,178 +1049,187 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
     # If download button is pressed
     if "btn_download" == ctx.triggered_id:
 
-        # If no file selected display error message
-        if file is None:
+        try:
 
-            # Display error message and don't download anything
-            text = no_update
+            # If no file selected display error message
+            if file is None:
 
-            error1 = ['No file selected', 'danger']
+                # Display error message and don't download anything
+                text = no_update
 
-        # If quantity is not picked
-        elif vels == [] or vels is None:
+                error1 = ['No file selected', 'danger']
 
-            # Display error message and don't download anything
-            text = no_update
+            # If quantity is not picked
+            elif vels == [] or vels is None:
 
-            error1 = ['No data selected', "danger"]
+                # Display error message and don't download anything
+                text = no_update
 
-        else:
+                error1 = ['No data selected', "danger"]
 
-            print(vels)
-            print(file)
-
-            # Assign values
-            prb = data[0]
-
-            # Create a dictionary of all options
-            dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
-
-            # Create a dictionary of options selected
-            df = {file: {vel: [] for vel in vels}}
-
-            # If a time range has been selected
-            if smallt is not None or bigt is not None:
-                # Assign variables and convert to numpy array
-                t = np.array(dff[file]['t'])
-                # Calculate min and  max
-                max1 = np.amax(t)
-                min1 = np.amin(t)
-
-                # If both smallt and bigt isn't empty
-                if smallt is not None and bigt is not None:
-
-                    # Error messages
-                    smallt_error = [
-                    file_type + ' File Downloaded.\n' + 'The data has been cut to the minimum time limit because it\n'
-                    'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
-
-                    bigt_error = [
-                        file_type + ' File Downloaded.\n' + 'The data has been cut to the maximum time limit because it\n'
-                        'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
-
-                    both_t_error = [
-                        file_type + ' File Downloaded. Warning: Both minimum and maximum time limits are outside the range\n'
-                                    'of available raw time data. The data has been trimmed to the minimum and maximum\n'
-                                    'time limits. Please adjust your time limits accordingly.', 'primary']
-
-                    both_t_NO_error = [file_type + ' File Downloaded.\n' + 'Data has been cut to the specified limits', 'primary']
-
-                    # Cut data based on conditions
-                    if smallt < min1 and bigt > max1:
-                        error1 = both_t_error
-                        mask = (t >= min1) & (t <= max1)
-
-                    elif smallt < min1:
-                        error1 = smallt_error
-                        mask = (t >= min1)
-
-                    elif bigt > max1:
-                        error1 = bigt_error
-                        mask = (t <= max1)
-
-                    else:
-                        mask = (t >= smallt) & (t < bigt)
-                        error1 = both_t_NO_error
-
-                # For selected options assign data
-                for vel in vels:
-                    df[file][vel] = dff[file][vel][mask]
-
-            # If no time range selected
             else:
 
-                # Assign data
-                for vel in vels:
-                    df[file][vel] = dff[file][vel]
+                print(vels)
+                print(file)
 
-                # Error message
-                error1 = [file_type + ' File Downloaded', 'primary']
+                # Assign values
+                prb = data[0]
 
-            # If .txt is not in file name
-            if file_type == '.txt':
+                # Create a dictionary of all options
+                dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
 
-                # Create an empty list
-                list_all = []
+                # Create a dictionary of options selected
+                df = {file: {vel: [] for vel in vels}}
 
-                # Convert data to strings based on initial conditions
-                if len(vels) == 1:
-                    stacked = df[file][vels[0]]
-                    list_all.append(stacked)
-                    list_all = list_all[0]
-                    str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
+                # If a time range has been selected
+                if smallt is not None or bigt is not None:
+                    # Assign variables and convert to numpy array
+                    t = np.array(dff[file]['t'])
+                    # Calculate min and  max
+                    max1 = np.amax(t)
+                    min1 = np.amin(t)
 
+                    # If both smallt and bigt isn't empty
+                    if smallt is not None and bigt is not None:
+
+                        # Error messages
+                        smallt_error = [
+                        file_type + ' File Downloaded.\n' + 'The data has been cut to the minimum time limit because it\n'
+                        'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
+
+                        bigt_error = [
+                            file_type + ' File Downloaded.\n' + 'The data has been cut to the maximum time limit because it\n'
+                            'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
+
+                        both_t_error = [
+                            file_type + ' File Downloaded. Warning: Both minimum and maximum time limits are outside the range\n'
+                                        'of available raw time data. The data has been trimmed to the minimum and maximum\n'
+                                        'time limits. Please adjust your time limits accordingly.', 'primary']
+
+                        both_t_NO_error = [file_type + ' File Downloaded.\n' + 'Data has been cut to the specified limits', 'primary']
+
+                        # Cut data based on conditions
+                        if smallt < min1 and bigt > max1:
+                            error1 = both_t_error
+                            mask = (t >= min1) & (t <= max1)
+
+                        elif smallt < min1:
+                            error1 = smallt_error
+                            mask = (t >= min1)
+
+                        elif bigt > max1:
+                            error1 = bigt_error
+                            mask = (t <= max1)
+
+                        else:
+                            mask = (t >= smallt) & (t < bigt)
+                            error1 = both_t_NO_error
+
+                    # For selected options assign data
+                    for vel in vels:
+                        df[file][vel] = dff[file][vel][mask]
+
+                # If no time range selected
                 else:
 
-                    if len(vels) == 2:
-                        stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-                        list_all.append(stacked)
+                    # Assign data
+                    for vel in vels:
+                        df[file][vel] = dff[file][vel]
 
-                    if len(vels) == 3:
-                        stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-                        stacked2 = df[file][vels[2]].reshape(-1, 1)
-                        stacked = np.concatenate((stacked1, stacked2), axis=1)
-                        list_all.append(stacked)
+                    # Error message
+                    error1 = [file_type + ' File Downloaded', 'primary']
 
-                    k = 0
-                    if len(vels) == 4:
-                        while k < len(vels) - 1:
-                            stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+                # If .txt is not in file name
+                if file_type == '.txt':
+
+                    # Create an empty list
+                    list_all = []
+
+                    # Convert data to strings based on initial conditions
+                    if len(vels) == 1:
+                        stacked = df[file][vels[0]]
+                        list_all.append(stacked)
+                        list_all = list_all[0]
+                        str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
+
+                    else:
+
+                        if len(vels) == 2:
+                            stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
                             list_all.append(stacked)
-                            k = k + 2
-                    list_all = np.concatenate(list_all, axis=1)
-                    str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
-                # Filter data so it is in the correct format
-                vels_str = ','.join(vels)
-                str_all = vels_str + '\n' + str_all
-                str_all = str_all.replace(' ', '')
-                str_all = str_all.replace('],', '')
-                str_all = str_all.replace(']]', '')
-                str_all = str_all.replace('[[', '')
-                str_all = str_all.replace('[', '')
-                str_all = str_all.replace(']', '')
+                        if len(vels) == 3:
+                            stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+                            stacked2 = df[file][vels[2]].reshape(-1, 1)
+                            stacked = np.concatenate((stacked1, stacked2), axis=1)
+                            list_all.append(stacked)
 
-                # If no filename selected, assign filename
-                if selected_name is None or selected_name == '':
-                    value = file.split('.')
-                    filenameTXT = value[0] + ".txt"
+                        k = 0
+                        if len(vels) == 4:
+                            while k < len(vels) - 1:
+                                stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+                                list_all.append(stacked)
+                                k = k + 2
+                        list_all = np.concatenate(list_all, axis=1)
+                        str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
 
-                # If filename is chosen, create filename string
-                else:
-                    filenameTXT = selected_name + ".txt"
+                    # Filter data so it is in the correct format
+                    vels_str = ','.join(vels)
+                    str_all = vels_str + '\n' + str_all
+                    str_all = str_all.replace(' ', '')
+                    str_all = str_all.replace('],', '')
+                    str_all = str_all.replace(']]', '')
+                    str_all = str_all.replace('[[', '')
+                    str_all = str_all.replace('[', '')
+                    str_all = str_all.replace(']', '')
 
-                # Assign text file to save
-                text = dict(content=str_all, filename = filenameTXT )
+                    # If no filename selected, assign filename
+                    if selected_name is None or selected_name == '':
+                        value = file.split('.')
+                        filenameTXT = value[0] + ".txt"
 
-            # If chosen file type is excel or CSV
-            if file_type == 'Excel' or 'CSV':
+                    # If filename is chosen, create filename string
+                    else:
+                        filenameTXT = selected_name + ".txt"
 
-                # create an empty list to store dataframes
-                pandaData = []
+                    # Assign text file to save
+                    text = dict(content=str_all, filename = filenameTXT )
 
-                # loop through each file and convert to dataframe
-                for file, df in df.items():
-                    dfff = pd.DataFrame(df)
-                    pandaData.append(dfff)
-                # concatenate all dataframes in the list
-                PDdata = pd.concat(pandaData)
+                # If chosen file type is excel or CSV
+                if file_type == 'Excel' or 'CSV':
 
-                # Assigning filenames
-                if selected_name is None or selected_name == '':
-                    value = file.split('.')
-                    filename = value[0]
-                else:
-                    filename = selected_name
+                    # create an empty list to store dataframes
+                    pandaData = []
 
-                if file_type == 'Excel':
-                    ty = '.xlsx'
-                    text = dcc.send_data_frame(PDdata.to_excel, filename + ty)
+                    # loop through each file and convert to dataframe
+                    for file, df in df.items():
+                        dfff = pd.DataFrame(df)
+                        pandaData.append(dfff)
+                    # concatenate all dataframes in the list
+                    PDdata = pd.concat(pandaData)
 
-                if file_type == 'CSV':
-                    ty = '.csv'
-                    text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
+                    # Assigning filenames
+                    if selected_name is None or selected_name == '':
+                        value = file.split('.')
+                        filename = value[0]
+                    else:
+                        filename = selected_name
 
+                    if file_type == 'Excel':
+                        ty = '.xlsx'
+                        text = dcc.send_data_frame(PDdata.to_excel, filename + ty)
+
+                    if file_type == 'CSV':
+                        ty = '.csv'
+                        text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
+
+
+
+        except:
+
+            # If any error display message
+            text = no_update
+            error1 = ['ERROR', 'danger']
 
         return text, error1[0], error1[1], True,
 
@@ -1240,6 +1248,7 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
         Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
         Output(component_id="File", component_property='value', allow_duplicate=True),
         Output(component_id='Vect', component_property='value', allow_duplicate=True),
+        Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
@@ -1256,6 +1265,7 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
     fig = {}
 
     # Clear upload data
+    submit_val_check = []
     upload_filename = []
     upload_contents = []
     # Clear selected values
@@ -1354,7 +1364,7 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
 
 
     # Return required values
-    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents, clear_val, file_drop_val, vect_drop_val
+    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents, clear_val, file_drop_val, vect_drop_val, submit_val_check
 
 
 # Run app
