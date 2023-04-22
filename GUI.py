@@ -1,5 +1,5 @@
 # Import libs
-from dash import Dash, dcc, Output, Input, ctx, State
+from dash import Dash, dcc, Output, Input, ctx, State, dash_table
 from dash.dash import no_update
 from dash.exceptions import PreventUpdate
 from dash import dcc
@@ -14,6 +14,34 @@ import warnings
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
+def calculate_turbulence_intensity(u, v, w, U_mag):
+
+    N = len(u)
+
+    # Calculate mean velocities
+    U = np.mean(u)
+    V = np.mean(v)
+    W = np.mean(w)
+
+    # Calculate velocity fluctuations
+    u_prime = u - U
+    v_prime = v - V
+    w_prime = w - W
+
+    # Calculate mean squared velocity fluctuations
+    mean_u_prime_sq = np.mean(np.square(u_prime))
+    mean_v_prime_sq = np.mean(np.square(v_prime))
+    mean_w_prime_sq = np.mean(np.square(w_prime))
+
+    # Calculate RMS of velocity fluctuations
+    u_prime_RMS = np.sqrt(mean_u_prime_sq)
+    v_prime_RMS = np.sqrt(mean_v_prime_sq)
+    w_prime_RMS = np.sqrt(mean_w_prime_sq)
+
+    # Calculate turbulence intensity
+    TI = (np.sqrt(u_prime_RMS**2 + v_prime_RMS**2 + w_prime_RMS**2)) / U_mag
+
+    return TI
 
 def cal_velocity(contents, file_names):
 
@@ -103,8 +131,10 @@ def cal_velocity(contents, file_names):
         prb_final = {'Ux': {}}
         prb_final = {'Uy': {}}
         prb_final = {'Uz': {}}
+        prb_final = {'U1': {}}
         prb_final = {'t': {}}
 
+        prb_final['U1'] = prb[file_name]['U1']
         prb_final['Ux'] = prb[file_name]['Ux']
         prb_final['Uy'] = prb[file_name]['Uy']
         prb_final['Uz'] = prb[file_name]['Uz']
@@ -450,14 +480,107 @@ app.layout = dbc.Container([
         ], width=6),
     ], align='center', justify='evenly'),  # Row containing columns for selecting and downloading data files
 
+
+    dbc.Row([
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),  # Horizontal rule to separate content
+    ], className='mb-2'),
+
+    dbc.Row(
+        dbc.Col(
+            html.H5('Turbulence Intensity', className='center-text'),
+            width=12,
+            className="text-center"
+        ),  # Column containing the header for the download files section
+    ),
+
+    dbc.Row(
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),  # Horizontal rule to separate content
+    ),
+
+dbc.Row([
+  dbc.Col(
+
+dash_table.DataTable(id = 'TI_Table',
+                     columns =
+                     [
+                        {"id": 'FileName', "name": 'File Name'},
+                        {"id": 'Time 1', "name": 'Time 1'},
+                        {"id": 'Time 2', "name": 'Time 2'},
+                        {"id": 'TI', 'name': 'Turbulence Intensity'},
+                     ],
+),
+
+  width = 6),
+
+    dbc.Col([
+        dbc.Stack([
+            dbc.Button("Calculate Turbulence Intensity", id="TI_btn_download", size="lg"),  # Button for downloading selected data
+
+            dcc.Dropdown(
+                id="DataSet_TI",
+                options=[],
+                multi=False,
+                value=[],
+                placeholder="Select a dataset"),
+
+            dbc.Row([
+                dbc.Col(
+                    dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True)
+                ),  # Input field for minimum time
+
+                dbc.Col(
+                    dbc.Input(id="big_t_TI", min=0, type="number", placeholder="Max Time", debounce=True)
+                ),  # Input field for maximum time
+
+            ], justify="center"),  # Row for input fields for minimum and maximum times
+
+        ], gap=2),
+    ], width=5),
+
+    ], align='center', justify='evenly'),
+
     # # Components for storing and downloading data
     dcc.Download(id="download"),
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
+    dcc.Store(id='TI_Storage', storage_type='session'),
     dcc.Store(id='Cal_storage', storage_type='local'),
 
 ])
+
+# Callback to analyse and update TI table
+ @ app.callback(
+    Output(component_id='TI_Table', component_property='data'),
+    Input(component_id='TI_btn_download', component_property='n_clicks'),
+    State(component_id='filestorage', component_property='data'),
+    State(component_id='DataSet_TI', component_property='contents'),
+    State(component_id="small_t_TI", component_property='value'),
+    State(component_id="big_t_TI", component_property='value'),
+    prevent_initial_call=True)
+
+def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI):
+
+    if "TI_btn_download" == ctx.triggered_id:
+
+        prb = data[0]
+
+        mask = (prb[chosen_file]['t'] >= small_TI) & (prb[chosen_file]['t'] < big_TI)
+
+        x = prb[chosen_file]['Ux'][mask]
+        y = prb[chosen_file]['Uy'][mask]
+        z = prb[chosen_file]['Uz'][mask]
+        xyz = prb[chosen_file]['U1'][mask]
+
+        TI = calculate_turbulence_intensity(x, y, z, xyz)
+
+    return TI_TABLE
 
 # Call back to update upload file checklist once files are selected
 @app.callback(
@@ -702,13 +825,14 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
     return vel_check, all_vel_checklist
 
 
-# Callback which updates dropdowns of graph
+# Callback which updates dropdowns
 @app.callback(
     Output(component_id="File", component_property='options'),
     Output(component_id='Vect', component_property='options'),
     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id='DataSet_TI', component_property='options'),
     Input(component_id='filestorage', component_property='data'),
     prevent_initial_call=True)
 
@@ -721,16 +845,18 @@ def update_dropdowns(data):
         file_checklist = []
         clear_file_check = []
         vel_checklist = []
+        DataDrop_TI = []
     else:
         # If the data is not None, set the dropdown options and checklists accordingly
         vect_options = ['Ux', 'Uy', 'Uz']
         file_dropdown_options = data[1]
         file_checklist = file_dropdown_options
+        DataDrop_TI = file_dropdown_options
         clear_file_check = file_checklist
         vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 
     # Return the updated dropdown options and checklists
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check, DataDrop_TI
 
 
 # Call back which updates the download time range to prevent error
