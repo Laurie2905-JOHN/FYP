@@ -14,18 +14,6 @@ import warnings
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
-def autocorrelation_function(velocity_component):
-    n = len(velocity_component)
-    mean = np.mean(velocity_component)
-    autocorr = np.correlate(velocity_component - mean, velocity_component - mean, mode='full')[-n:]
-    autocorr /= autocorr[0]
-    return autocorr
-
-def integral_length_scale(velocity_component, delta):
-    autocorr = autocorrelation_function(velocity_component)
-    integral_scale = np.trapz(autocorr, dx=delta)
-    return integral_scale
-
 def calculate_turbulence_intensity(u, v, w):
 
     N = len(u)
@@ -306,117 +294,6 @@ app.layout = dbc.Container([
             ]),
         ])], className = 'mb-2', justify="center", align="center"),
 
-    # Empty row with a horizontal line
-    dbc.Row([
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),
-    ], className='mb-2'),
-
-    dbc.Row([
-
-        # Column for "Upload/Clear Files" title
-        dbc.Col(
-            html.H5('Upload/Clear Files', className='center-text'),
-            width=12,
-            className="text-center"
-        ),
-
-        # Horizontal line
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),
-
-        # Column for alert message (hidden by default)
-        dbc.Col([
-            dbc.Alert(
-                id="ClearFiles_alert",
-                is_open=False,
-                dismissable=True,
-                duration=30000
-            ),
-        ], width=12),
-
-        # Column for file selection/upload
-        dbc.Col([
-            dcc.Upload(
-                id='submit_files',
-                children=html.Div([
-                    html.A('Select Files')
-                ]),
-                style={
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'solid',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': '20px',
-                    'width': '90%',
-                },
-                className="text-primary",
-                # Allow multiple files to be uploaded
-                multiple=True
-            )
-        ], width=3),
-
-        # Column for uploading files
-        dbc.Col(
-            dbc.Stack([
-                dbc.Button(
-                    "Upload Selected Files",
-                    id='newfile',
-                    outline=True,
-                    color="primary",
-                    className="me-1",
-                    n_clicks=0
-                ),
-
-                dbc.Input(id="Sample_rate", min = 0, type="number", placeholder="Enter Sample Frequency", debounce=True),
-
-                html.Label("Select files to upload"),
-
-                # Checkbox for uploading all files
-                dbc.Checklist(
-                    ["All"], [], id="all_upload_file_checklist", inline=True
-                ),
-
-                # Checkbox for selecting individual files to upload
-                dbc.Checklist(value=[], id="upload_file_checklist", inline=True),
-            ], gap=2),
-            width=3
-        ),
-
-        # Column for clearing files
-        dbc.Col(
-            dbc.Stack([
-                dbc.Button(
-                    "Clear Selected Files",
-                    id='clear_files',
-                    outline=True,
-                    color="primary",
-                    className="me-1",
-                    n_clicks=0
-                ),
-
-                html.Label("Select files to clear", className='center-text'),
-
-                # Checkbox for clearing all files
-                dbc.Checklist(
-                    ["All"], [], id="all_clear_file_checklist", inline=True
-                ),
-
-                # Checkbox for selecting individual files to clear
-                dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
-            ], gap=2),
-            width=3
-        ),
-
-    ], align='center', justify='evenly'),
-
-
 
     dbc.Row([
         dbc.Col(
@@ -427,86 +304,7 @@ app.layout = dbc.Container([
 
     dbc.Row(
         dbc.Col(
-            html.H5('Download Files', className='center-text'),
-            width=12,
-            className="text-center"
-        ),  # Column containing the header for the download files section
-    ),
-
-    dbc.Row(
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),  # Horizontal rule to separate content
-    ),
-
-    dbc.Row(
-        dbc.Col([
-            dbc.Alert(
-                id="Download_alert",
-                is_open=False,
-                dismissable=True,
-                duration=30000
-            ),  # Alert component to show status of file download
-        ], width=12),
-    ),
-
-    dbc.Row([
-        dbc.Col([
-            dbc.Stack([
-                html.Label("Choose Data File"),  # Label for selecting data file
-
-                dbc.RadioItems(id="file_checklist", inline=True),  # Radio buttons for selecting data file
-
-                html.Label("Choose Quantity"),  # Label for selecting quantity of data to download
-
-                dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),  # Checkbox to select all data
-
-                dbc.Checklist(value=[], options=[], id="vel_checklist", inline=True),  # Checkbox to select specific data
-
-                html.Label("Choose File Type"),  # Label for selecting file type
-
-                dbc.RadioItems(
-                    options=['CSV', 'Excel', '.txt'],
-                    value='CSV',
-                    id="type_checklist",
-                    inline=True
-                ),  # Radio buttons for selecting file type
-            ], gap=2),
-        ], width=6),
-
-        dbc.Col([
-            dbc.Stack([
-                dbc.Button("Download", id="btn_download", size="lg"),  # Button for downloading selected data
-
-                dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),  # Input field for file name
-
-                dbc.Row([
-                    dbc.Col(
-                        dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True)
-                    ),  # Input field for minimum time
-
-                    dbc.Col(
-                        dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True)
-                    ),  # Input field for maximum time
-
-                ], justify="center"),  # Row for input fields for minimum and maximum times
-
-            ], gap=2),
-        ], width=6),
-    ], align='center', justify='evenly'),  # Row containing columns for selecting and downloading data files
-
-
-    dbc.Row([
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),  # Horizontal rule to separate content
-    ], className='mb-2'),
-
-    dbc.Row(
-        dbc.Col(
-            html.H5('Turbulence Intensity', className='center-text'),
+            html.H5('Turbulence Parameters', className='center-text'),
             width=12,
             className="text-center"
         ),  # Column containing the header for the download files section
@@ -556,7 +354,7 @@ app.layout = dbc.Container([
                     id="DataSet_TI",
                     options=[],
                     multi=False,
-                    placeholder="Select a dataset"),
+                    placeholder="Select a Dataset"),
 
             dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True),
 
@@ -595,6 +393,232 @@ dash_table.DataTable(id = 'TI_Table',
 
   width = 12),
 
+    # Empty row with a horizontal line
+    dbc.Row([
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
+    ], className='mb-2'),
+
+    dbc.Row([
+
+        # Column for "Upload/Clear Files" title
+        dbc.Col(
+            html.H5('Upload BARNACLE Files', className='center-text'),
+            width=12,
+            className="text-center"
+        ),
+
+        # Horizontal line
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
+
+        # Column for alert message (hidden by default)
+        dbc.Col([
+            dbc.Alert(
+                id="ClearFiles_alert",
+                is_open=False,
+                dismissable=True,
+                duration=30000
+            ),
+        ], width=12),
+
+        # Column for file selection/upload
+        dbc.Col([
+            dcc.Upload(
+                id='submit_files',
+                children=html.Div([
+                    html.A('Select BARNACLE Files')
+                ]),
+                style={
+                    'height': '60px',
+                    'lineHeight': '60px',
+                    'borderWidth': '1px',
+                    'borderStyle': 'solid',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    'margin': '20px',
+                    'width': '90%',
+                },
+                className="text-primary",
+                # Allow multiple files to be uploaded
+                multiple=True
+            )
+        ], width=3),
+
+        # Column for uploading files
+        dbc.Col(
+            dbc.Stack([
+                dbc.Button(
+                    "Upload Selected Files",
+                    id='newfile',
+                    outline=True,
+                    color="primary",
+                    className="me-1",
+                    n_clicks=0
+                ),
+
+                dcc.Dropdown(
+                    id="Cal_select",
+                    options=[],
+                    multi=False,
+                    placeholder="Select a Calibration File"),
+
+                dcc.Dropdown(
+                    id="Zero_select",
+                    options=[],
+                    multi=False,
+                    placeholder="Select a Zero File"),
+
+                dbc.Input(id="Sample_rate", min=0, type="number", placeholder="Enter Sample Frequency", debounce=True),
+
+                html.Label("Select files to upload"),
+
+                # Checkbox for uploading all files
+                dbc.Checklist(
+                    ["All"], [], id="all_upload_file_checklist", inline=True
+                ),
+
+                # Checkbox for selecting individual files to upload
+                dbc.Checklist(value=[], id="upload_file_checklist", inline=True),
+            ], gap=2),
+            width=3
+        ),
+
+        # Column for clearing files
+        dbc.Col(
+            dbc.Stack([
+                dbc.Button(
+                    "Clear Selected Files",
+                    id='clear_files',
+                    outline=True,
+                    color="primary",
+                    className="me-1",
+                    n_clicks=0
+                ),
+
+                html.Label("Select files to clear", className='center-text'),
+
+                # Checkbox for clearing all files
+                dbc.Checklist(
+                    ["All"], [], id="all_clear_file_checklist", inline=True
+                ),
+
+                # Checkbox for selecting individual files to clear
+                dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
+            ], gap=2),
+            width=3
+        ),
+
+    ], align='center', justify='evenly'),
+
+    dbc.Row([
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),  # Horizontal rule to separate content
+    ], className='mb-2'),
+
+
+
+
+    dbc.Row([
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),  # Horizontal rule to separate content
+    ], className='mb-2'),
+
+    dbc.Row(
+        dbc.Col(
+            html.H5('Download Data', className='center-text'),
+            width=12,
+            className="text-center"
+        ),  # Column containing the header for the download files section
+    ),
+
+    dbc.Row(
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),  # Horizontal rule to separate content
+    ),
+
+    dbc.Row(
+        dbc.Col([
+            dbc.Alert(
+                id="Download_alert",
+                is_open=False,
+                dismissable=True,
+                duration=30000
+            ),  # Alert component to show status of file download
+        ], width=12),
+    ),
+
+dbc.Col([
+
+    dbc.Row([
+
+        dbc.Col(
+
+            dbc.Stack([
+                html.Label("Choose Data File"),  # Label for selecting data file
+
+                dbc.RadioItems(id="file_checklist", inline=True),  # Radio buttons for selecting data file
+
+                html.Label("Choose Quantity"),  # Label for selecting quantity of data to download
+
+                dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),  # Checkbox to select all data
+
+                dbc.Checklist(value=[], options=[], id="vel_checklist", inline=True),
+                # Checkbox to select specific data
+
+                html.Label("Choose File Type"),  # Label for selecting file type
+
+                dbc.RadioItems(
+                    options=['CSV', 'Excel', '.txt'],
+                    value='CSV',
+                    id="type_checklist",
+                    inline=True
+                ),  # Radio buttons for selecting file type
+            ], gap=2),
+
+        width = 4),
+
+        dbc.Col(
+
+            dbc.Stack([
+                dbc.Button("Download", id="btn_download", size="lg"),  # Button for downloading selected data
+
+                dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),  # Input field for file name
+
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True)
+                    ),  # Input field for minimum time
+
+                    dbc.Col(
+                        dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True)
+                    ),  # Input field for maximum time
+
+                ], justify="center"),  # Row for input fields for minimum and maximum times
+
+            ], gap=2),
+
+        width = 4),
+
+
+        ], align='center', justify='center'),
+
+
+
+    ], width = 12),
+
+
+
 
     # # Components for storing and downloading data
     dcc.Download(id="download"),
@@ -604,6 +628,7 @@ dash_table.DataTable(id = 'TI_Table',
     dcc.Store(id='Cal_storage', storage_type='local'),
 
 ])
+
 @ app.callback(
     Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
     Output(component_id="small_t_TI", component_property='value', allow_duplicate=True),
@@ -744,6 +769,7 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
             z1 = z[mask]
 
             [TI, U1, Ux, Uy, Uz] = calculate_turbulence_intensity(x1, y1, z1)
+
 
             if table_data is None:
                 table_data = []
