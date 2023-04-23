@@ -14,6 +14,18 @@ import warnings
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
+def autocorrelation_function(velocity_component):
+    n = len(velocity_component)
+    mean = np.mean(velocity_component)
+    autocorr = np.correlate(velocity_component - mean, velocity_component - mean, mode='full')[-n:]
+    autocorr /= autocorr[0]
+    return autocorr
+
+def integral_length_scale(velocity_component, delta):
+    autocorr = autocorrelation_function(velocity_component)
+    integral_scale = np.trapz(autocorr, dx=delta)
+    return integral_scale
+
 def calculate_turbulence_intensity(u, v, w):
 
     N = len(u)
@@ -46,7 +58,7 @@ def calculate_turbulence_intensity(u, v, w):
 
     return TI, U_mag, U, V, W
 
-def cal_velocity(contents, file_names):
+def cal_velocity(contents, file_names, fs):
 
     ## function to calculate velocities from Barnacle voltage data
 
@@ -58,7 +70,6 @@ def cal_velocity(contents, file_names):
 
     # Constants
     rho = 997
-    fs = 16  # sample rate
 
     # File retrieving
     ZeroFolder = "C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/"
@@ -363,6 +374,8 @@ app.layout = dbc.Container([
                     n_clicks=0
                 ),
 
+                dbc.Input(id="Sample_rate", min = 0, type="number", placeholder="Enter Sample Frequency", debounce=True),
+
                 html.Label("Select files to upload"),
 
                 # Checkbox for uploading all files
@@ -524,7 +537,14 @@ app.layout = dbc.Container([
 
             dbc.Col(
 
-                dbc.Button("Calculate Turbulence Intensity", id="TI_btn_download", size="lg"),
+                dbc.Stack([
+
+                dbc.Button("Calculate", id="TI_btn_download", size="lg"),
+
+                dbc.Button("Clear Table", id="Clear_Table", size="lg"),
+
+                ], gap = 2),
+
 
             width = 3),
 
@@ -536,7 +556,6 @@ app.layout = dbc.Container([
                     id="DataSet_TI",
                     options=[],
                     multi=False,
-                    value=[],
                     placeholder="Select a dataset"),
 
             dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True),
@@ -548,11 +567,6 @@ app.layout = dbc.Container([
             ], gap =2 ),
 
             width = 3),
-
-            dbc.Col(
-dbc.Button("Clear Table", id="Clear_Table", size="lg"),
-            width = 2)
-
 
             ], align='center', justify='center')
 
@@ -773,12 +787,13 @@ def file_checklist(file_names):
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='newfile', component_property='n_clicks'),
+    State(component_id='Sample_rate', component_property='value'),
     State(component_id='filestorage', component_property='data'),
     State(component_id = 'submit_files',component_property = 'contents'),
     State(component_id="upload_file_checklist", component_property='value'),
     prevent_initial_call=True)
 
-def content(n_clicks, data, contents, filenames):
+def content(n_clicks, fs, data, contents, filenames):
 
     # Check if the "newfile" button was clicked
     if "newfile" == ctx.triggered_id:
@@ -790,12 +805,21 @@ def content(n_clicks, data, contents, filenames):
         # Check if no files were uploaded
         if filenames is None or filenames == []:
 
-            error = 'No files selected for upload'
+            error = 'No Files Selected For Upload'
             color = "danger"
             open1 = True
 
             # Return the same data if no files were uploaded
             data = no_update
+
+        elif fs is None or fs == 0:
+
+            error = 'Check Sample Rate'
+            color = "danger"
+            open1 = True
+            # Return the same data if no files were uploaded
+            data = no_update
+
 
         else:
 
@@ -828,7 +852,7 @@ def content(n_clicks, data, contents, filenames):
                         # Try to process the file
                         try:
                             prb[value] = {value: {}}
-                            prb[value] = cal_velocity(contents[i], filenames[i])
+                            prb[value] = cal_velocity(contents[i], filenames[i], fs)
                             new_value.append(value)
                             combined_filenames.append(value)
 
