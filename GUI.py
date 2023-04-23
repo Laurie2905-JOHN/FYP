@@ -44,7 +44,7 @@ def calculate_turbulence_intensity(u, v, w):
     # Calculate turbulence intensity
     TI = (np.sqrt(u_prime_RMS**2 + v_prime_RMS**2 + w_prime_RMS**2)) / U_mag
 
-    return TI
+    return TI, U_mag, U, V, W
 
 def cal_velocity(contents, file_names):
 
@@ -518,23 +518,8 @@ app.layout = dbc.Container([
     ),
 
 dbc.Row([
-  dbc.Col(
 
-dash_table.DataTable(id = 'TI_Table',
-                     columns =
-                     [
-                        {"id": 'FileName', "name": 'File Name'},
-                        {"id": 'Time_1', "name": 'Time 1'},
-                        {"id": 'Time_2', "name": 'Time 2'},
-                        {"id": 'TI', 'name': 'Turbulence Intensity'},
-                     ],
-                     export_format='xlsx',
-                     export_headers='display',
-                     row_deletable=True
-),
-
-  width = 6),
-
+dbc.Col([
     dbc.Col([
         dbc.Stack([
             dbc.Button("Calculate Turbulence Intensity", id="TI_btn_download", size="lg"),
@@ -546,23 +531,72 @@ dash_table.DataTable(id = 'TI_Table',
                 value=[],
                 placeholder="Select a dataset"),
 
-            dbc.Row([
-                dbc.Col(
-                    dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True)
-                ),  # Input field for minimum time
-
-                dbc.Col(
-                    dbc.Input(id="big_t_TI", type="number", placeholder="Max Time", debounce=True)
-                ),  # Input field for maximum time
-
-                dbc.Col(
-                dbc.Button("Clear Table", id="Clear_Table", size="lg"),
-                )
-
-            ], align='center', justify="center"),  # Row for input fields for minimum and maximum times
 
         ], gap=2),
     ], width=5),
+
+    dbc.Row([
+
+        dbc.Row([
+        dbc.Col(
+            dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True)
+        ),  # Input field for minimum time
+
+        dbc.Col(
+            dbc.Input(id="big_t_TI", type="number", placeholder="Max Time", debounce=True)
+        ),  # Input field for maximum time
+
+            ])
+
+        dbc.Col(
+            dbc.Button("Clear Table", id="Clear_Table", size="lg"),
+        )
+
+        ], align='center', justify="center"),
+
+
+
+    ])
+
+    ], class_name= 'mb-3', align='center', justify="center"),  # Row for input fields for minimum and maximum times
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  dbc.Row([
+
+  dbc.Col(
+
+dash_table.DataTable(id = 'TI_Table',
+                     columns =
+                     [
+                        {"id": 'FileName', "name": 'File Name'},
+                        {"id": 'Time_1', "name": 'Time 1'},
+                        {"id": 'Time_2', "name": 'Time 2'},
+                        {"id": 'Ux', "name": 'Average Ux'},
+                        {"id": 'Uy', "name": 'Average Uy'},
+                        {"id": 'Uz', "name": 'Average Uz'},
+                        {"id": 'U1', "name": 'Average U'},
+                        {"id": 'TI', 'name': 'Turbulence Intensity'},
+                     ],
+                     export_format='xlsx',
+                     export_headers='display',
+                     row_deletable=True
+),
+
+  width = 12),
 
     ], align='center', justify='evenly'),
 
@@ -713,7 +747,7 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
             y1 = y[mask]
             z1 = z[mask]
 
-            TI = calculate_turbulence_intensity(x1, y1, z1)
+            [TI, U1, Ux, Uy, Uz] = calculate_turbulence_intensity(x1, y1, z1)
 
             if table_data is None:
                 table_data = []
@@ -723,7 +757,11 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
                 'FileName': chosen_file,
                 'Time_1': small_TI,
                 'Time_2': big_TI,
-                'TI': TI
+                'Ux': round(Ux,6),
+                'Uy': round(Uy,6),
+                'Uz': round(Uz,6),
+                'U1': round(U1,6),
+                'TI': round(TI,6),
             }
 
             ]
