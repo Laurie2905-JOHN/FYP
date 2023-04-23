@@ -517,65 +517,48 @@ app.layout = dbc.Container([
         ], width=12),
     ),
 
-dbc.Row([
 
-dbc.Col([
     dbc.Col([
-        dbc.Stack([
-            dbc.Button("Calculate Turbulence Intensity", id="TI_btn_download", size="lg"),
-
-            dcc.Dropdown(
-                id="DataSet_TI",
-                options=[],
-                multi=False,
-                value=[],
-                placeholder="Select a dataset"),
-
-
-        ], gap=2),
-    ], width=5),
-
-    dbc.Row([
 
         dbc.Row([
-        dbc.Col(
-            dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True)
-        ),  # Input field for minimum time
 
-        dbc.Col(
-            dbc.Input(id="big_t_TI", type="number", placeholder="Max Time", debounce=True)
-        ),  # Input field for maximum time
+            dbc.Col(
 
-            ])
+                dbc.Button("Calculate Turbulence Intensity", id="TI_btn_download", size="lg"),
 
-        dbc.Col(
-            dbc.Button("Clear Table", id="Clear_Table", size="lg"),
-        )
+            width = 3),
 
-        ], align='center', justify="center"),
+            dbc.Col(
 
+            dbc.Stack([
 
+                dcc.Dropdown(
+                    id="DataSet_TI",
+                    options=[],
+                    multi=False,
+                    value=[],
+                    placeholder="Select a dataset"),
 
-    ])
+            dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True),
 
-    ], class_name= 'mb-3', align='center', justify="center"),  # Row for input fields for minimum and maximum times
-
-
+            dbc.Input(id="big_t_TI", type="number", placeholder="Max Time", debounce=True),
 
 
 
+            ], gap =2 ),
+
+            width = 3),
+
+            dbc.Col(
+dbc.Button("Clear Table", id="Clear_Table", size="lg"),
+            width = 2)
 
 
+            ], align='center', justify='center')
+
+        ], width = 12),
 
 
-
-
-
-
-
-
-
-  dbc.Row([
 
   dbc.Col(
 
@@ -598,7 +581,6 @@ dash_table.DataTable(id = 'TI_Table',
 
   width = 12),
 
-    ], align='center', justify='evenly'),
 
     # # Components for storing and downloading data
     dcc.Download(id="download"),
