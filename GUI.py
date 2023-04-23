@@ -530,13 +530,14 @@ dash_table.DataTable(id = 'TI_Table',
                      ],
                      export_format='xlsx',
                      export_headers='display',
+                     row_deletable=True
 ),
 
   width = 6),
 
     dbc.Col([
         dbc.Stack([
-            dbc.Button("Calculate Turbulence Intensity", id="TI_btn_download", size="lg"),  # Button for downloading selected data
+            dbc.Button("Calculate Turbulence Intensity", id="TI_btn_download", size="lg"),
 
             dcc.Dropdown(
                 id="DataSet_TI",
@@ -547,14 +548,18 @@ dash_table.DataTable(id = 'TI_Table',
 
             dbc.Row([
                 dbc.Col(
-                    dbc.Input(id="small_t_TI", min = 0, type="number", placeholder="Min Time", debounce=True)
+                    dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True)
                 ),  # Input field for minimum time
 
                 dbc.Col(
-                    dbc.Input(id="big_t_TI", min=0, type="number", placeholder="Max Time", debounce=True)
+                    dbc.Input(id="big_t_TI", type="number", placeholder="Max Time", debounce=True)
                 ),  # Input field for maximum time
 
-            ], justify="center"),  # Row for input fields for minimum and maximum times
+                dbc.Col(
+                dbc.Button("Clear Table", id="Clear_Table", size="lg"),
+                )
+
+            ], align='center', justify="center"),  # Row for input fields for minimum and maximum times
 
         ], gap=2),
     ], width=5),
@@ -596,13 +601,32 @@ def update_In(small_val, large_val):
     # Return the updated large and small input values
     return large_val, small_val
 
+@app.callback(
+    Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id='Clear_Table', component_property='n_clicks'),
+    prevent_initial_call=True)
+
+def clear_table(n_clicks):
+
+    if "Clear_Table" == ctx.triggered_id:
+
+        error = 'TABLE CLEARED'
+
+        error_col = 'success'
+
+        table_data = []
+
+    return table_data, error, error_col, True
 
 # Callback to analyse and update TI table
 @ app.callback(
-    Output(component_id='TI_Table', component_property='data'),
-    Output(component_id='TI_alert', component_property='children'),
-    Output(component_id='TI_alert', component_property='color'),
-    Output(component_id='TI_alert', component_property='is_open'),
+    Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='TI_btn_download', component_property='n_clicks'),
     State(component_id='filestorage', component_property='data'),
     State(component_id='DataSet_TI', component_property='value'),
@@ -624,14 +648,65 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
 
             table_data = no_update
 
+        elif small_TI == big_TI:
+
+            error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
+
+            error_col = 'danger'
+
+            table_data = no_update
+
         else:
+
             prb = data[0]
 
-            mask = (np.array(prb[chosen_file]['t']) >= small_TI) & (np.array(prb[chosen_file]['t']) < big_TI)
+            t = np.array(prb[chosen_file]['t'])
 
             x = np.array(prb[chosen_file]['Ux'])
             y = np.array(prb[chosen_file]['Uy'])
             z = np.array(prb[chosen_file]['Uz'])
+
+            max1 = np.amax(np.array(prb[chosen_file]['t']))
+            min1 = np.amin(np.array(prb[chosen_file]['t']))
+
+
+            # Error messages
+            smallt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum time limit because the inputted time ' \
+                                                                'is outside the available range. Please adjust your time limit accordingly.'
+
+
+            bigt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the maximum time limit because the inputted time ' \
+                                                                'is outside the available range. Please adjust your time limit accordingly.'
+
+            both_t_error ='TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
+                                                               'are outside the available range. Please adjust your time limit accordingly.'
+
+            both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED'
+
+            # Cut data based on conditions
+            if small_TI < min1 and big_TI > max1:
+                small_TI = min1
+                big_TI = max1
+                error = both_t_error
+                error_col = 'primary'
+                mask = (t >= min1) & (t <= max1)
+
+            elif small_TI < min1:
+                small_TI = min1
+                error = smallt_error
+                error_col = 'primary'
+                mask = (t >= min1)
+
+            elif big_TI > max1:
+                big_TI = max1
+                error = bigt_error
+                error_col = 'primary'
+                mask = (t <= max1)
+
+            else:
+                mask = (t >= small_TI) & (t < big_TI)
+                error_col = 'success'
+                error = both_t_NO_error
 
 
             x1 = x[mask]
@@ -640,34 +715,20 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
 
             TI = calculate_turbulence_intensity(x1, y1, z1)
 
-            if np.isnan(TI):
+            if table_data is None:
+                table_data = []
 
-                error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check inputted time range'
+            new_data = [
+                {
+                'FileName': chosen_file,
+                'Time_1': small_TI,
+                'Time_2': big_TI,
+                'TI': TI
+            }
 
-                error_col = 'danger'
+            ]
 
-                table_data = no_update
-
-            else:
-
-                if table_data is None:
-                    table_data = []
-
-                new_data = [
-                    {
-                    'FileName': chosen_file,
-                    'Time_1': small_TI,
-                    'Time_2': big_TI,
-                    'TI': TI
-                }
-
-                ]
-
-                table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
-
-                error = 'Turbulence Intensity Calculated'
-
-                error_col = 'success'
+            table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
 
 
         return table_data, error, error_col, True
