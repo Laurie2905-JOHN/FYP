@@ -11,6 +11,9 @@ import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objects as go
 import warnings
+import base64
+import io
+import math
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
@@ -46,7 +49,7 @@ def calculate_turbulence_intensity(u, v, w):
 
     return TI, U_mag, U, V, W
 
-def cal_velocity(contents, file_names, fs):
+def cal_velocity(contents, file_names, cal_data, fs):
 
     ## function to calculate velocities from Barnacle voltage data
 
@@ -59,18 +62,19 @@ def cal_velocity(contents, file_names, fs):
     # Constants
     rho = 997
 
-    # File retrieving
-    ZeroFolder = "C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/"
-    ZeroFile = 'Mon1527.txt'
-    CalFolder = ZeroFolder
-    CalFile = 'IanYawAndDynCalMk2.mat'
-    Cal = sio.loadmat(CalFolder + CalFile)
-    Cal = Cal["Cal"]
-    Dynfit = Cal[0][0][0].flatten()
-    Yawfit = Cal[0][0][1].flatten()
-    LDyn = Cal[0][0][2].flatten()
-    LYaw = Cal[0][0][3].flatten()
-    LDyn_0 = Cal[0][0][4].flatten()
+    Dynfit = cal_data['Dynfit']
+    Yawfit = cal_data['Yawfit']
+    LDyn1 = cal_data['Ldyn1']
+    LYaw1 = cal_data['Lyaw1']
+    LDyn2 = cal_data['Ldyn2']
+    LYaw2 = cal_data['Lyaw2']
+    LDyn_0 = cal_data['Ldyn0'][0]
+
+    # Importing Zeroes
+    zeros = {}
+    # Raw data which is zero reading data from slack water
+    # Taking average of zero readings for each transducer
+    zeros['pr_mean'] = [cal_data['Zero'],cal_data['Zero1'],cal_data['Zero2'],cal_data['Zero3'],cal_data['Zero4']]
 
     # Evaluating yawcal for a polynomial Cal.Yawfit and dyncal
     yawcal = np.zeros((91, 2))
@@ -79,12 +83,7 @@ def cal_velocity(contents, file_names, fs):
     dyncal = np.polyval(Dynfit, yawcal[:, 0])
     dyncal = dyncal * LDyn_0
 
-    # Importing Zeroes
-    zeros = {}
-    # Raw data which is zero reading data from slack water
-    zeros['pr_raw'] = np.loadtxt(ZeroFolder + ZeroFile, delimiter=',')
-    # Taking average of zero readings for each transducer
-    zeros['pr_mean'] = np.mean(zeros['pr_raw'][1300:1708, :], axis=0) # 1300-1708 was genuinely slack water
+
 
     # Loading actual Barnacle data
     # Decoding Barnacle data
@@ -428,6 +427,8 @@ dash_table.DataTable(id = 'TI_Table',
 
         # Column for file selection/upload
         dbc.Col([
+            dbc.Stack([
+
             dcc.Upload(
                 id='submit_files',
                 children=html.Div([
@@ -446,7 +447,31 @@ dash_table.DataTable(id = 'TI_Table',
                 className="text-primary",
                 # Allow multiple files to be uploaded
                 multiple=True
-            )
+            ),
+
+                dcc.Upload(
+                    id='submit_Cal_file',
+                    children=html.Div([
+                        html.A('Select a Calibration File')
+                    ]),
+                    style={
+                        'height': '60px',
+                        'lineHeight': '60px',
+                        'borderWidth': '1px',
+                        'borderStyle': 'solid',
+                        'borderRadius': '5px',
+                        'textAlign': 'center',
+                        'margin': '20px',
+                        'width': '90%',
+                    },
+                    className="text-primary",
+                    # Allow multiple files to be uploaded
+                    multiple=True
+                )
+
+                ], gap = 2)
+
+
         ], width=3),
 
         # Column for uploading files
@@ -460,18 +485,6 @@ dash_table.DataTable(id = 'TI_Table',
                     className="me-1",
                     n_clicks=0
                 ),
-
-                dcc.Dropdown(
-                    id="Cal_select",
-                    options=[],
-                    multi=False,
-                    placeholder="Select a Calibration File"),
-
-                dcc.Dropdown(
-                    id="Zero_select",
-                    options=[],
-                    multi=False,
-                    placeholder="Select a Zero File"),
 
                 dbc.Input(id="Sample_rate", min=0, type="number", placeholder="Enter Sample Frequency", debounce=True),
 
@@ -628,6 +641,59 @@ dbc.Col([
     dcc.Store(id='Cal_storage', storage_type='local'),
 
 ])
+
+@ app.callback(
+    Output(component_id="Cal_storage", component_property='data', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id='submit_Cal_file', component_property='filename'),
+    Input(component_id='submit_Cal_file', component_property='contents'),
+        prevent_initial_call=True)
+
+def cal_analysis(filename, contents):
+
+    try:
+        content_type, content_string = contents[0].split(',')
+
+        decoded = base64.b64decode(content_string)
+
+        if 'xlsx' or 'xlx' in filename:
+
+            cal_data = pd.read_excel(io.BytesIO(decoded))
+
+            cal_data = cal_data.to_dict('list')
+
+            # Remove NaN values from the lists in the dictionary
+            cal_data = {key: [val for val in values if not math.isnan(val)] for key, values in
+                                  cal_data.items()}
+
+            error1 = 'File Uploaded Successfully'
+
+            color1 = 'success'
+
+
+        else:
+
+            error1 = 'Please Upload an Excel File'
+
+            color1 = 'danger'
+
+            cal_data = no_update
+
+    except Exception as e:
+
+        print(e)
+
+        error1 = 'There was an error processing this file'
+
+        color1 = 'danger'
+
+        cal_data = no_update
+
+
+    return cal_data, error1, color1, True
+
 
 @ app.callback(
     Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
@@ -813,13 +879,14 @@ def file_checklist(file_names):
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='newfile', component_property='n_clicks'),
+    State(component_id="Cal_storage", component_property='data'),
     State(component_id='Sample_rate', component_property='value'),
     State(component_id='filestorage', component_property='data'),
     State(component_id = 'submit_files',component_property = 'contents'),
     State(component_id="upload_file_checklist", component_property='value'),
     prevent_initial_call=True)
 
-def content(n_clicks, fs, data, contents, filenames):
+def content(n_clicks,cal_data, fs, data, contents, filenames):
 
     # Check if the "newfile" button was clicked
     if "newfile" == ctx.triggered_id:
@@ -878,12 +945,14 @@ def content(n_clicks, fs, data, contents, filenames):
                         # Try to process the file
                         try:
                             prb[value] = {value: {}}
-                            prb[value] = cal_velocity(contents[i], filenames[i], fs)
+                            print(cal_data)
+                            prb[value] = cal_velocity(contents[i], filenames[i], cal_data, fs)
                             new_value.append(value)
                             combined_filenames.append(value)
 
                         # If there's an error processing the file, add it to the error list
-                        except Exception:
+                        except Exception as e:
+                            print('cal' + e)
                             error_file.append(value)
 
             # If there are errors, return error messages

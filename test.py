@@ -1,10 +1,6 @@
-key = [1, 2, 4, 3, 4, 4]
-index = [1, 3, 4]
+zero_1 = [1, 2, 3]
+zero_2 = [2, 3, 5]
 
-data = [None,[]]
+mean_list = [(a + b) / 2 for a, b in zip(zero_1, zero_2)]
 
-prb = data[0]
-
-Oldfilenames = data[1]
-
-print(prb)
+print(mean_list)
