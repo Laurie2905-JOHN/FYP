@@ -14,7 +14,7 @@ import warnings
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
-def calculate_turbulence_intensity(u, v, w, U_mag):
+def calculate_turbulence_intensity(u, v, w):
 
     N = len(u)
 
@@ -37,6 +37,9 @@ def calculate_turbulence_intensity(u, v, w, U_mag):
     u_prime_RMS = np.sqrt(mean_u_prime_sq)
     v_prime_RMS = np.sqrt(mean_v_prime_sq)
     w_prime_RMS = np.sqrt(mean_w_prime_sq)
+
+    # Calculate magnitude of mean flow velocity
+    U_mag = np.sqrt(U**2 + V**2 + W**2)
 
     # Calculate turbulence intensity
     TI = (np.sqrt(u_prime_RMS**2 + v_prime_RMS**2 + w_prime_RMS**2)) / U_mag
@@ -503,6 +506,17 @@ app.layout = dbc.Container([
         ),  # Horizontal rule to separate content
     ),
 
+    dbc.Row(
+        dbc.Col([
+            dbc.Alert(
+                id="TI_alert",
+                is_open=False,
+                dismissable=True,
+                duration=30000
+            ),  # Alert component to show status of file download
+        ], width=12),
+    ),
+
 dbc.Row([
   dbc.Col(
 
@@ -510,10 +524,12 @@ dash_table.DataTable(id = 'TI_Table',
                      columns =
                      [
                         {"id": 'FileName', "name": 'File Name'},
-                        {"id": 'Time 1', "name": 'Time 1'},
-                        {"id": 'Time 2', "name": 'Time 2'},
+                        {"id": 'Time_1', "name": 'Time 1'},
+                        {"id": 'Time_2', "name": 'Time 2'},
                         {"id": 'TI', 'name': 'Turbulence Intensity'},
                      ],
+                     export_format='xlsx',
+                     export_headers='display',
 ),
 
   width = 6),
@@ -531,7 +547,7 @@ dash_table.DataTable(id = 'TI_Table',
 
             dbc.Row([
                 dbc.Col(
-                    dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True)
+                    dbc.Input(id="small_t_TI", min = 0, type="number", placeholder="Min Time", debounce=True)
                 ),  # Input field for minimum time
 
                 dbc.Col(
@@ -550,37 +566,111 @@ dash_table.DataTable(id = 'TI_Table',
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
-    dcc.Store(id='TI_Storage', storage_type='session'),
     dcc.Store(id='Cal_storage', storage_type='local'),
 
 ])
+@ app.callback(
+    Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
+    Output(component_id="small_t_TI", component_property='value', allow_duplicate=True),
+    Input(component_id="small_t_TI", component_property='value'),
+    Input(component_id="big_t_TI", component_property='value'),
+        prevent_initial_call=True)
+
+def update_In(small_val, large_val):
+    # If both inputs are None, prevent update
+    if large_val is None and small_val is None:
+        raise PreventUpdate
+
+    # If large input is None, set it to 0
+    if large_val is None:
+        large_val = 0
+
+    # If small input is None, set it to 0
+    if small_val is None:
+        small_val = 0
+
+    # If large input is less than small input, set large input equal to small input
+    if large_val < small_val:
+        large_val = small_val
+
+    # Return the updated large and small input values
+    return large_val, small_val
+
 
 # Callback to analyse and update TI table
- @ app.callback(
+@ app.callback(
     Output(component_id='TI_Table', component_property='data'),
+    Output(component_id='TI_alert', component_property='children'),
+    Output(component_id='TI_alert', component_property='color'),
+    Output(component_id='TI_alert', component_property='is_open'),
     Input(component_id='TI_btn_download', component_property='n_clicks'),
     State(component_id='filestorage', component_property='data'),
-    State(component_id='DataSet_TI', component_property='contents'),
+    State(component_id='DataSet_TI', component_property='value'),
     State(component_id="small_t_TI", component_property='value'),
     State(component_id="big_t_TI", component_property='value'),
+    State(component_id='TI_Table', component_property='data'),
+    State(component_id='TI_Table', component_property='columns'),
     prevent_initial_call=True)
 
-def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI):
+def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, column_data):
 
     if "TI_btn_download" == ctx.triggered_id:
 
-        prb = data[0]
+        if small_TI is None or big_TI is None or chosen_file is None:
 
-        mask = (prb[chosen_file]['t'] >= small_TI) & (prb[chosen_file]['t'] < big_TI)
+            error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check you have selected a time range and a dataset'
 
-        x = prb[chosen_file]['Ux'][mask]
-        y = prb[chosen_file]['Uy'][mask]
-        z = prb[chosen_file]['Uz'][mask]
-        xyz = prb[chosen_file]['U1'][mask]
+            error_col = 'danger'
 
-        TI = calculate_turbulence_intensity(x, y, z, xyz)
+            table_data = no_update
 
-    return TI_TABLE
+        else:
+            prb = data[0]
+
+            mask = (np.array(prb[chosen_file]['t']) >= small_TI) & (np.array(prb[chosen_file]['t']) < big_TI)
+
+            x = np.array(prb[chosen_file]['Ux'])
+            y = np.array(prb[chosen_file]['Uy'])
+            z = np.array(prb[chosen_file]['Uz'])
+
+
+            x1 = x[mask]
+            y1 = y[mask]
+            z1 = z[mask]
+
+            TI = calculate_turbulence_intensity(x1, y1, z1)
+
+            if np.isnan(TI):
+
+                error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check inputted time range'
+
+                error_col = 'danger'
+
+                table_data = no_update
+
+            else:
+
+                if table_data is None:
+                    table_data = []
+
+                new_data = [
+                    {
+                    'FileName': chosen_file,
+                    'Time_1': small_TI,
+                    'Time_2': big_TI,
+                    'TI': TI
+                }
+
+                ]
+
+                table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
+
+                error = 'Turbulence Intensity Calculated'
+
+                error_col = 'success'
+
+
+        return table_data, error, error_col, True
 
 # Call back to update upload file checklist once files are selected
 @app.callback(
