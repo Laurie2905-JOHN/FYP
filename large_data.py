@@ -19,7 +19,7 @@ Time = np.linspace(0, len(data_array) / fs, len(data_array))
 total_time = Time[-1]
 
 # Set the desired time duration
-desired_time = 2678400
+desired_time = 10
 
 # Example desired time duration in seconds
 
