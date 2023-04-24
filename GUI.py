@@ -58,6 +58,7 @@ def cal_velocity(contents, file_names, cal_data, fs):
     import numpy as np
     import scipy.io as sio
     from scipy import interpolate
+    import statistics as st
 
     # Constants
     rho = 997
@@ -74,7 +75,7 @@ def cal_velocity(contents, file_names, cal_data, fs):
     zeros = {}
     # Raw data which is zero reading data from slack water
     # Taking average of zero readings for each transducer
-    zeros['pr_mean'] = [cal_data['Zero'],cal_data['Zero1'],cal_data['Zero2'],cal_data['Zero3'],cal_data['Zero4']]
+    zeros['pr_mean'] = [st.mean(cal_data['Zero']),st.mean(cal_data['Zero1']),st.mean(cal_data['Zero2']),st.mean(cal_data['Zero3']),st.mean(cal_data['Zero4'])]
 
     # Evaluating yawcal for a polynomial Cal.Yawfit and dyncal
     yawcal = np.zeros((91, 2))
