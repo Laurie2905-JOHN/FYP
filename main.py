@@ -48,7 +48,7 @@ def cal_velocity(folder):
     prb = {}
     prb['raw'] = np.loadtxt(BarnFolder + BarnFile, delimiter=',')
     prb['raw'] -= zeros['pr_mean']
-
+    print(type(zeros['pr_mean']))
     # Data analysis
     prb['denom'] = np.mean(prb['raw'][:, :4], axis = 1)
     prb['Lyaw'] = (prb['raw'][:, 1] - prb['raw'][:, 3]) / prb['denom']
