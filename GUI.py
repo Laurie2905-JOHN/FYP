@@ -891,51 +891,80 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
         State(component_id='filename_filepath', component_property='data'),
         prevent_initial_call = True)
 
-def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath, filename_filepath_data):
+def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_filepath_data):
 
-    if ctx.triggered_id == 'dropdown_BARN_update':
-        filepath = filepath.replace("\\", "/")
+    if ctx.triggered_id == 'dropdown_BARN_update' and filepath1 is not None:
+        filepath = filepath1.replace("\\", "/")
         filename = os.path.basename(filepath)
 
         if filename_filepath_data is None:
-            filename_filepath_data = [[],[]]
 
-        combined_filenames = filename_filepath_data[0].copy()
-        combined_filepaths = filename_filepath_data[1].copy()
-
-        for val in combined_filenames:
-            if filename == val:
-                repeated_filename = filename
-                repeated_filepath = filepath
-
-            else:
-                combined_filenames.append(filename)
-                combined_filepaths.append(filepath)
-                print(filename)
-
-
-        if x == 1:
-            error = filename + ' already exists. Please check'
-            color1 = 'danger'
-            open1 = True
-            filepath_input = no_update
-            filename_filepath_data = no_update
-        else:
+            filename_filepath_data = [[filename],[filepath]]
             error = filename + ' added'
             color1 = 'success'
             open1 = True
-            filepath_input = None
-            filename_filepath_data = [combined_filenames, combined_filepaths]
+            filepath_input = ''
+
+        else:
+
+            combined_filenames = filename_filepath_data[0].copy()
+            combined_filepaths = filename_filepath_data[1].copy()
+
+            for val in combined_filenames:
+                print(filename)
+                print(val)
+                if filename == val:
+                    repeated_filename = filename
+                    repeated_filepath = filepath
+                else:
+                    print('why')
+                    combined_filenames.append(filename)
+                    combined_filepaths.append(filepath)
+
+            if 'repeated_filename' in locals():
+
+                error = filename + ' already exists. Please check'
+                color1 = 'danger'
+                open1 = True
+                filepath_input = no_update
+                filename_filepath_data = no_update
+
+            else:
+
+                error = filename.join(',') + ' added'
+                color1 = 'success'
+                open1 = True
+                filepath_input = ''
+                filename_filepath_data = [combined_filenames, combined_filepaths]
+
+        print(filename_filepath_data)
+
+        return filepath_input, filename_filepath_data, error, color1, open1
+
+@app.callback(
+        Output(component_id='submit_files', component_property='value', allow_duplicate=True),
+        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id='dropdown_BARN_clear', component_property='n_clicks'),
+        prevent_initial_call = True)
+
+def clear_upload(n_clicks):
+
+    if ctx.triggered_id == 'dropdown_BARN_clear':
+
+        filepath_input = ''
+        error = 'Upload Files Cleared'
+        color1 = 'primary'
+        open1 = True
+        filename_filepath_data = True
     else:
         raise PreventUpdate
 
-    if ctx.triggered_id == 'dropdown_BARN_clear':
-        filepath_input = ''
-        color1 = no_update
-        open1 = no_update
-        filename_filepath_data = no_update
+        return filepath_input, filename_filepath_data, error, color1, open1
 
-    return filepath_input, filename_filepath_data, error, color1, open1
+
 
 
 # # Callback to analyse and update data
@@ -1198,7 +1227,6 @@ def update_dropdowns(data, filename_filepath_upload_data):
 
     if filename_filepath_upload_data is not None:
         upload_file_checklist = filename_filepath_upload_data[0]
-        print(upload_file_checklist)
     else:
         upload_file_checklist = []
 
