@@ -14,6 +14,7 @@ import warnings
 import base64
 import io
 import math
+from dash_extensions.callback import CallbackCache
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
@@ -49,7 +50,7 @@ def calculate_turbulence_intensity(u, v, w):
 
     return TI, U_mag, U, V, W
 
-def cal_velocity(contents, file_names, cal_data, fs):
+def cal_velocity(contents, file_names, cal_data, SF):
 
     ## function to calculate velocities from Barnacle voltage data
 
@@ -127,7 +128,7 @@ def cal_velocity(contents, file_names, cal_data, fs):
         prb[file_name]['Ux'] = prb[file_name]['U1'] * np.cos(np.deg2rad(prb[file_name]['apitch'])) * np.cos(np.deg2rad(prb[file_name]['ayaw']))
         prb[file_name]['Uy'] = prb[file_name]['U1'] * np.cos(np.deg2rad(prb[file_name]['apitch'])) * np.sin(np.deg2rad(prb[file_name]['ayaw']))
         prb[file_name]['Uz'] = prb[file_name]['U1'] * np.sin(np.deg2rad(prb[file_name]['apitch']))
-        prb[file_name]['t'] = np.linspace(0, prb[file_name]['raw'].shape[0] / fs, prb[file_name]['raw'].shape[0]);
+        prb[file_name]['t'] = np.linspace(0, prb[file_name]['raw'].shape[0] / SF, prb[file_name]['raw'].shape[0]);
 
         # Taking data needed
         prb_final = {'Ux': {}}
@@ -771,7 +772,6 @@ def clear_table(n_clicks):
     Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
     Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='TI_btn_download', component_property='n_clicks'),
-    State(component_id="Cal_storage", component_property='data'),
     State(component_id='filestorage', component_property='data'),
     State(component_id='DataSet_TI', component_property='value'),
     State(component_id="small_t_TI", component_property='value'),
@@ -780,7 +780,7 @@ def clear_table(n_clicks):
     State(component_id='TI_Table', component_property='columns'),
     prevent_initial_call=True)
 
-def TI_caluculate(n_clicks, Cal_data, data, chosen_file, small_TI, big_TI, table_data, column_data):
+def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, column_data):
 
     if "TI_btn_download" == ctx.triggered_id:
 
@@ -866,7 +866,7 @@ def TI_caluculate(n_clicks, Cal_data, data, chosen_file, small_TI, big_TI, table
             new_data = [
                 {
                 'FileName': chosen_file,
-                'CalFile': Cal_data[0][0],
+                'CalFile': data[3],
                 'SF': data[2],
                 'Time_1': small_TI,
                 'Time_2': big_TI,
@@ -896,6 +896,20 @@ def file_checklist(file_names):
 
     return upload_file_checklist
 
+# @app.callback(
+#     Output(component_id='filestorage', component_property='data'),
+#     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+#     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+#     Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+#     Input(component_id='newfile', component_property='n_clicks'),
+#     State(component_id="Cal_storage", component_property='data'),
+#     State(component_id='Sample_rate', component_property='value'),
+#     State(component_id='filestorage', component_property='data'),
+#     State(component_id = 'submit_files',component_property = 'contents'),
+#     prevent_initial_call=True)
+#
+# def content(n_clicks,cal_data, SF, data, contents, filenames):
+
 
 # Callback to analyse and update data
 @app.callback(
@@ -911,7 +925,7 @@ def file_checklist(file_names):
     State(component_id="upload_file_checklist", component_property='value'),
     prevent_initial_call=True)
 
-def content(n_clicks,cal_data, fs, data, contents, filenames):
+def content(n_clicks,cal_data, SF, data, contents, filenames):
 
     # Check if the "newfile" button was clicked
     if "newfile" == ctx.triggered_id:
@@ -930,9 +944,9 @@ def content(n_clicks,cal_data, fs, data, contents, filenames):
             # Return the same data if no files were uploaded
             data = no_update
 
-        elif fs is None or fs == 0:
+        elif SF is None or SF == 0:
 
-            error = 'Check Sample Rate'
+            error = 'No Sample Rate Selected'
             color = "danger"
             open1 = True
             # Return the same data if no files were uploaded
@@ -970,7 +984,7 @@ def content(n_clicks,cal_data, fs, data, contents, filenames):
                         # Try to process the file
                         try:
                             prb[value] = {value: {}}
-                            prb[value] = cal_velocity(contents[i], filenames[i], cal_data[1], fs)
+                            prb[value] = cal_velocity(contents[i], filenames[i], cal_data[1], SF)
                             new_value.append(value)
                             combined_filenames.append(value)
 
@@ -982,7 +996,7 @@ def content(n_clicks,cal_data, fs, data, contents, filenames):
             # If there are errors, return error messages
             if contain_text != [] or repeated_value != [] or error_file != []:
 
-                data = [prb, combined_filenames, fs]
+                data = [prb, combined_filenames, SF, cal_data[0][0]]
 
                 color = "danger"
                 open1 = True
@@ -1046,7 +1060,7 @@ def content(n_clicks,cal_data, fs, data, contents, filenames):
 
                 open1 = True
 
-                data = [prb, combined_filenames, fs]
+                data = [prb, combined_filenames, SF, cal_data[0][0]]
 
 
         return data, error, color, open1
@@ -1804,6 +1818,21 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
     # Return required values
     return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents, clear_val, file_drop_val, vect_drop_val, submit_val_check
 
+
+Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
+Output(component_id="File", component_property='options', allow_duplicate=True),
+Output(component_id='Vect', component_property='options', allow_duplicate=True),
+Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+Output(component_id='submit_files', component_property='filename'),
+Output(component_id='submit_files', component_property='contents'),
+Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
+Output(component_id="File", component_property='value', allow_duplicate=True),
+Output(component_id='Vect', component_property='value', allow_duplicate=True),
+Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
 
 # Run app
 if __name__== '__main__':
