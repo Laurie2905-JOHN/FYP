@@ -18,6 +18,13 @@ from dash.dependencies import Output, Input
 from flask_caching.backends import FileSystemCache
 from dash_extensions.callback import CallbackCache, Trigger
 from dash_extensions.callback import CallbackCache
+from pathlib import Path
+import uuid
+import dash_bootstrap_components as dbc
+import dash_uploader as du
+import dash
+from dash import html, dash_table
+from dash.dependencies import Input, Output, State
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
@@ -915,7 +922,7 @@ def file_checklist(file_names):
 
 
 # Callback to analyse and update data
-@cc.cached_callback(
+@ app.callback(
     [Output(component_id='filestorage', component_property='data'),
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),

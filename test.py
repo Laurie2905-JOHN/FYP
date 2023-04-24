@@ -8,14 +8,18 @@ from dash.dependencies import Input, Output, State
 
 app = dash.Dash(__name__)
 
-# 1) configure the upload folder
-du.configure_upload(app, r"C:\Users\lauri\Desktop")
+UPLOAD_FOLDER_ROOT = Path("./tmp") / "uploads"
+du.configure_upload(
+    app,
+    str(UPLOAD_FOLDER_ROOT),
+    use_upload_id=True,
+)
 
 def get_upload_component(id):
     return du.Upload(
         id=id,
-        max_file_size=1800,  # 1800 Mb
-        filetypes=['txt', 'zip'],
+        max_file_size=30000,  # 1800 Mb
+        filetypes=['txt', 'csv'],
         upload_id=uuid.uuid1(),  # Unique session id
     )
 
