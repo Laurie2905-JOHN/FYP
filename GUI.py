@@ -379,6 +379,7 @@ dash_table.DataTable(id = 'TI_Table',
                      [
                         {"id": 'FileName', "name": 'File Name'},
                         {'id': 'CalFile', 'name': 'Cal File'},
+                        {'id': 'SF', 'name': 'SF'},
                         {"id": 'Time_1', "name": 'Time 1'},
                         {"id": 'Time_2', "name": 'Time 2'},
                         {"id": 'Ux', "name": 'Average Ux'},
@@ -441,10 +442,9 @@ dash_table.DataTable(id = 'TI_Table',
                     'lineHeight': '60px',
                     'borderWidth': '1px',
                     'borderStyle': 'solid',
-                    'borderRadius': '5px',
+                    'borderRadius': '15px',
                     'textAlign': 'center',
-                    'margin': '20px',
-                    'width': '90%',
+                    'width': '100%',
                 },
                 className="text-primary",
                 # Allow multiple files to be uploaded
@@ -461,19 +461,19 @@ dash_table.DataTable(id = 'TI_Table',
                         'lineHeight': '60px',
                         'borderWidth': '1px',
                         'borderStyle': 'solid',
-                        'borderRadius': '5px',
+                        'borderRadius': '15px',
                         'textAlign': 'center',
-                        'margin': '20px',
-                        'width': '90%',
+                        'width': '100%',
                     },
                     className="text-primary",
                     # Allow multiple files to be uploaded
                     multiple=True
                 ),
 
+
                 dbc.Alert(id = 'calAlert', dismissable=False, class_name = 'text-center'),
 
-                ], gap = 2)
+                ], gap = 3)
 
 
         ], width=3),
@@ -866,7 +866,8 @@ def TI_caluculate(n_clicks, Cal_data, data, chosen_file, small_TI, big_TI, table
             new_data = [
                 {
                 'FileName': chosen_file,
-                'CalFile': Cal_data[0],
+                'CalFile': Cal_data[0][0],
+                'SF': data[2],
                 'Time_1': small_TI,
                 'Time_2': big_TI,
                 'Ux': round(Ux,6),
@@ -981,7 +982,7 @@ def content(n_clicks,cal_data, fs, data, contents, filenames):
             # If there are errors, return error messages
             if contain_text != [] or repeated_value != [] or error_file != []:
 
-                data = [prb, combined_filenames]
+                data = [prb, combined_filenames, fs]
 
                 color = "danger"
                 open1 = True
@@ -1045,7 +1046,7 @@ def content(n_clicks,cal_data, fs, data, contents, filenames):
 
                 open1 = True
 
-                data = [prb, combined_filenames]
+                data = [prb, combined_filenames, fs]
 
 
         return data, error, color, open1
