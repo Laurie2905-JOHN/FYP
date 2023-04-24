@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 import warnings
 import base64
 import io
+import os
 import math
 from dash.dependencies import Output, Input
 from flask_caching.backends import FileSystemCache
@@ -60,7 +61,7 @@ def calculate_turbulence_intensity(u, v, w):
 
     return TI, U_mag, U, V, W
 
-def cal_velocity(contents, file_names, cal_data, SF):
+def cal_velocity(BarnFilePath, cal_data, SF):
 
     ## function to calculate velocities from Barnacle voltage data
 
@@ -95,63 +96,43 @@ def cal_velocity(contents, file_names, cal_data, SF):
     dyncal = np.polyval(Dynfit, yawcal[:, 0])
     dyncal = dyncal * LDyn_0
 
-
-
-    # Loading actual Barnacle data
-    # Decoding Barnacle data
-    content_string = contents
-    decoded = base64.b64decode(content_string)
-    decoded_str = decoded.removeprefix(b'u\xabZ\xb5\xecm\xfe\x99Z\x8av\xda\xb1\xee\xb8')
-    lines = decoded_str.decode().split('\r\n')[:-1]
-
-    # Assigning dictionaries
     prb = {}
-    prb_final = {}
+
+    prb['raw'] = np.loadtxt(BarnFilePath, delimiter=',')
     # Calculating velocities
-    # For loop allows calculation for multiple files if needed
-    for i, file_name in enumerate(file_names):
-        prb[file_name] = {'raw': {}}
-        # Assigning numpy array to dictionary
-        prb[file_name]['raw'] = np.array([list(map(float, line.split(','))) for line in lines])
-        # Subtracting zero readings from the data
-        prb[file_name]['raw'] -= zeros['pr_mean']
-        # Data analysis
-        # Calculating the mean of each row of the angled probes
-        prb[file_name]['denom'] = np.mean(prb[file_name]['raw'][:, :4], axis=1)
-        # Calculating Lyaw and Lpitch
-        prb[file_name]['Lyaw'] = (prb[file_name]['raw'][:, 1] - prb[file_name]['raw'][:, 3]) / prb[file_name]['denom']
-        prb[file_name]['Lpitch'] = (prb[file_name]['raw'][:, 0] - prb[file_name]['raw'][:, 2]) / prb[file_name]['denom']
-        # Interpolating for each yaw and pitch angle
-        ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
-        apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
-        prb[file_name]['ayaw'] = ayaw_interp(prb[file_name]['Lyaw'])
-        prb[file_name]['apitch'] = apitch_interp(prb[file_name]['Lpitch'])
-        # Bodge: whatever one is bigger interpolate for Ldyn
-        prb[file_name]['pitchbigger'] = np.abs(prb[file_name]['apitch']) > np.abs(prb[file_name]['ayaw'])
-        prb[file_name]['amax'] = prb[file_name]['pitchbigger'] * prb[file_name]['apitch'] + (1 - prb[file_name]['pitchbigger']) * prb[file_name]['ayaw']
-        ldyn_interp = interpolate.interp1d(yawcal[:, 0], dyncal, kind='linear', fill_value='extrapolate')
-        prb[file_name]['ldyn'] = ldyn_interp(prb[file_name]['amax'])
+    prb['raw'] -= zeros['pr_mean']
+    # Data analysis
+    # Calculating the mean of each row of the angled probes
+    prb['denom'] = np.mean(prb['raw'][:, :4], axis=1)
+    # Calculating Lyaw and Lpitch
+    prb['Lyaw'] = (prb['raw'][:, 1] - prb['raw'][:, 3]) / prb['denom']
+    prb['Lpitch'] = (prb['raw'][:, 0] - prb['raw'][:, 2]) / prb['denom']
+    # Interpolating for each yaw and pitch angle
+    ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
+    apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind='linear', fill_value='extrapolate')
+    prb['ayaw'] = ayaw_interp(prb['Lyaw'])
+    prb['apitch'] = apitch_interp(prb['Lpitch'])
+    # Bodge: whatever one is bigger interpolate for Ldyn
+    prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
+    prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
+    ldyn_interp = interpolate.interp1d(yawcal[:, 0], dyncal, kind='linear', fill_value='extrapolate')
+    prb['ldyn'] = ldyn_interp(prb['amax'])
 
-        # Splitting into velocities
-        prb[file_name]['U1'] = np.sqrt(2 * -prb[file_name]['ldyn'] * np.mean(prb[file_name]['raw'][:, :4], axis=1) / rho)
-        prb[file_name]['U1'][np.imag(prb[file_name]['U1']) > 0] = 0
-        prb[file_name]['Ux'] = prb[file_name]['U1'] * np.cos(np.deg2rad(prb[file_name]['apitch'])) * np.cos(np.deg2rad(prb[file_name]['ayaw']))
-        prb[file_name]['Uy'] = prb[file_name]['U1'] * np.cos(np.deg2rad(prb[file_name]['apitch'])) * np.sin(np.deg2rad(prb[file_name]['ayaw']))
-        prb[file_name]['Uz'] = prb[file_name]['U1'] * np.sin(np.deg2rad(prb[file_name]['apitch']))
-        prb[file_name]['t'] = np.linspace(0, prb[file_name]['raw'].shape[0] / SF, prb[file_name]['raw'].shape[0]);
+    # Splitting into velocities
+    prb['U1'] = np.sqrt(2 * -prb['ldyn'] * np.mean(prb['raw'][:, :4], axis=1) / rho)
+    prb['U1'][np.imag(prb['U1']) > 0] = 0
+    prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
+    prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
+    prb['Uz'] = prb['U1'] * np.sin(np.deg2rad(prb['apitch']))
+    prb['t'] = np.linspace(0, prb['raw'].shape[0] / SF, prb['raw'].shape[0]);
 
-        # Taking data needed
-        prb_final = {'Ux': {}}
-        prb_final = {'Uy': {}}
-        prb_final = {'Uz': {}}
-        prb_final = {'U1': {}}
-        prb_final = {'t': {}}
-
-        prb_final['U1'] = prb[file_name]['U1']
-        prb_final['Ux'] = prb[file_name]['Ux']
-        prb_final['Uy'] = prb[file_name]['Uy']
-        prb_final['Uz'] = prb[file_name]['Uz']
-        prb_final['t'] = prb[file_name]['t']
+    prb_final = {
+        'U1': prb['U1'],
+        'Ux': prb['Ux'],
+        'Uy': prb['Uy'],
+        'Uz': prb['Uz'],
+        't': prb['t'],
+    }
 
     return prb_final
 
@@ -443,24 +424,26 @@ dash_table.DataTable(id = 'TI_Table',
         dbc.Col([
             dbc.Stack([
 
-            dcc.Upload(
-                id='submit_files',
-                children=html.Div([
-                    html.A('Select BARNACLE Files')
-                ]),
-                style={
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'solid',
-                    'borderRadius': '15px',
-                    'textAlign': 'center',
-                    'width': '100%',
-                },
-                className="text-primary",
-                # Allow multiple files to be uploaded
-                multiple=True
-            ),
+                dbc.Stack([
+                    dbc.InputGroup([
+                        # Dropdown menu for selecting the update action
+                        dbc.DropdownMenu([
+                            dbc.DropdownMenuItem("Add to Uploads", id="dropdown_BARN_update"),
+                            dbc.DropdownMenuItem(divider=True),
+                            dbc.DropdownMenuItem("Clear", id="dropdown_BARN_clear"),
+                        ],
+                            label="Update"),
+                        # Input element for entering the new title or legend
+                        dbc.Input(
+                            id="submit_files",
+                            type='text',
+                            placeholder="Enter BARNACLE Filepath",
+                            debounce=True
+                        ),
+                    ]),
+                    # Horizontal direction of the stack
+                ], direction="horizontal"),
+
 
                 dcc.Upload(
                     id='submit_Cal_file',
@@ -653,6 +636,7 @@ dbc.Col([
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
+    dcc.Store(id='filename_filepath', storage_type='session'),
     dcc.Store(id='Cal_storage', storage_type='local'),
 
 ])
@@ -896,34 +880,62 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
 
 # Call back to update upload file checklist once files are selected
 @app.callback(
-        Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
-        Input(component_id = 'submit_files', component_property ='filename'),
+        Output(component_id='submit_files', component_property='value'),
+        Output(component_id='filename_filepath', component_property='data'),
+        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id = 'dropdown_BARN_update', component_property ='n_clicks'),
+        Input(component_id='dropdown_BARN_clear', component_property='n_clicks'),
+        State(component_id='submit_files', component_property='value'),
+        State(component_id='filename_filepath', component_property='data'),
         prevent_initial_call = True)
 
-def file_checklist(file_names):
+def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath, current_upload_checklist):
 
-    upload_file_checklist = file_names
+    if ctx.triggered_id == 'dropdown_BARN_update':
+        filepath = filepath.replace("\\", "/")
+        filename = os.path.basename(filepath)
 
-    return upload_file_checklist
+        repeated_value = []
 
-# @app.callback(
-#     Output(component_id='filestorage', component_property='data'),
-#     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-#     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-#     Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-#     Input(component_id='newfile', component_property='n_clicks'),
-#     State(component_id="Cal_storage", component_property='data'),
-#     State(component_id='Sample_rate', component_property='value'),
-#     State(component_id='filestorage', component_property='data'),
-#     State(component_id = 'submit_files',component_property = 'contents'),
-#     prevent_initial_call=True)
-#
-# def content(n_clicks,cal_data, SF, data, contents, filenames):
+        if current_upload_checklist is None:
+            current_upload_checklist = []
+
+        combined_filenames = current_upload_checklist.copy()
+
+        for val in combined_filenames:
+            if filename == val:
+                repeated_value.append(val)
+            else:
+                combined_filenames.append(val)
+
+        if repeated_value != []:
+            error = repeated_value + ' already exists. Please check filepath'
+            color1 = 'danger'
+            open1 = True
+            filepath_input = no_update
+            filename_filepath_data = no_update
+        else:
+            error = filename + ' added'
+            color1 = 'success'
+            open1 = True
+            filepath_input = ''
+            filename_filepath_data = [combined_filenames, combined_filepaths]
+
+
+    if ctx.triggered_id == 'dropdown_BARN_clear':
+        filepath_input = ''
+        color1 = no_update
+        open1 = no_update
+        filename_filepath_data = no_update
+
+    return filepath_input, filename_filepath_data, error, color1, open1
 
 
 # Callback to analyse and update data
 @ app.callback(
-    [Output(component_id='filestorage', component_property='data'),
+    [Output(component_id='filestorage', component_property='data', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True)],
@@ -932,7 +944,8 @@ def file_checklist(file_names):
     State(component_id='Sample_rate', component_property='value'),
     State(component_id='filestorage', component_property='data'),
     State(component_id = 'submit_files',component_property = 'contents'),
-    State(component_id="upload_file_checklist", component_property='value')]
+    State(component_id="upload_file_checklist", component_property='value')],
+    prevent_initial_call = True,
 )
 
 def content(n_clicks,cal_data, SF, data, contents, filenames):
@@ -1170,11 +1183,20 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
     Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
     Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
     Output(component_id='DataSet_TI', component_property='options'),
     Input(component_id='filestorage', component_property='data'),
+    Input(component_id='filename_filepath', component_property='data'),
     prevent_initial_call=True)
 
-def update_dropdowns(data):
+def update_dropdowns(data, filename_filepath_upload_data):
+
+    if filename_filepath_upload_data is None:
+
+        upload_file_checklist = []
+    else:
+
+        upload_file_checklist = filename_filepath_upload_data[0]
 
     if data is None:
         # If the data is None, set all dropdown options to empty lists
@@ -1194,7 +1216,7 @@ def update_dropdowns(data):
         vel_checklist = ['Ux', 'Uy', 'Uz', 't']
 
     # Return the updated dropdown options and checklists
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check, DataDrop_TI
+    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI
 
 
 # Call back which updates the download time range to prevent error
