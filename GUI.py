@@ -378,6 +378,7 @@ dash_table.DataTable(id = 'TI_Table',
                      columns =
                      [
                         {"id": 'FileName', "name": 'File Name'},
+                        {'id': 'CalFile', 'name': 'Cal File'},
                         {"id": 'Time_1', "name": 'Time 1'},
                         {"id": 'Time_2', "name": 'Time 2'},
                         {"id": 'Ux', "name": 'Average Ux'},
@@ -453,7 +454,7 @@ dash_table.DataTable(id = 'TI_Table',
                 dcc.Upload(
                     id='submit_Cal_file',
                     children=html.Div([
-                        html.A('Select a Calibration File')
+                        html.A(id = 'Cal_select_text',children = 'Select a Calibration File')
                     ]),
                     style={
                         'height': '60px',
@@ -468,7 +469,9 @@ dash_table.DataTable(id = 'TI_Table',
                     className="text-primary",
                     # Allow multiple files to be uploaded
                     multiple=True
-                )
+                ),
+
+                dbc.Alert(id = 'calAlert', dismissable=False, class_name = 'text-center'),
 
                 ], gap = 2)
 
@@ -644,6 +647,25 @@ dbc.Col([
 ])
 
 @ app.callback(
+    Output(component_id='calAlert', component_property='children'),
+    Output(component_id='calAlert', component_property='color'),
+    Output(component_id='calAlert', component_property='is_open'),
+    Input(component_id="Cal_storage", component_property='data'),
+)
+
+def update_cal_text(Cal_data):
+
+    if Cal_data is None:
+        alert_cal = 'No Calibration File Selected'
+        color1 = 'danger'
+    else:
+        alert_cal = Cal_data[0][0] + ' Selected'
+        color1 = 'primary'
+
+
+    return alert_cal, color1, True
+
+@ app.callback(
     Output(component_id="Cal_storage", component_property='data', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
@@ -666,13 +688,12 @@ def cal_analysis(filename, contents):
             cal_data = cal_data.to_dict('list')
 
             # Remove NaN values from the lists in the dictionary
-            cal_data = {key: [val for val in values if not math.isnan(val)] for key, values in
-                                  cal_data.items()}
+            cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
+                                  cal_data.items()}]
 
             error1 = 'File Uploaded Successfully'
 
             color1 = 'success'
-
 
         else:
 
@@ -750,6 +771,7 @@ def clear_table(n_clicks):
     Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
     Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='TI_btn_download', component_property='n_clicks'),
+    State(component_id="Cal_storage", component_property='data'),
     State(component_id='filestorage', component_property='data'),
     State(component_id='DataSet_TI', component_property='value'),
     State(component_id="small_t_TI", component_property='value'),
@@ -758,7 +780,7 @@ def clear_table(n_clicks):
     State(component_id='TI_Table', component_property='columns'),
     prevent_initial_call=True)
 
-def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, column_data):
+def TI_caluculate(n_clicks, Cal_data, data, chosen_file, small_TI, big_TI, table_data, column_data):
 
     if "TI_btn_download" == ctx.triggered_id:
 
@@ -844,6 +866,7 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
             new_data = [
                 {
                 'FileName': chosen_file,
+                'CalFile': Cal_data[0],
                 'Time_1': small_TI,
                 'Time_2': big_TI,
                 'Ux': round(Ux,6),
@@ -946,8 +969,7 @@ def content(n_clicks,cal_data, fs, data, contents, filenames):
                         # Try to process the file
                         try:
                             prb[value] = {value: {}}
-                            print(cal_data)
-                            prb[value] = cal_velocity(contents[i], filenames[i], cal_data, fs)
+                            prb[value] = cal_velocity(contents[i], filenames[i], cal_data[1], fs)
                             new_value.append(value)
                             combined_filenames.append(value)
 
@@ -1486,9 +1508,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                 error1 = ['No data selected', "danger"]
 
             else:
-
-                print(vels)
-                print(file)
 
                 # Assign values
                 prb = data[0]
