@@ -915,18 +915,18 @@ def file_checklist(file_names):
 
 
 # Callback to analyse and update data
-@app.callback(
-    Output(component_id='filestorage', component_property='data'),
+@cc.cached_callback(
+    [Output(component_id='filestorage', component_property='data'),
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-    Input(component_id='newfile', component_property='n_clicks'),
+    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True)],
+    [Input(component_id='newfile', component_property='n_clicks'),
     State(component_id="Cal_storage", component_property='data'),
     State(component_id='Sample_rate', component_property='value'),
     State(component_id='filestorage', component_property='data'),
     State(component_id = 'submit_files',component_property = 'contents'),
-    State(component_id="upload_file_checklist", component_property='value'),
-    prevent_initial_call=True)
+    State(component_id="upload_file_checklist", component_property='value')]
+)
 
 def content(n_clicks,cal_data, SF, data, contents, filenames):
 
@@ -1822,20 +1822,7 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
     return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main, upload_filename, upload_contents, clear_val, file_drop_val, vect_drop_val, submit_val_check
 
 
-Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
-Output(component_id="File", component_property='options', allow_duplicate=True),
-Output(component_id='Vect', component_property='options', allow_duplicate=True),
-Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-Output(component_id='submit_files', component_property='filename'),
-Output(component_id='submit_files', component_property='contents'),
-Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
-Output(component_id="File", component_property='value', allow_duplicate=True),
-Output(component_id='Vect', component_property='value', allow_duplicate=True),
-Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
+
 
 # Run app
 if __name__== '__main__':
