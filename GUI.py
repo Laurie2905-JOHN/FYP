@@ -14,6 +14,9 @@ import warnings
 import base64
 import io
 import math
+from dash.dependencies import Output, Input
+from flask_caching.backends import FileSystemCache
+from dash_extensions.callback import CallbackCache, Trigger
 from dash_extensions.callback import CallbackCache
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -145,7 +148,7 @@ def cal_velocity(contents, file_names, cal_data, SF):
 
     return prb_final
 
-
+cc = CallbackCache(cache=FileSystemCache(cache_dir="cache"))
 
 # Create the Dash app object
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
