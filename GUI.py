@@ -136,7 +136,6 @@ def cal_velocity(BarnFilePath, cal_data, SF):
 
     return prb_final
 
-cc = CallbackCache(cache=FileSystemCache(cache_dir="cache"))
 
 # Create the Dash app object
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
