@@ -417,26 +417,27 @@ dash_table.DataTable(id = 'TI_Table',
             ),
         ], width=12),
 
+    dbc.Col(
+        dbc.InputGroup([
+            # Dropdown menu for selecting the update action
+            dbc.DropdownMenu([
+                dbc.DropdownMenuItem("Update Workspace", id="Workspace_update"),
+                dbc.DropdownMenuItem(divider=True),
+                dbc.DropdownMenuItem("Clear Workspace", id="Workspace_clear"),
+            ],
+                label="Update"),
+            # Input element for entering the new title or legend
+            dbc.Input(
+                id="Workspace",
+                type='text',
+                placeholder="Enter Workspace Filepath",
+                debounce=True
+            ),
+
+        ]),
+    width =11, class_name = 'mb-3'),
 
         dbc.Col(
-
-        dbc.Stack([
-            dbc.InputGroup([
-                # Dropdown menu for selecting the update action
-                dbc.DropdownMenu([
-                    dbc.DropdownMenuItem("Update Workspace", id="Workspace_update"),
-                    dbc.DropdownMenuItem(divider=True),
-                    dbc.DropdownMenuItem("Clear Workspace", id="Workspace_clear"),
-                ],
-                    label="Update"),
-                # Input element for entering the new title or legend
-                dbc.Input(
-                    id="Workspace",
-                    type='text',
-                    placeholder="Enter Workspace Filepath",
-                    debounce=True
-                ),
-            ]),
 
             dbc.InputGroup([
                 # Dropdown menu for selecting the update action
@@ -455,7 +456,6 @@ dash_table.DataTable(id = 'TI_Table',
                 ),
             ]),
             # Horizontal direction of the stack
-        ], gap = 4, direction="horizontal"),
 
     width = 11, class_name = 'mb-3'),
 
@@ -539,21 +539,12 @@ dash_table.DataTable(id = 'TI_Table',
 
                 # Checkbox for selecting individual files to clear
                 dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
-            ], gap=2),
+            ], gap=3),
             width=3
         ),
 
-    ], align='center', justify='evenly'),
 
-    dbc.Row([
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),  # Horizontal rule to separate content
-    ], className='mb-2'),
-
-
-
+    ], align='start', justify='evenly'),
 
     dbc.Row([
         dbc.Col(
@@ -656,11 +647,70 @@ dbc.Col([
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
     dcc.Store(id='filename_filepath', storage_type='session'),
+    dcc.Store(id='Workspace_store', storage_type='memory'),
     dcc.Store(id='Cal_storage', storage_type='local'),
-
 ])
 
+@ app.callback(
+    Output(component_id='Workspace_store', component_property='data'),
+    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id='Workspace_update', component_property='n_clicks'),
+    State(component_id='Workspace', component_property='value'),
+)
 
+def update_Workspace(n_clicks, Workspace_input):
+
+    if ctx.triggered_id == 'Workspace_update':
+
+        if Workspace_input is None or Workspace_input == '':
+            error = 'No Filepath Inputted. Please Check'
+            color1 = 'danger'
+            open1 = True
+            Workspace_data = no_update
+
+        else:
+
+            Workspace_input2 = Workspace_input.replace("\\", "/")
+            Workspace_input3 = Workspace_input2.replace('"', "")
+
+            print(os.path.exists(Workspace_input3))
+
+            if not os.path.exists(Workspace_input3):
+                error = 'Please Check Filepath'
+                color1 = 'danger'
+                open1 = True
+                Workspace_data = no_update
+            else:
+                error = 'Workspace Uploaded'
+                color1 = 'success'
+                open1 = True
+                Workspace_data = Workspace_input3
+
+        return Workspace_data, error, color1, open1
+
+
+@app.callback(
+        Output(component_id='Workspace', component_property='value', allow_duplicate=True),
+        Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id='Workspace_clear', component_property='n_clicks'),
+        prevent_initial_call = True)
+
+def clear_upload(n_clicks):
+
+    if ctx.triggered_id == 'dropdown_BARN_clear':
+
+        filepath_input = ''
+        error = 'Workspace Cleared'
+        color1 = 'primary'
+        open1 = True
+        clear_filename_filepath_data = True
+
+        return filepath_input, clear_filename_filepath_data, error, color1, open1
 
 @ app.callback(
     Output(component_id='calAlert', component_property='children'),
@@ -913,6 +963,7 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
 
 
     if ctx.triggered_id == 'dropdown_BARN_update':
+        print(filepath1)
 
         if filepath1 is None or filepath1 == '':
             error = 'No Filepath Inputted. Please Check'
@@ -972,7 +1023,7 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
                         filepath_input = ''
                         filename_filepath_data = [combined_filenames, combined_filepaths]
 
-            return filepath_input, filename_filepath_data, error, color1, open1
+        return filepath_input, filename_filepath_data, error, color1, open1
 
     else:
         raise PreventUpdate
@@ -1176,7 +1227,6 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
                 filename_filepath_data = [upload_filename, upload_filepath]
 
             folder_path = r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace'
-            vector = ['U1','Ux', 'Uy', 'Uz', 't']
 
             save_Barn_data = Barn_data[value]
 
@@ -1184,239 +1234,86 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
 
             file_path = os.path.join(folder_path, filename2)
 
-            np.savez(file_path, U1 = save_Barn_data[vector[0]], Ux = save_Barn_data[vector[1]], Uy = save_Barn_data[vector[1]], Uz = save_Barn_data[vector[1]], t = save_Barn_data[vector[1]])
+            np.savez(file_path, U1 = save_Barn_data['U1'], Ux = save_Barn_data['Ux'], Uy = save_Barn_data['Uy'], Uz = save_Barn_data['Uz'], t = save_Barn_data['t'])
 
         return data, error, color, open1, filename_filepath_data
 
 
-# Callback which updates the graph based on graph options
-@app.callback(
-        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-        Output(component_id = 'time-range', component_property = 'min', allow_duplicate=True),
-        Output(component_id = 'time-range', component_property = 'max', allow_duplicate=True),
-        Output(component_id = 'time-range', component_property = 'value', allow_duplicate=True),
-        Output(component_id='alert', component_property='children', allow_duplicate=True),
-        Output(component_id='alert', component_property='color', allow_duplicate=True),
-        Output(component_id='alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id = 'filestorage', component_property = 'data'),
-        Input(component_id = 'File', component_property = 'value'),
-        Input(component_id = 'Vect', component_property = 'value'),
-        Input(component_id = 'time-range', component_property = 'value'),
-        Input(component_id='line_thick', component_property='value'),
-        Input(component_id='legend_Data', component_property='data'),
-        Input(component_id='title_Data', component_property='data'),
-        Input(component_id='legend_onoff', component_property='value'),
-        Input(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
-
-def update_graph(data, user_inputs, user_inputs1, time_input, line_thick, legend_data, title_data, leg, title ):
-
-
-    # If no input do not plot graphs
-    if user_inputs == [] or user_inputs1 == []:
-
-        error1 = no_update
-
-        color = no_update
-
-        open1 = False
-
-        fig = {}
-
-        min_sl = 1
-
-        max_sl = 10
-
-        value =[1, 10]
-
-    else:
-
-        folder_path = r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace'
-        # Plotting graphs
-
-        max1 = []
-
-        min1 = []
-
-        fig = go.Figure()
-
-        current_names = []
-
-        # If user inputs are changed reset time slider and plot full data
-        if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
-
-            for user_input in user_inputs:
-                for user_input1 in user_inputs1:
-
-                    # Create a new file name with the current 'value' and the '.npz' extension
-                    filename2 = user_input + '.npz'
-
-                    # Join the folder path with the file name
-                    file_path = os.path.join(folder_path, filename2)
-
-                    filename2 = user_input +'.npz'
-
-                    file_path = os.path.join(folder_path, filename2)
-
-                    Barn_data = np.load(file_path)
-
-                    print()
-
-                    V = Barn_data[user_input1]
-                    t = Barn_data['t']
-                    # Calculating max and min of the datasets
-                    max1.append(np.round(np.amax(t)))
-                    min1.append(np.round(np.amin(t)))
-                    # Plotting data
-                    fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
-                                            line=dict(
-                                            width=line_thick),
-                                            name=f"{user_input}{' '}{user_input1}"))
-                    # Creating a list of current legend names
-                    current_names.append(f"{user_input}{' '}{user_input1}")
-
-            # Calculating min and max of data
-            min_sl = min(min1)
-            max_sl = max(max1)
-            # Value of slider being put at min and max positions
-            value = [min_sl, max_sl]
-
-        else:
-
-            # If user inputs haven't changed
-            for user_input in user_inputs:
-                for user_input1 in user_inputs1:
-                    V = Barn_data[user_input][user_input1]
-                    t = Barn_data[user_input]['t']
-                    # Calculating max and min of data set
-                    max1.append(np.round(np.amax(t)))
-                    min1.append(np.round(np.amin(t)))
-                    # Creating a mask to trim data for the time slider
-                    mask = (t >= time_input[0]) & (t < time_input[1])
-                    t2 = t[mask]
-                    V2 = V[mask]
-                    # Plotting data
-                    fig.add_trace(go.Scatter(x=t2, y=V2, mode='lines',
-                                            line=dict(
-                                            width=line_thick),
-                                            name=f"{user_input}{' '}{user_input1}"))
-                    current_names.append(f"{user_input}{' '}{user_input1}")
-
-            # No change in slider values
-            value = time_input
-            # Calculate max and min of data
-            min_sl = min(min1)
-            max_sl = max(max1)
-
-        # Update x and y axes labels
-        fig.update_layout(
-            xaxis_title="Time (s)",
-            yaxis_title="Velocity (m/s)",
-            legend=dict(
-                y=1,
-                x=0.5,
-                orientation="h",
-                yanchor="bottom",
-                xanchor="center"),
-        )
-
-        # Update legend
-
-        if legend_data is None:
-            # If no legend data
-
-            # Turn legend off
-            if leg == 'Off':
-                fig.layout.update(showlegend=False)
-
-                # No update to error messages
-                error1 = no_update
-
-                color = no_update
-
-                open1 = False
-
-            # Turn legend on
-            elif leg == 'On':
-                fig.layout.update(showlegend=True)
-
-                # No update to error messages
-                error1 = no_update
-
-                color = no_update
-
-                open1 = False
-
-        else:
-            # If there is legend data
-
-            # If legend is off
-            if leg == 'Off':
-                fig.layout.update(showlegend=False)
-
-                # No error message
-                error1 = no_update
-
-                color = no_update
-
-                open1 = False
-
-            elif leg == 'On':
-                # Split string when there is a comma
-                legend_name_list = legend_data.split(',')
-                # Create empty dictionary for new legend name
-                newname_result = {}
-
-                # If the length of the list of new legend entries is eqaul to the number of lines
-                if len(current_names) == len(legend_name_list):
-                    # For each legend name create a dictionary of the current names and their replacements
-                    for i, current_name in enumerate(current_names):
-                        newnames = {current_name: legend_name_list[i]}
-                        newname_result.update(newnames)
-                    # Update legend names
-                    fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
-                                                          legendgroup=newname_result[t.name],
-                                                          hovertemplate=t.hovertemplate.replace(t.name, newname_result[
-                                                              t.name]) if t.hovertemplate is not None else None)
-                                       )
-
-                    fig.layout.update(showlegend=True)
-
-                    # No error message
-                    error1 = no_update
-
-                    color = no_update
-
-                    open1 = False
-
-                else:
-
-                    # If legend entries do not match display error message
-                    error1 = 'Number of legend entries do not match'
-
-                    color = 'danger'
-
-                    open1 = True
-        # If title data is empty
-        if title_data is None:
-
-            # Turn graph title off
-            if title == 'Off':
-                fig.layout.update(title='')
-            # If title is on display original title
-            elif title == 'On':
-                fig.layout.update(title='Plot of ' + ', '.join(user_inputs) + ' Data')
-
-        # If title data isn't empty
-        else:
-
-            # Turn graph title off
-            if title == 'Off':
-                fig.layout.update(title='')
-            # Update title with legend data if legend is on
-            elif title == 'On':
-                fig.layout.update(title=title_data)
-    # return figure, min and max values for slider, and error message
-    return fig, min_sl, max_sl, value, error1, color, open1
+# # Callback which updates the graph based on graph options
+# @app.callback(
+#         Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+#         Input(component_id = 'filestorage', component_property = 'data'),
+#         Input(component_id = 'File', component_property = 'value'),
+#         Input(component_id = 'Vect', component_property = 'value'),
+#         Input(component_id='line_thick', component_property='value'),
+#         prevent_initial_call = True)
+#
+# def update_graph(data, user_inputs, user_inputs1, line_thick):
+#
+#
+#     # If no input do not plot graphs
+#     if user_inputs == [] or user_inputs1 == []:
+#
+#         error1 = no_update
+#
+#         color = no_update
+#
+#         open1 = False
+#
+#         fig = {}
+#
+#         min_sl = 1
+#
+#         max_sl = 10
+#
+#         value =[1, 10]
+#
+#     else:
+#
+#         folder_path = r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace'
+#         # Plotting graphs
+#
+#         max1 = []
+#
+#         min1 = []
+#
+#         fig = go.Figure()
+#
+#         current_names = []
+#
+#         # If user inputs are changed reset time slider and plot full data
+#         if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
+#
+#             for user_input in user_inputs:
+#                 for user_input1 in user_inputs1:
+#
+#                     # Create a new file name with the current 'value' and the '.npz' extension
+#                     filename2 = user_input + '.npz'
+#
+#                     # Join the folder path with the file name
+#                     file_path = os.path.join(folder_path, filename2)
+#
+#                     filename2 = user_input +'.npz'
+#
+#                     file_path = os.path.join(folder_path, filename2)
+#
+#                     Barn_data = np.load(file_path)
+#
+#
+#                     V = Barn_data[user_input1]
+#                     t = Barn_data['t']
+#
+#                     # Plotting data
+#                     fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
+#                                             line=dict(
+#                                             width=line_thick),
+#                                             name=f"{user_input}{' '}{user_input1}"))
+#                     # Creating a list of current legend names
+#                     current_names.append(f"{user_input}{' '}{user_input1}")
+#
+#
+#
+#         return fig,
 
 # Callback to update legend or title data
 @app.callback(
