@@ -15,7 +15,8 @@ import base64
 import io
 import os
 import math
-from dash_extensions.enrich import Dash, Output, Input, State, ServersideOutput
+import diskcache
+
 from dash.dependencies import Output, Input
 from flask_caching.backends import FileSystemCache
 from dash_extensions.callback import CallbackCache, Trigger
@@ -137,9 +138,11 @@ def cal_velocity(BarnFilePath, cal_data, SF):
 
     return prb_final
 
+    cache = diskcache.Cache("./cache")
+    background_callback_manager = DiskcacheManager(cache)
 
 # Create the Dash app object
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # Define the layout of the app
 app.layout = dbc.Container([
@@ -997,6 +1000,8 @@ def clear_upload(n_clicks):
     State(component_id='Sample_rate', component_property='value'),
     State(component_id='filestorage', component_property='data'),
     State(component_id="upload_file_checklist", component_property='value')],
+    background=True,
+    manager=background_callback_manager,
     prevent_initial_call = True,
 )
 
