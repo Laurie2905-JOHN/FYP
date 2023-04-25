@@ -16,6 +16,7 @@ import io
 import os
 import math
 import diskcache
+from dash_extensions.enrich import DashProxy
 from dash import DiskcacheManager
 from dash.dependencies import Output, Input
 from flask_caching.backends import FileSystemCache
@@ -27,9 +28,10 @@ import dash_bootstrap_components as dbc
 import dash_uploader as du
 import dash
 from dash import html, dash_table
-from dash.dependencies import Input, Output, State
-from flask_caching.backends import FileSystemCache
-from dash_extensions.callback import CallbackCache, Trigger
+
+
+cache = diskcache.Cache("./cache")
+long_callback_manager = DiskcacheLongCallbackManager(cache)
 
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -143,7 +145,7 @@ def cal_velocity(BarnFilePath, cal_data, SF):
 
 
 # Create the Dash app object
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], prevent_initial_callbacks=True)
 
 
 
@@ -642,14 +644,11 @@ dbc.Col([
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
-    dcc.Loading(dcc.Store(id="store"), fullscreen=True, type="dot"),
     dcc.Store(id='filename_filepath', storage_type='session'),
     dcc.Store(id='Cal_storage', storage_type='local'),
 
 ])
 
-# Create (server side) cache. Works with any flask caching backend.
-cc = CallbackCache(cache=FileSystemCache(cache_dir="cache"))
 
 @ app.callback(
     Output(component_id='calAlert', component_property='children'),
@@ -994,9 +993,9 @@ def clear_upload(n_clicks):
 
 
 
-
-@cc.cached_callback(
-    [Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+@app.callback(
+    [
+    Output(component_id='filestorage', component_property='data', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
@@ -1006,7 +1005,7 @@ def clear_upload(n_clicks):
     State(component_id="Cal_storage", component_property='data'),
     State(component_id='Sample_rate', component_property='value'),
     State(component_id='filestorage', component_property='data'),
-    State(component_id="upload_file_checklist", component_property='value')],
+    State(component_id="upload_file_checklist", component_property='value')],  manager=long_callback_manager,
 )
 
 def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
