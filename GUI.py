@@ -710,6 +710,15 @@ def clear_upload(n_clicks):
         open1 = True
         clear_filename_filepath_data = True
 
+        path = r"E:\demos\files\reports\\"
+        for file_name in os.listdir(path):
+            # construct full file path
+            file = path + file_name
+            if os.path.isfile(file):
+                deleted_files.join(',')
+                print('Deleted file:', file)
+                os.remove(file)
+
         return filepath_input, clear_filename_filepath_data, error, color1, open1
 
 @ app.callback(
