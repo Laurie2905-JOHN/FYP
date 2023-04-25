@@ -1162,8 +1162,7 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
 
                 filename_filepath_data = [upload_filename, upload_filepath]
 
-
-        return data, error, color, open1, filename_filepath_data
+        return no_update, error, color, open1, filename_filepath_data
 
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
