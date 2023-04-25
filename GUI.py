@@ -16,7 +16,7 @@ import io
 import os
 import math
 import diskcache
-
+from dash import DiskcacheManager
 from dash.dependencies import Output, Input
 from flask_caching.backends import FileSystemCache
 from dash_extensions.callback import CallbackCache, Trigger
@@ -138,11 +138,13 @@ def cal_velocity(BarnFilePath, cal_data, SF):
 
     return prb_final
 
-    cache = diskcache.Cache("./cache")
-    background_callback_manager = DiskcacheManager(cache)
+
 
 # Create the Dash app object
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+cache = diskcache.Cache("./cache")
+background_callback_manager = DiskcacheManager(cache)
 
 # Define the layout of the app
 app.layout = dbc.Container([
@@ -1168,7 +1170,7 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
 
                 filename_filepath_data = [upload_filename, upload_filepath]
 
-        return no_update, error, color, open1, filename_filepath_data
+        return data, error, color, open1, filename_filepath_data
 
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
