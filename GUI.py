@@ -893,37 +893,24 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
 
 def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_filepath_data):
 
-    if ctx.triggered_id == 'dropdown_BARN_update' and filepath1 is not None:
-        filepath = filepath1.replace("\\", "/")
-        filename = os.path.basename(filepath)
 
-        if filename_filepath_data is None:
+    if ctx.triggered_id == 'dropdown_BARN_update':
 
-            filename_filepath_data = [[filename],[filepath]]
-            error = filename + ' added'
-            color1 = 'success'
+        if filepath1 is None or filepath1 == '':
+            error = 'No Filepath Inputted. Please Check'
+            color1 = 'danger'
             open1 = True
             filepath_input = ''
+            filename_filepath_data = no_update
 
         else:
 
-            combined_filenames = filename_filepath_data[0].copy()
-            combined_filepaths = filename_filepath_data[1].copy()
+            filepath2 = filepath1.replace("\\", "/")
+            filepath = filepath2.replace('"', "")
 
-            for val in combined_filenames:
-                print(filename)
-                print(val)
-                if filename == val:
-                    repeated_filename = filename
-                    repeated_filepath = filepath
-                else:
-                    print('why')
-                    combined_filenames.append(filename)
-                    combined_filepaths.append(filepath)
 
-            if 'repeated_filename' in locals():
-
-                error = filename + ' already exists. Please check'
+            if os.path.isfile(filepath)==False:
+                error = 'Please Check Filepath'
                 color1 = 'danger'
                 open1 = True
                 filepath_input = no_update
@@ -931,15 +918,48 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
 
             else:
 
-                error = filename.join(',') + ' added'
-                color1 = 'success'
-                open1 = True
-                filepath_input = ''
-                filename_filepath_data = [combined_filenames, combined_filepaths]
+                filename = os.path.basename(filepath)
 
-        print(filename_filepath_data)
+                if filename_filepath_data is None:
+                    filename_filepath_data = [[filename],[filepath]]
+                    error = filename + ' added'
+                    color1 = 'success'
+                    open1 = True
+                    filepath_input = ''
 
-        return filepath_input, filename_filepath_data, error, color1, open1
+                else:
+
+                    combined_filenames = filename_filepath_data[0].copy()
+                    combined_filepaths = filename_filepath_data[1].copy()
+                    repeated_filename = []
+
+                    for value in combined_filenames:
+                        if filename == value:
+                            repeated_filename.append(filename)
+
+                    if repeated_filename != []:
+                        error = filename + ' already exists. Please check'
+                        color1 = 'danger'
+                        open1 = True
+                        filepath_input = no_update
+                        filename_filepath_data = no_update
+                        repeated_filename = []
+
+                    else:
+                        combined_filenames.append(filename)
+                        combined_filepaths.append(filepath)
+                        error = filename + ' added'
+                        color1 = 'success'
+                        open1 = True
+                        filepath_input = ''
+                        filename_filepath_data = [combined_filenames, combined_filepaths]
+
+            return filepath_input, filename_filepath_data, error, color1, open1
+
+    else:
+        raise PreventUpdate
+
+
 
 @app.callback(
         Output(component_id='submit_files', component_property='value', allow_duplicate=True),
@@ -958,12 +978,9 @@ def clear_upload(n_clicks):
         error = 'Upload Files Cleared'
         color1 = 'primary'
         open1 = True
-        filename_filepath_data = True
-    else:
-        raise PreventUpdate
+        clear_filename_filepath_data = True
 
-        return filepath_input, filename_filepath_data, error, color1, open1
-
+        return filepath_input, clear_filename_filepath_data, error, color1, open1
 
 
 
