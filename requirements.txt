@@ -21,6 +21,8 @@ dash-table==5.0.0
 dash-uploader==0.7.0a1
 debugpy==1.6.7
 decorator==5.1.1
+dill==0.3.6
+diskcache==5.6.1
 et-xmlfile==1.1.0
 executing==1.2.0
 Flask==2.2.3
@@ -40,11 +42,12 @@ MarkupSafe==2.1.2
 matplotlib==3.7.1
 matplotlib-inline==0.1.6
 more-itertools==9.1.0
+multiprocess==0.70.14
 nest-asyncio==1.5.6
 numpy==1.24.2
 openpyxl==3.1.2
 orjson==3.8.10
-packaging==23.0
+packaging==21.3
 pandas==1.5.3
 parso==0.8.3
 patsy==0.5.3
@@ -58,6 +61,7 @@ prompt-toolkit==3.0.38
 psutil==5.9.5
 pure-eval==0.2.2
 Pygments==2.15.1
+Pympler==1.0.1
 pyparsing==3.0.9
 python-dateutil==2.8.2
 pytz==2022.7.1

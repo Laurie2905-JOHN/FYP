@@ -5,6 +5,7 @@ import dash_uploader as du
 import dash
 from dash import html, dash_table
 from dash.dependencies import Input, Output, State
+from pympler import asizeof
 
 def cal_velocity(file_name, BarnFilePath):
 
@@ -97,5 +98,5 @@ def cal_velocity(file_name, BarnFilePath):
 
     return prb_final
 
-prb = cal_velocity('test', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Mon1527.txt')
-print(prb)
+prb = cal_velocity('test', r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\BARNACLE DATA\output.txt')
+print(asizeof.asizeof(prb))
