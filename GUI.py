@@ -1083,8 +1083,10 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
 
                 # Delete selected data
                 for value in filenames:
+                    i = upload_filename.index(value)
                     upload_filename.remove(value)
-                    upload_filepath = []
+                    del upload_filepath[i]
+
 
                 filename_filepath_data = [upload_filename, upload_filepath]
 
@@ -1152,9 +1154,11 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
                 upload_filename = filename_filepath_data[0]
                 upload_filepath = filename_filepath_data[1]
 
+                # Delete selected data
                 for value in filenames:
+                    i = upload_filename.index(value)
                     upload_filename.remove(value)
-                    upload_filepath = []
+                    del upload_filepath[i]
 
                 filename_filepath_data = [upload_filename, upload_filepath]
 
