@@ -28,6 +28,9 @@ import dash_uploader as du
 import dash
 from dash import html, dash_table
 from dash.dependencies import Input, Output, State
+from flask_caching.backends import FileSystemCache
+from dash_extensions.callback import CallbackCache, Trigger
+
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
@@ -139,12 +142,10 @@ def cal_velocity(BarnFilePath, cal_data, SF):
     return prb_final
 
 
-
 # Create the Dash app object
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-cache = diskcache.Cache("./cache")
-background_callback_manager = DiskcacheManager(cache)
+
 
 # Define the layout of the app
 app.layout = dbc.Container([
@@ -641,10 +642,14 @@ dbc.Col([
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
+    dcc.Loading(dcc.Store(id="store"), fullscreen=True, type="dot"),
     dcc.Store(id='filename_filepath', storage_type='session'),
     dcc.Store(id='Cal_storage', storage_type='local'),
 
 ])
+
+# Create (server side) cache. Works with any flask caching backend.
+cc = CallbackCache(cache=FileSystemCache(cache_dir="cache"))
 
 @ app.callback(
     Output(component_id='calAlert', component_property='children'),
@@ -801,10 +806,7 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
 
         else:
 
-            prb = data[0]
-
             t = np.array(prb[chosen_file]['t'])
-
             x = np.array(prb[chosen_file]['Ux'])
             y = np.array(prb[chosen_file]['Uy'])
             z = np.array(prb[chosen_file]['Uz'])
@@ -862,11 +864,13 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
             if table_data is None:
                 table_data = []
 
+            i = data[0].index(chosen_file)
+
             new_data = [
                 {
                 'FileName': chosen_file,
-                'CalFile': data[3],
-                'SF': data[2],
+                'CalFile': data[2][i],
+                'SF': data[1][i],
                 'Time_1': small_TI,
                 'Time_2': big_TI,
                 'Ux': round(Ux,6),
@@ -989,8 +993,9 @@ def clear_upload(n_clicks):
 
 
 
-# Callback to analyse and update data
-@ app.callback(
+
+
+@cc.cached_callback(
     [Output(component_id='filestorage', component_property='data', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
@@ -1002,9 +1007,6 @@ def clear_upload(n_clicks):
     State(component_id='Sample_rate', component_property='value'),
     State(component_id='filestorage', component_property='data'),
     State(component_id="upload_file_checklist", component_property='value')],
-    background=True,
-    manager=background_callback_manager,
-    prevent_initial_call = True,
 )
 
 def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
@@ -1014,7 +1016,7 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
 
         # Initialise data dictionary if it is None
         if data is None:
-            data = [{}, []]
+            data = [[],[],[]]
 
         # Check if no files were uploaded
         if filenames is None or filenames == []:
@@ -1038,8 +1040,7 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
 
         else:
 
-            prb = data[0] # Get existing data dictionary
-            Oldfilenames = data[1] # Get existing file names
+            Oldfilenames = data[0] # Get existing file names
 
             combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
 
@@ -1064,14 +1065,11 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
                     # Check if file name is not in the list of names that don't have 'txt' in them
                     if value not in contain_text:
 
-                        # Try to process the file
                         try:
-                            prb[value] = {value: {}}
-                            prb[value] = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
-
+                            Barn_data[value] = {value: {}}
+                            Barn_data[value] = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
                             new_value.append(value)
                             combined_filenames.append(value)
-
                         # If there's an error processing the file, add it to the error list
                         except Exception as e:
                             print('cal' + e)
@@ -1080,7 +1078,7 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
             # If there are errors, return error messages
             if contain_text != [] or repeated_value != [] or error_file != []:
 
-                data = [prb, combined_filenames, SF, cal_data[0][0]]
+                data = [combined_filenames, SF, cal_data[0][0]]
 
                 color = "danger"
                 open1 = True
@@ -1157,7 +1155,7 @@ def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
 
                 open1 = True
 
-                data = [prb, combined_filenames, SF, cal_data[0][0]]
+                data = [combined_filenames, SF, cal_data[0][0]]
 
                 upload_filename = filename_filepath_data[0]
                 upload_filepath = filename_filepath_data[1]
@@ -1222,7 +1220,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     # Extract the file options from the data dictionary
-    file_options = data[1]
+    file_options = data[0]
 
     if input_id == "clear_file_checklist":
         # If the clear file checklist input triggered the callback, update the all clear checklist
@@ -1273,7 +1271,7 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
     Input(component_id='filename_filepath', component_property='data'),
     prevent_initial_call=True)
 
-def update_dropdowns(data, filename_filepath_upload_data):
+def update_dropdowns1(data, filename_filepath_upload_data):
 
     if filename_filepath_upload_data is not None:
         upload_file_checklist = filename_filepath_upload_data[0]
@@ -1292,11 +1290,12 @@ def update_dropdowns(data, filename_filepath_upload_data):
     else:
         # If the data is not None, set the dropdown options and checklists accordingly
         vect_options = ['Ux', 'Uy', 'Uz']
-        file_dropdown_options = data[1]
-        file_checklist = file_dropdown_options
-        DataDrop_TI = file_dropdown_options
-        clear_file_check = file_checklist
         vel_checklist = ['Ux', 'Uy', 'Uz', 't']
+        file_dropdown_options = data[0]
+        file_checklist = data[0]
+        DataDrop_TI = data[0]
+        clear_file_check = data[0]
+
 
     # Return the updated dropdown options and checklists
     return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI
@@ -1349,11 +1348,8 @@ def update_In(small_val, large_val):
         Input(component_id='legend_onoff', component_property='value'),
         Input(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
 
-def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, legend_data, title_data, leg, title ):
+def update_graph(data, user_inputs, user_inputs1, time_input, line_thick, legend_data, title_data, leg, title ):
 
-    # Check if data is not empty or None
-    if data is None or data == []:
-        raise PreventUpdate
 
     # If no input do not plot graphs
     if user_inputs == [] or user_inputs1 == []:
@@ -1375,7 +1371,6 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
     else:
 
         # Plotting graphs
-        df = data[0]
 
         max1 = []
 
@@ -1390,8 +1385,8 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
 
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
-                    V = df[user_input][user_input1]
-                    t = df[user_input]['t']
+                    V = Barn_data[user_input][user_input1]
+                    t = Barn_data[user_input]['t']
                     # Calculating max and min of the datasets
                     max1.append(np.round(np.amax(t)))
                     min1.append(np.round(np.amin(t)))
@@ -1414,8 +1409,8 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
             # If user inputs haven't changed
             for user_input in user_inputs:
                 for user_input1 in user_inputs1:
-                    V = np.array(df[user_input][user_input1])
-                    t = np.array(df[user_input]['t'])
+                    V = Barn_data[user_input][user_input1]
+                    t = Barn_data[user_input]['t']
                     # Calculating max and min of data set
                     max1.append(np.round(np.amax(t)))
                     min1.append(np.round(np.amin(t)))
@@ -1552,18 +1547,13 @@ def update_dropdowns(data, user_inputs, user_inputs1, time_input, line_thick, le
      Output(component_id='New_name', component_property='value'),
      Output(component_id='legend_Data', component_property='data'),
      Output(component_id='title_Data', component_property='data'),
-     Input(component_id='filestorage', component_property='data'),
      Input(component_id="dropdown_legend_update", component_property='n_clicks'),
      Input(component_id="dropdown_title_update", component_property='n_clicks'),
      Input(component_id="dropdown_clear", component_property='n_clicks'),
      State(component_id='New_name', component_property='value'),
      prevent_initial_call = True)
 
-def update_leg_title_data(data, n_click, n_clicks1, n_clicks2,  name_input):
-
-    # If data is none prevent update of app
-    if data is None:
-        raise PreventUpdate
+def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
 
     # If legend update button is pressed
     if ctx.triggered_id == 'dropdown_legend_update':
@@ -1638,9 +1628,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                 error1 = ['No data selected', "danger"]
 
             else:
-
-                # Assign values
-                prb = data[0]
 
                 # Create a dictionary of all options
                 dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
@@ -1791,7 +1778,6 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                         text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
 
 
-
         except:
 
             # If any error display message
@@ -1901,14 +1887,14 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
     # If 1 or more files being deleted
     elif len(whatclear) >= 1 and allclear != ['All']:
 
-        # Assign data
-        df1 = maindata[0]
-        df2 = maindata[1]
 
-        # Delete selected data
-        for what in whatclear:
-            del df1[what]
-            df2.remove(what)
+        # store = maindata[0]
+        #
+        # # Delete selected data
+        # for what in whatclear:
+        #     del prb[what]
+        #     del df1[what]
+        #     df2.remove(what)
 
         # Assign new data
         newmaindata = [df1, df2]
