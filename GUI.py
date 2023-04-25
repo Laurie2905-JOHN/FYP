@@ -685,7 +685,7 @@ def cal_analysis(filename, contents):
             cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
                                   cal_data.items()}]
 
-            error1 = 'File Uploaded Successfully'
+            error1 = filename[0] + ' Uploaded Successfully'
 
             color1 = 'success'
 
@@ -983,160 +983,183 @@ def clear_upload(n_clicks):
 
 
 
-# # Callback to analyse and update data
-# @ app.callback(
-#     [Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-#     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-#     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-#     Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True)],
-#     [Input(component_id='newfile', component_property='n_clicks'),
-#     State(component_id="Cal_storage", component_property='data'),
-#     State(component_id='Sample_rate', component_property='value'),
-#     State(component_id='filestorage', component_property='data'),
-#     State(component_id = 'submit_files',component_property = 'contents'),
-#     State(component_id="upload_file_checklist", component_property='value')],
-#     prevent_initial_call = True,
-# )
-#
-# def content(n_clicks,cal_data, SF, data, contents, filenames):
-#
-#     # Check if the "newfile" button was clicked
-#     if "newfile" == ctx.triggered_id:
-#
-#         # Initialise data dictionary if it is None
-#         if data is None:
-#             data = [{}, []]
-#
-#         # Check if no files were uploaded
-#         if filenames is None or filenames == []:
-#
-#             error = 'No Files Selected For Upload'
-#             color = "danger"
-#             open1 = True
-#
-#             # Return the same data if no files were uploaded
-#             data = no_update
-#
-#         elif SF is None or SF == 0:
-#
-#             error = 'No Sample Rate Selected'
-#             color = "danger"
-#             open1 = True
-#             # Return the same data if no files were uploaded
-#             data = no_update
-#
-#
-#         else:
-#
-#             prb = data[0] # Get existing data dictionary
-#             Oldfilenames = data[1] # Get existing file names
-#
-#             combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
-#
-#             new_value = [] # List of uploaded file names which aren't repeated
-#             repeated_value = [] # List of repeated file names
-#             contain_text = [] # List of file names that don't have 'txt' in them
-#             error_file = [] # List of files with invalid formats
-#
-#             # Loop through uploaded files and process them
-#             for i, value in enumerate(filenames):
-#
-#                 # Check for repeated file names
-#                 if value in combined_filenames:
-#                     repeated_value.append(value)
-#
-#                 # Check for file names without 'txt' in them
-#                 if 'txt' not in value:
-#                     contain_text.append(value)
-#
-#                 # Check if the file name is already in the combined list
-#                 if value not in combined_filenames:
-#                     # Check if file name is not in the list of names that don't have 'txt' in them
-#                     if value not in contain_text:
-#
-#                         # Try to process the file
-#                         try:
-#                             prb[value] = {value: {}}
-#                             prb[value] = cal_velocity(contents[i], filenames[i], cal_data[1], SF)
-#                             new_value.append(value)
-#                             combined_filenames.append(value)
-#
-#                         # If there's an error processing the file, add it to the error list
-#                         except Exception as e:
-#                             print('cal' + e)
-#                             error_file.append(value)
-#
-#             # If there are errors, return error messages
-#             if contain_text != [] or repeated_value != [] or error_file != []:
-#
-#                 data = [prb, combined_filenames, SF, cal_data[0][0]]
-#
-#                 color = "danger"
-#                 open1 = True
-#
-#                 error_list_complete = contain_text + repeated_value + error_file
-#
-#                 if new_value != []:
-#
-#                     error_start = 'Files (' + ', '.join(new_value) + ') uploaded.\n'
-#                     'There was an error processing files: \n ' \
-#                     '(' + ', '.join(error_list_complete) + ').'
-#
-#                 else:
-#
-#                     error_start = 'There was an error processing files: \n ' \
-#                                    '(' + ', '.join(error_list_complete) + ').'
-#
-#                 error_repeat = ' Please check : ' \
-#                                '(' + ', '.join(repeated_value) + ') are not repeated.'
-#
-#                 error_txt = ' Please check the file type of: \n' \
-#                             '(' + ', '.join(contain_text) + '). '
-#
-#                 error_process = ' Please check: \n' \
-#                             '(' + ', '.join(error_file) + ') for errors.'
-#
-#                 # If all three errors are present
-#                 if contain_text != [] and repeated_value != [] and error_file != []:
-#                     error = error_start + error_repeat + error_txt + error_process
-#
-#                 # If there are invalid file types and errors in files
-#                 elif contain_text != [] and repeated_value == [] and error_file != []:
-#                     error = error_start + error_txt + error_process
-#
-#                 # If there are invalid file types and repeated files
-#                 elif contain_text != [] and repeated_value != [] and error_file == []:
-#                     error = error_start + error_repeat + error_txt
-#
-#                 # If there are errors in files and repeated files
-#                 elif contain_text == [] and repeated_value != [] and error_file != []:
-#                     error = error_start + error_repeat + error_process
-#
-#                 # If there are invalid file types
-#                 elif contain_text != [] and repeated_value == [] and error_file == []:
-#                     error = error_start + '\n' + error_txt
-#
-#                 # If there are repeated files
-#                 elif contain_text == [] and repeated_value != [] and error_file == []:
-#                     error = error_start + '\n' + error_repeat
-#
-#                 # If there are errors in files
-#                 elif contain_text == [] and repeated_value == [] and error_file != []:
-#                     error = error_start + '\n' + error_process
-#
-#             else:
-#
-#                 # If no errors display success message
-#                 error = ', '.join(new_value) + ' uploaded'
-#
-#                 color = "success"
-#
-#                 open1 = True
-#
-#                 data = [prb, combined_filenames, SF, cal_data[0][0]]
-#
-#
-#         return data, error, color, open1
+# Callback to analyse and update data
+@ app.callback(
+    [Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='filename_filepath', component_property='data', allow_duplicate=True)],
+    [Input(component_id='newfile', component_property='n_clicks'),
+    State(component_id='filename_filepath', component_property='data'),
+    State(component_id="Cal_storage", component_property='data'),
+    State(component_id='Sample_rate', component_property='value'),
+    State(component_id='filestorage', component_property='data'),
+    State(component_id="upload_file_checklist", component_property='value')],
+    prevent_initial_call = True,
+)
+
+def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
+
+    # Check if the "newfile" button was clicked
+    if "newfile" == ctx.triggered_id:
+
+        # Initialise data dictionary if it is None
+        if data is None:
+            data = [{}, []]
+
+        # Check if no files were uploaded
+        if filenames is None or filenames == []:
+
+            error = 'No Files Selected For Upload'
+            color = "danger"
+            open1 = True
+            filename_filepath_data = no_update
+            # Return the same data if no files were uploaded
+            data = no_update
+
+        elif SF is None or SF == 0:
+
+            error = 'No Sample Rate Selected'
+            color = "danger"
+            open1 = True
+            filename_filepath_data = no_update
+            # Return the same data if no files were uploaded
+            data = no_update
+
+
+        else:
+
+            prb = data[0] # Get existing data dictionary
+            Oldfilenames = data[1] # Get existing file names
+
+            combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
+
+            new_value = [] # List of uploaded file names which aren't repeated
+            repeated_value = [] # List of repeated file names
+            contain_text = [] # List of file names that don't have 'txt' in them
+            error_file = [] # List of files with invalid formats
+
+            # Loop through uploaded files and process them
+            for i, value in enumerate(filenames):
+
+                # Check for repeated file names
+                if value in combined_filenames:
+                    repeated_value.append(value)
+
+                # Check for file names without 'txt' in them
+                if 'txt' not in value:
+                    contain_text.append(value)
+
+                # Check if the file name is already in the combined list
+                if value not in combined_filenames:
+                    # Check if file name is not in the list of names that don't have 'txt' in them
+                    if value not in contain_text:
+
+                        # Try to process the file
+                        try:
+                            prb[value] = {value: {}}
+                            prb[value] = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
+
+                            new_value.append(value)
+                            combined_filenames.append(value)
+
+                        # If there's an error processing the file, add it to the error list
+                        except Exception as e:
+                            print('cal' + e)
+                            error_file.append(value)
+
+            # If there are errors, return error messages
+            if contain_text != [] or repeated_value != [] or error_file != []:
+
+                data = [prb, combined_filenames, SF, cal_data[0][0]]
+
+                color = "danger"
+                open1 = True
+
+                # Assign data
+                upload_filename = filename_filepath_data[0]
+                upload_filepath = filename_filepath_data[1]
+
+                # Delete selected data
+                for value in filenames:
+                    upload_filename.remove(value)
+                    upload_filepath = []
+
+                filename_filepath_data = [upload_filename, upload_filepath]
+
+                error_list_complete = contain_text + repeated_value + error_file
+
+                if new_value != []:
+
+                    error_start = 'Files (' + ', '.join(new_value) + ') uploaded.\n'
+                    'There was an error processing files: \n ' \
+                    '(' + ', '.join(error_list_complete) + ').'
+
+                else:
+
+                    error_start = 'There was an error processing files: \n ' \
+                                   '(' + ', '.join(error_list_complete) + ').'
+
+                error_repeat = ' Please check files: ' \
+                               '(' + ', '.join(repeated_value) + ') are not repeated.'
+
+                error_txt = ' Please check the file type of: \n' \
+                            '(' + ', '.join(contain_text) + '). '
+
+                error_process = ' Please check: \n' \
+                            '(' + ', '.join(error_file) + ') for errors.'
+
+                # If all three errors are present
+                if contain_text != [] and repeated_value != [] and error_file != []:
+                    error = error_start + error_repeat + error_txt + error_process
+
+                # If there are invalid file types and errors in files
+                elif contain_text != [] and repeated_value == [] and error_file != []:
+                    error = error_start + error_txt + error_process
+
+                # If there are invalid file types and repeated files
+                elif contain_text != [] and repeated_value != [] and error_file == []:
+                    error = error_start + error_repeat + error_txt
+
+                # If there are errors in files and repeated files
+                elif contain_text == [] and repeated_value != [] and error_file != []:
+                    error = error_start + error_repeat + error_process
+
+                # If there are invalid file types
+                elif contain_text != [] and repeated_value == [] and error_file == []:
+                    error = error_start + '\n' + error_txt
+
+                # If there are repeated files
+                elif contain_text == [] and repeated_value != [] and error_file == []:
+                    error = error_start + '\n' + error_repeat
+
+                # If there are errors in files
+                elif contain_text == [] and repeated_value == [] and error_file != []:
+                    error = error_start + '\n' + error_process
+
+            else:
+
+                # If no errors display success message
+                error = ', '.join(new_value) + ' uploaded'
+
+                color = "success"
+
+                open1 = True
+
+                data = [prb, combined_filenames, SF, cal_data[0][0]]
+
+                upload_filename = filename_filepath_data[0]
+                upload_filepath = filename_filepath_data[1]
+
+                for value in filenames:
+                    upload_filename.remove(value)
+                    upload_filepath = []
+
+                filename_filepath_data = [upload_filename, upload_filepath]
+
+
+        return data, error, color, open1, filename_filepath_data
 
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected

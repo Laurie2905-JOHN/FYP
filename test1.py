@@ -97,4 +97,5 @@ def cal_velocity(file_name, BarnFilePath):
 
     return prb_final
 
-prb = cal_velocity('test', r'C:\Users\lauri\Desktop\7cb6e78d-e2c0-11ed-8ffc-8c554ad42726\output.txt')
+prb = cal_velocity('test', 'C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/Mon1527.txt')
+print(prb)
