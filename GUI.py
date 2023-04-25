@@ -3,7 +3,6 @@ from dash import Dash, dcc, Output, Input, ctx, State, dash_table
 from dash.dash import no_update
 from dash.exceptions import PreventUpdate
 from dash import dcc
-from dash import html
 from dash.dependencies import Input, Output, State
 import pandas as pd
 import sys
@@ -16,22 +15,13 @@ import io
 import os
 import math
 import diskcache
-from dash_extensions.enrich import DashProxy
-from dash import DiskcacheManager
 from dash.dependencies import Output, Input
-from flask_caching.backends import FileSystemCache
-from dash_extensions.callback import CallbackCache, Trigger
-from dash_extensions.callback import CallbackCache
-from pathlib import Path
-import uuid
 import dash_bootstrap_components as dbc
-import dash_uploader as du
 import dash
 from dash import html, dash_table
 
 
-cache = diskcache.Cache("./cache")
-long_callback_manager = DiskcacheLongCallbackManager(cache)
+
 
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -146,7 +136,6 @@ def cal_velocity(BarnFilePath, cal_data, SF):
 
 # Create the Dash app object
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], prevent_initial_callbacks=True)
-
 
 
 # Define the layout of the app
@@ -650,6 +639,7 @@ dbc.Col([
 ])
 
 
+
 @ app.callback(
     Output(component_id='calAlert', component_property='children'),
     Output(component_id='calAlert', component_property='color'),
@@ -770,18 +760,18 @@ def clear_table(n_clicks):
 
 # Callback to analyse and update TI table
 @ app.callback(
-    Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
+    [Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
     Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
     Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
-    Input(component_id='TI_btn_download', component_property='n_clicks'),
-    State(component_id='filestorage', component_property='data'),
+    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True)],
+    [Input(component_id='TI_btn_download', component_property='n_clicks'),
+    Input(component_id='store', component_property='data'),
     State(component_id='DataSet_TI', component_property='value'),
     State(component_id="small_t_TI", component_property='value'),
     State(component_id="big_t_TI", component_property='value'),
     State(component_id='TI_Table', component_property='data'),
-    State(component_id='TI_Table', component_property='columns'),
-    prevent_initial_call=True)
+    State(component_id='TI_Table', component_property='columns')])
+
 
 def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, column_data):
 
@@ -804,14 +794,13 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
             table_data = no_update
 
         else:
+            t = data[chosen_file]['t']
+            x = data[chosen_file]['Ux']
+            y = data[chosen_file]['Uy']
+            z = data[chosen_file]['Uz']
 
-            t = np.array(prb[chosen_file]['t'])
-            x = np.array(prb[chosen_file]['Ux'])
-            y = np.array(prb[chosen_file]['Uy'])
-            z = np.array(prb[chosen_file]['Uz'])
-
-            max1 = np.amax(np.array(prb[chosen_file]['t']))
-            min1 = np.amin(np.array(prb[chosen_file]['t']))
+            max1 = np.amax(np.array(data[chosen_file]['t']))
+            min1 = np.amin(np.array(data[chosen_file]['t']))
 
 
             # Error messages
@@ -991,9 +980,7 @@ def clear_upload(n_clicks):
         return filepath_input, clear_filename_filepath_data, error, color1, open1
 
 
-
-
-@app.callback(
+@ app.callback(
     [
     Output(component_id='filestorage', component_property='data', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
@@ -1005,7 +992,7 @@ def clear_upload(n_clicks):
     State(component_id="Cal_storage", component_property='data'),
     State(component_id='Sample_rate', component_property='value'),
     State(component_id='filestorage', component_property='data'),
-    State(component_id="upload_file_checklist", component_property='value')],  manager=long_callback_manager,
+    State(component_id="upload_file_checklist", component_property='value')],
 )
 
 def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
