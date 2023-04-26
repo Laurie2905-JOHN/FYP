@@ -669,13 +669,12 @@ def update_Workspace(n_clicks, Workspace_input):
             color1 = 'danger'
             open1 = True
             Workspace_data = no_update
+            Workspace_input = None
 
         else:
 
             Workspace_input2 = Workspace_input.replace("\\", "/")
             Workspace_input3 = Workspace_input2.replace('"', "")
-
-            print(os.path.exists(Workspace_input3))
 
             if not os.path.exists(Workspace_input3):
                 error = 'Please Check Filepath'
@@ -683,7 +682,7 @@ def update_Workspace(n_clicks, Workspace_input):
                 open1 = True
                 Workspace_data = no_update
             else:
-                error = 'Workspace Uploaded'
+                error = 'Workspace Updated'
                 color1 = 'success'
                 open1 = True
                 Workspace_data = Workspace_input3
@@ -698,28 +697,47 @@ def update_Workspace(n_clicks, Workspace_input):
         Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
         Input(component_id='Workspace_clear', component_property='n_clicks'),
+        State(component_id='Workspace_store', component_property='data'),
         prevent_initial_call = True)
 
-def clear_upload(n_clicks):
+def clear_Workspace(n_clicks,Workspace_data):
 
-    if ctx.triggered_id == 'dropdown_BARN_clear':
+    if ctx.triggered_id == 'Workspace_clear':
+        if Workspace_data is None:
+            error = 'No Workspace Selected to Clear'
+            color1 = 'danger'
+            Workspace_input = ''
+            Workspace_Clear_data = False
 
-        filepath_input = ''
-        error = 'Workspace Cleared'
-        color1 = 'primary'
-        open1 = True
-        clear_filename_filepath_data = True
+        else:
 
-        path = r"E:\demos\files\reports\\"
-        for file_name in os.listdir(path):
-            # construct full file path
-            file = path + file_name
-            if os.path.isfile(file):
-                deleted_files.join(',')
-                print('Deleted file:', file)
-                os.remove(file)
+            color1 = 'success'
+            path = Workspace_data
+            deleted_files = []
 
-        return filepath_input, clear_filename_filepath_data, error, color1, open1
+            for file_name in os.listdir(path):
+                # construct full file path
+                file = path + '/' + file_name
+                if os.path.isfile(file):
+                    deleted_files.append(file_name)
+                    print('Deleted file:', file)
+                    os.remove(file)
+                print(file)
+
+            Workspace_Clear_data = True
+            Workspace_input = ''
+
+            if deleted_files == []:
+
+                error = 'Workspace Data Cleared'
+
+            else:
+
+                error = 'Workspace Cleared. ' + ', '.join(deleted_files) + ' removed.'
+
+        return Workspace_input, Workspace_Clear_data, error, color1, True
+    else:
+        raise PreventUpdate
 
 @ app.callback(
     Output(component_id='calAlert', component_property='children'),
