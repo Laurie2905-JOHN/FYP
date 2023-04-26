@@ -1161,16 +1161,8 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
 def update_In(small_val, large_val):
     # If both inputs are None, prevent update
-    if large_val is None and small_val is None:
+    if large_val is None or small_val is None:
         raise PreventUpdate
-
-    # If large input is None, set it to 0
-    if large_val is None:
-        large_val = 0
-
-    # If small input is None, set it to 0
-    if small_val is None:
-        small_val = 0
 
     # If large input is less than small input, set large input equal to small input
     if large_val < small_val:
@@ -1218,17 +1210,9 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
     if "TI_btn_download" == ctx.triggered_id:
 
-        if small_TI is None or big_TI is None or chosen_file is None:
+        if chosen_file is None:
 
-            error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check you have selected a time range and a dataset'
-
-            error_col = 'danger'
-
-            table_data = no_update
-
-        elif small_TI == big_TI:
-
-            error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
+            error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check you have selected a dataset'
 
             error_col = 'danger'
 
@@ -1236,109 +1220,120 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
         else:
 
+            if small_TI or big_TI is not None:
 
-            def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                filepath = os.path.join(folder_path, filename)
-                mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+                if small_TI == big_TI:
 
-                if row_numbers == 'all':
-                    loaded_data = mapped_data[:]
-                else:
-                    loaded_data = mapped_data[row_numbers]
+                    error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
 
-                return loaded_data
+                    error_col = 'danger'
 
-            i = file_data[0].index(chosen_file)
-
-
-            shape_dtype = file_data[1][i]
-            shape, dtype = shape_dtype
-
-            Workspace_data = file_data[4][i]
-
-            t = load_array_memmap('t.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = 'all')
-
-            max1 = np.amax(t)
-            min1 = np.amin(t)
-
-            # Error messages
-            smallt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum time limit because the inputted time ' \
-                                                                'is outside the available range. Please adjust your time limit accordingly.'
-
-
-            bigt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the maximum time limit because the inputted time ' \
-                                                                'is outside the available range. Please adjust your time limit accordingly.'
-
-            both_t_error ='TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
-                                                               'are outside the available range. Please adjust your time limit accordingly.'
-
-            both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED'
-
-            # # Cut data based on conditions
-            # if small_TI is None:
-            #     small_TI = min1
-            #
-            # if big_TI is None:
-            #     big_TI = max1
-            #     error = 'File has been cut to the maximum limit'
-
-            if small_TI < min1 and big_TI > max1:
-                small_TI = min1
-                big_TI = max1
-                error = both_t_error
-                error_col = 'primary'
-                mask = (t >= min1) & (t <= max1)
-
-            elif small_TI < min1:
-                small_TI = min1
-                error = smallt_error
-                error_col = 'primary'
-                mask = (t >= min1)
-
-            elif big_TI > max1:
-                big_TI = max1
-                error = bigt_error
-                error_col = 'primary'
-                mask = (t <= max1)
+                    table_data = no_update
 
             else:
-                mask = (t >= small_TI) & (t < big_TI)
-                error_col = 'success'
-                error = both_t_NO_error
 
-            row_numbers = np.where(mask)[0].tolist()
+                def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                    filepath = os.path.join(folder_path, filename)
+                    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
 
-            ux = load_array_memmap('Ux.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-            uy = load_array_memmap('Uy.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-            uz = load_array_memmap('Uz.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+                    if row_numbers == 'all':
+                        loaded_data = mapped_data[:]
+                    else:
+                        loaded_data = mapped_data[row_numbers]
 
-            TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
+                    return loaded_data
+
+                i = file_data[0].index(chosen_file)
 
 
-            if table_data is None:
-                table_data = []
+                shape_dtype = file_data[1][i]
+                shape, dtype = shape_dtype
 
-            i = file_data[0].index(chosen_file)
+                Workspace_data = file_data[4][i]
 
-            print(file_data)
+                t = load_array_memmap('t.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = 'all')
 
-            new_data = [
-                {
-                'FileName': chosen_file,
-                'CalFile': file_data[2][i],
-                'SF': file_data[3][i],
-                'Time_1': small_TI,
-                'Time_2': big_TI,
-                'Ux': round(Ux,6),
-                'Uy': round(Uy,6),
-                'Uz': round(Uz,6),
-                'U1': round(U1,6),
-                'TI': round(TI,6),
-            }
+                max1 = np.amax(t)
+                min1 = np.amin(t)
 
-            ]
+                # Error messages
+                smallt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum time limit because the inputted time ' \
+                                                                    'is outside the available range. Please adjust your time limit accordingly.'
 
-            table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
+
+                bigt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the maximum time limit because the inputted time ' \
+                                                                    'is outside the available range. Please adjust your time limit accordingly.'
+
+                both_t_error ='TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
+                                                                   'are outside the available range. Please adjust your time limit accordingly.'
+
+                both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED'
+
+                # Cut data based on conditions
+                if small_TI is None and big_TI is None:
+                    big_TI = max1
+                    small_TI = min1
+                    error = both_t_error
+
+                elif small_TI is None:
+                    small_TI = min1
+                    error = smallt_error
+
+                elif big_TI is None:
+                    big_TI = max1
+                    error = bigt_error
+
+                elif small_TI < min1 and big_TI > max1:
+                    small_TI = min1
+                    big_TI = max1
+                    error = both_t_error
+
+                elif small_TI < min1:
+                    small_TI = min1
+                    error = smallt_error
+
+
+                elif big_TI > max1:
+                    big_TI = max1
+                    error = bigt_error
+
+                else:
+
+                    error = both_t_NO_error
+
+                mask = (t >= small_TI) & (t <= big_TI)
+                error_col = 'primary'
+                row_numbers = np.where(mask)[0].tolist()
+
+                ux = load_array_memmap('Ux.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+                uy = load_array_memmap('Uy.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+                uz = load_array_memmap('Uz.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+
+                TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
+
+
+                if table_data is None:
+                    table_data = []
+
+                i = file_data[0].index(chosen_file)
+
+                new_data = [
+                    {
+                    'FileName': chosen_file,
+                    'CalFile': file_data[2][i],
+                    'SF': file_data[3][i],
+                    'Time_1': round(small_TI,2),
+                    'Time_2': round(big_TI,2),
+                    'Ux': round(Ux,6),
+                    'Uy': round(Uy,6),
+                    'Uz': round(Uz,6),
+                    'U1': round(U1,6),
+                    'TI': round(TI,6),
+                }
+
+                ]
+
+                table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
 
         return table_data, error, error_col, True
 

@@ -23,26 +23,23 @@ if not os.path.exists(folder_path):
 # np.savez_compressed(file_path, data1=data1, data2=data2)
 
 # Load the arrays from the file
-
-folder_path = r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace'
-file_name = 'Example 1.npz'
-file_path = os.path.join(folder_path, file_name)
-
 # loaded_data = np.load(file_path)
 #
 # print(loaded_data['Mon1527'])
 
+import numpy as np
 import matplotlib.pyplot as plt
 
-def load_array_memmap(filename, folder_path, dtype=np.float64, shape=(4966,)):
+def load_array_memmap(filename, folder_path, dtype=np.float64, shape=4966):
     filepath = os.path.join(folder_path, filename)
-    return np.memmap(filepath, mode='r')
+    return np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
 
 x = load_array_memmap('t.dat', r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace\Example 2')
 y = load_array_memmap('Ux.dat', r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace\Example 2')
 
 fig, axs = plt.subplots(1, 1)
 axs.plot(x, y, 'k')
-print(x)
+print(x[:])
 
+plt.show()
 plt.show()
