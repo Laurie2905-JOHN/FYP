@@ -990,7 +990,7 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, data, filenam
 
         # Initialise data dictionary if it is None
         if data is None:
-            data = [[],[],[]]
+            data = [[],[],[],[],[]]
 
         # Check if no files were uploaded
         if filenames is None or filenames == []:
@@ -1022,9 +1022,9 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, data, filenam
         else:
 
             Oldfilenames = data[0] # Get existing file names
-
+            old_dtype_shape = data[1]
             combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
-
+            combined_dtype_shape = old_dtype_shape.copy()
             new_value = [] # List of uploaded file names which aren't repeated
             repeated_value = [] # List of repeated file names
             error_file = [] # List of files with invalid formats
@@ -1032,11 +1032,12 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, data, filenam
 
             def save_array_memmap(array, filename, folder_path):
                 filepath = os.path.join(folder_path, filename)
-                dtype = array.dtype
+                dtype = str(array.dtype)
                 shape = array.shape
                 array_memmap = np.memmap(filepath, dtype=dtype, shape = shape, mode='w+')
                 array_memmap[:] = array[:]
                 del array_memmap
+                return shape, dtype
 
             for i, value in enumerate(filenames):
                 # Check if the file name is already in the combined list
@@ -1053,24 +1054,27 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, data, filenam
 
                         os.makedirs(file_path, exist_ok=True)
 
+
+
                         save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
                         save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
                         save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
                         save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
-                        save_array_memmap(Barn_data['t'], 't.dat', file_path)
+                        shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
 
                         new_value.append(value)
-
                         combined_filenames.append(value)
+                        combined_dtype_shape.append(shape_dtype)
 
                     # If there's an error processing the file, add it to the error list
                     except Exception as e:
                         print('cal' + e)
                         error_file.append(value)
                 else:
+
                     repeated_value.append(value)
 
-            data = [combined_filenames, SF, cal_data[0][0]]
+            data = [combined_filenames, combined_dtype_shape, Workspace_data, SF, cal_data[0][0]]
 
             upload_filename = filename_filepath_data[0]
             upload_filepath = filename_filepath_data[1]
@@ -1089,7 +1093,7 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, data, filenam
 
                 error_list_complete = repeated_value + error_file
 
-                if new_value != []:
+                if new_value == []:
 
                     error_start = 'There was an error processing all files: \n ' \
                     '(' + ', '.join(error_list_complete) + ').'
@@ -1125,7 +1129,7 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, data, filenam
             else:
 
                 # If no errors display success message
-                error = ', '.join(new_value) + ' uploaded'
+                error = ', '.join(new_value) + ' processed'
 
                 color = "success"
 
@@ -1187,6 +1191,7 @@ def clear_table(n_clicks):
     Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
     Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True)],
     [Input(component_id='TI_btn_download', component_property='n_clicks'),
+    State(component_id='filestorage', component_property='data'),
     State(component_id='DataSet_TI', component_property='value'),
     State(component_id="small_t_TI", component_property='value'),
     State(component_id="big_t_TI", component_property='value'),
@@ -1194,7 +1199,7 @@ def clear_table(n_clicks):
     State(component_id='TI_Table', component_property='columns')])
 
 
-def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, column_data):
+def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data, column_data):
 
     if "TI_btn_download" == ctx.triggered_id:
 
@@ -1216,16 +1221,29 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
 
         else:
 
-            t = data[chosen_file]['t']
-            x = data[chosen_file]['Ux']
-            y = data[chosen_file]['Uy']
-            z = data[chosen_file]['Uz']
 
-            max1 = np.amax(np.array(data[chosen_file]['t']))
-            min1 = np.amin(np.array(data[chosen_file]['t']))
+            def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                filepath = os.path.join(folder_path, filename)
+                mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
 
+                if row_numbers == 'all':
+                    loaded_data = mapped_data[:]
+                else:
+                    loaded_data = mapped_data[row_numbers]
 
+                return loaded_data
 
+            i = file_data[0].index(chosen_file)
+
+            shape_dtype = file_data[1][i]
+            shape, dtype = shape_dtype
+
+            Workspace_data = file_data[2][i]
+
+            t = load_array_memmap(os.join(chosen_file,'.dat'),Workspace_data, dtype= dtype, shape= shape, row_numbers = 'all')
+
+            max1 = np.amax(t)
+            min1 = np.amin(t)
 
             # Error messages
             smallt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum time limit because the inputted time ' \
@@ -1265,38 +1283,50 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
                 error_col = 'success'
                 error = both_t_NO_error
 
-            x1 = x[mask]
-            y1 = y[mask]
-            z1 = z[mask]
+            print(mask)
 
-            [TI, U1, Ux, Uy, Uz] = calculate_turbulence_intensity(x1, y1, z1)
+            #  = load_array_memmap(chosen_file + '.dat', os.path.join(Workspace_data, chosen_file + '.dat'),
+            #                       dtype=t_dtype, shape=t_shape)
+            #
+            # t = load_array_memmap(chosen_file + '.dat', os.path.join(Workspace_data, chosen_file + '.dat'),
+            #                       dtype=t_dtype, shape=t_shape)
+            #
+            # t = load_array_memmap(chosen_file + '.dat', os.path.join(Workspace_data, chosen_file + '.dat'),
+            #                       dtype=t_dtype, shape=t_shape)
+            #
+            # t = load_array_memmap(chosen_file + '.dat', os.path.join(Workspace_data, chosen_file + '.dat'),
+            #                       dtype=t_dtype, shape=t_shape)
+
+            # [TI, U1, Ux, Uy, Uz] = calculate_turbulence_intensity(x1, y1, z1)
 
 
-            if table_data is None:
-                table_data = []
-
-            i = data[0].index(chosen_file)
-
-            new_data = [
-                {
-                'FileName': chosen_file,
-                'CalFile': data[2][i],
-                'SF': data[1][i],
-                'Time_1': small_TI,
-                'Time_2': big_TI,
-                'Ux': round(Ux,6),
-                'Uy': round(Uy,6),
-                'Uz': round(Uz,6),
-                'U1': round(U1,6),
-                'TI': round(TI,6),
-            }
-
-            ]
-
-            table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
+            # if table_data is None:
+            #     table_data = []
+            #
+            # i = data[0].index(chosen_file)
+            #
+            # new_data = [
+            #     {
+            #     'FileName': chosen_file,
+            #     'CalFile': data[4][i],
+            #     'SF': data[2][i],
+            #     'Time_1': small_TI,
+            #     'Time_2': big_TI,
+            #     'Ux': round(Ux,6),
+            #     'Uy': round(Uy,6),
+            #     'Uz': round(Uz,6),
+            #     'U1': round(U1,6),
+            #     'TI': round(TI,6),
+            # }
+            #
+            # ]
+            #
+            # table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
 
         return table_data, error, error_col, True
 
+#
+# data = [combined_filenames, combined_dtype_shape, Workspace_data, SF, cal_data[0][0]]
 
 # # Callback which updates the graph based on graph options
 # @app.callback(

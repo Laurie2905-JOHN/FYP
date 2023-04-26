@@ -34,15 +34,15 @@ file_path = os.path.join(folder_path, file_name)
 
 import matplotlib.pyplot as plt
 
-x = np.load(file_path)
-print(x)
-for k in x.keys():
-    print(k)
+def load_array_memmap(filename, folder_path, dtype=np.float64, shape=(4966,)):
+    filepath = os.path.join(folder_path, filename)
+    return np.memmap(filepath, mode='r')
 
-fig, axs = plt.subplots(4, 1)
-axs[0].plot(x['t'], x['Ux'], 'k')
-axs[1].plot(x['t'], x['Uy'], 'r')
-axs[2].plot(x['t'], x ['Uz'], 'r')
-axs[3].plot(x['t'], x['U1'], 'r')
+x = load_array_memmap('t.dat', r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace\Example 2')
+y = load_array_memmap('Ux.dat', r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace\Example 2')
+
+fig, axs = plt.subplots(1, 1)
+axs.plot(x, y, 'k')
+print(x)
 
 plt.show()
