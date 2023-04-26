@@ -19,7 +19,7 @@ from dash.dependencies import Output, Input
 import dash_bootstrap_components as dbc
 import dash
 from dash import html, dash_table
-
+import shutil
 
 
 
@@ -734,17 +734,21 @@ def clear_Workspace(n_clicks,Workspace_data):
         else:
 
             color1 = 'success'
-            path = Workspace_data
             deleted_files = []
 
-            for file_name in os.listdir(path):
-                # construct full file path
-                file = path + '/' + file_name
-                if os.path.isfile(file):
-                    deleted_files.append(file_name)
-                    print('Deleted file:', file)
-                    os.remove(file)
-                print(file)
+            for file_name in os.listdir(Workspace_data):
+                path = os.path.join(Workspace_data,file_name)
+                try:
+                    if os.path.isfile(path):
+                        # delete the file
+                        os.remove(path)
+                        deleted_files.append(file_name)
+                    elif os.path.isdir(path):
+                        # delete the folder and its contents recursively
+                        shutil.rmtree(path)
+                        deleted_files.append(file_name)
+                except Exception as e:
+                    print(f"Error deleting {path}: {e}")
 
             Workspace_Clear_data = True
             Workspace_input = ''
