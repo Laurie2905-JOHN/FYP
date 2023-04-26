@@ -691,12 +691,11 @@ def update_Workspace(n_clicks, Workspace_input):
             color1 = 'danger'
             open1 = True
             Workspace_data = no_update
-            Workspace_input = None
 
         else:
 
-            Workspace_input2 = Workspace_input.replace("\\", "/")
-            Workspace_input3 = Workspace_input2.replace('"', "")
+            Workspace_input2 = Workspace_input.replace('"', "")
+            Workspace_input3 = os.path.normpath(Workspace_input2)
 
             if not os.path.exists(Workspace_input3):
                 error = 'Please Check Filepath'
@@ -882,8 +881,9 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
 
         else:
 
-            filepath2 = filepath1.replace("\\", "/")
-            filepath = filepath2.replace('"', "")
+            filepath2 = filepath1.replace('"', "")
+            filepath = os.path.normpath(filepath2)
+
             filename1 = os.path.basename(filepath)
             filename = os.path.splitext(filename1)[0]
 
@@ -1025,13 +1025,13 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
             old_dtype_shape = file_data[1]
             Old_calData = file_data[2]
             Old_SF = file_data[3]
-            Old_Workspace = file_data[4]
+            Old_filepath = file_data[4]
 
             combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
             combined_dtype_shape = old_dtype_shape.copy()
             combined_CalData = Old_calData.copy() # Make a copy of existing file names
             combined_SF = Old_SF.copy()
-            combined_Workspace = Old_Workspace.copy() # Make a copy of existing file names
+            combined_filepath = Old_filepath.copy() # Make a copy of existing file names
 
 
 
@@ -1050,6 +1050,17 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
                 del array_memmap
                 return shape, dtype
 
+            def get_unique_path(base_path, name):
+                counter = 1
+                new_name = name
+
+                while os.path.exists(os.path.join(base_path, new_name)):
+                    new_name = f"{name} ({counter})"
+                    counter += 1
+
+                return os.path.normpath(os.path.join(base_path, new_name))
+
+
             for i, value in enumerate(filenames):
                 # Check if the file name is already in the combined list
                 if value not in combined_filenames:
@@ -1057,14 +1068,9 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
                         Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
 
-                        file_path = os.path.join(Workspace_data,value)
-
-                        if os.path.exists(file_path):
-                            filename2 = value + '_copy'
-                            file_path = os.path.join(Workspace_data, filename2)
+                        file_path = get_unique_path(Workspace_data, value)
 
                         os.makedirs(file_path, exist_ok=True)
-
 
 
                         save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
@@ -1078,7 +1084,7 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
                         combined_dtype_shape.append(shape_dtype)
                         combined_CalData.append(cal_data[0][0])
                         combined_SF.append(SF)
-                        combined_Workspace.append(Workspace_data)
+                        combined_filepath.append(file_path)
 
                     # If there's an error processing the file, add it to the error list
                     except Exception as e:
@@ -1088,7 +1094,7 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
                     repeated_value.append(value)
 
-            file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_Workspace]
+            file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath]
 
 
             upload_filename = filename_filepath_data[0]
@@ -1220,17 +1226,16 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
         else:
 
-            if small_TI or big_TI is not None:
+            if small_TI == big_TI and small_TI is not None and big_TI is not None:
 
-                if small_TI == big_TI:
+                error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
 
-                    error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
+                error_col = 'danger'
 
-                    error_col = 'danger'
-
-                    table_data = no_update
+                table_data = no_update
 
             else:
+
 
                 def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
                     filepath = os.path.join(folder_path, filename)
@@ -1247,11 +1252,12 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
 
                 shape_dtype = file_data[1][i]
+
                 shape, dtype = shape_dtype
 
-                Workspace_data = file_data[4][i]
+                file_path = file_data[4][i]
 
-                t = load_array_memmap('t.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = 'all')
+                t = load_array_memmap('t.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = 'all')
 
                 max1 = np.amax(t)
                 min1 = np.amin(t)
@@ -1275,39 +1281,40 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                     small_TI = min1
                     error = both_t_error
 
-                elif small_TI is None:
+                elif small_TI is None and big_TI is not None:
                     small_TI = min1
                     error = smallt_error
 
-                elif big_TI is None:
-                    big_TI = max1
-                    error = bigt_error
-
-                elif small_TI < min1 and big_TI > max1:
-                    small_TI = min1
-                    big_TI = max1
-                    error = both_t_error
-
-                elif small_TI < min1:
-                    small_TI = min1
-                    error = smallt_error
-
-
-                elif big_TI > max1:
+                elif big_TI is None and small_TI is not None:
                     big_TI = max1
                     error = bigt_error
 
                 else:
 
-                    error = both_t_NO_error
+                    if small_TI < min1 and big_TI > max1:
+                        small_TI = min1
+                        big_TI = max1
+                        error = both_t_error
+
+                    elif small_TI < min1:
+                        small_TI = min1
+                        error = smallt_error
+
+
+                    elif big_TI > max1:
+                        big_TI = max1
+                        error = bigt_error
+
+                    else:
+                        error = both_t_NO_error
 
                 mask = (t >= small_TI) & (t <= big_TI)
                 error_col = 'primary'
                 row_numbers = np.where(mask)[0].tolist()
 
-                ux = load_array_memmap('Ux.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-                uy = load_array_memmap('Uy.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-                uz = load_array_memmap('Uz.dat',os.path.join(Workspace_data, chosen_file), dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+                ux = load_array_memmap('Ux.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+                uy = load_array_memmap('Uy.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+                uz = load_array_memmap('Uz.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
 
                 TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
 
