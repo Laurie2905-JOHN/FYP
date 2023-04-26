@@ -1782,7 +1782,10 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                 # Concatenate the arrays vertically
                 concatenated_array = np.column_stack(numpy_vect_data)
 
-                concatenated_array1 = np.concatenate((np.array([vector_value]), concatenated_array))
+                print(np.array([vector_value]))
+                print(concatenated_array)
+
+                concatenated_array1 = np.concatenate((np.array(vector_value), concatenated_array))
 
                 # Assigning filenames
                 if selected_name is None or selected_name == '':
