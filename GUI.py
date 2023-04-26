@@ -396,7 +396,7 @@ dash_table.DataTable(id = 'TI_Table',
 
         # Column for "Upload/Clear Files" title
         dbc.Col(
-            html.H5('Upload BARNACLE Files', className='center-text'),
+            html.H5('File Upload', className='center-text'),
             width=12,
             className="text-center"
         ),
@@ -417,7 +417,22 @@ dash_table.DataTable(id = 'TI_Table',
             ),
         ], width=12),
 
-    dbc.Col(
+        # Column for "Upload/Clear Files" title
+        dbc.Col(
+            html.H5('Workspace', className='center-text'),
+            width=12,
+            className="text-center"
+        ),
+
+        dbc.Col([
+            dbc.Alert(
+                id="Workspace_alert",
+                is_open=False,
+                class_name='text-center'
+            ),
+        ], width=10),
+
+        dbc.Col(
         dbc.InputGroup([
             # Dropdown menu for selecting the update action
             dbc.DropdownMenu([
@@ -436,6 +451,12 @@ dash_table.DataTable(id = 'TI_Table',
 
         ]),
     width =11, class_name = 'mb-3'),
+
+        # Horizontal line
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
 
         dbc.Col(
 
@@ -738,6 +759,24 @@ def clear_Workspace(n_clicks,Workspace_data):
         return Workspace_input, Workspace_Clear_data, error, color1, True
     else:
         raise PreventUpdate
+
+
+@app.callback(
+    Output(component_id='Workspace_alert', component_property='children'),
+    Output(component_id='Workspace_alert', component_property='color'),
+    Output(component_id='Workspace_alert', component_property='is_open'),
+    Input(component_id="Workspace_store", component_property='data'),
+)
+def update_Workspace_Alert(Workspace_data):
+
+    if Workspace_data is None:
+        alert_work = 'No Workspace Selected'
+        color1 = 'danger'
+    else:
+        alert_work = Workspace_data + ' Selected'
+        color1 = 'primary'
+
+    return alert_work, color1, True
 
 @ app.callback(
     Output(component_id='calAlert', component_property='children'),
