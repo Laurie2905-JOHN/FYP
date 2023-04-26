@@ -401,12 +401,6 @@ dash_table.DataTable(id = 'TI_Table',
             className="text-center"
         ),
 
-        # Horizontal line
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),
-
         # Column for alert message (hidden by default)
         dbc.Col([
             dbc.Alert(
@@ -416,6 +410,13 @@ dash_table.DataTable(id = 'TI_Table',
                 duration=30000
             ),
         ], width=12),
+
+        # Horizontal line
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
+
 
         # Column for "Upload/Clear Files" title
         dbc.Col(
@@ -668,7 +669,7 @@ dbc.Col([
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
     dcc.Store(id='filename_filepath', storage_type='session'),
-    dcc.Store(id='Workspace_store', storage_type='memory'),
+    dcc.Store(id='Workspace_store', storage_type='local'),
     dcc.Store(id='Cal_storage', storage_type='local'),
 ])
 
@@ -773,7 +774,7 @@ def update_Workspace_Alert(Workspace_data):
         alert_work = 'No Workspace Selected'
         color1 = 'danger'
     else:
-        alert_work = Workspace_data + ' Selected'
+        alert_work = Workspace_data
         color1 = 'primary'
 
     return alert_work, color1, True
@@ -848,6 +849,285 @@ def cal_analysis(filename, contents):
 
     return cal_data, error1, color1, True
 
+
+
+# Call back to update upload file checklist once files are selected
+@app.callback(
+        Output(component_id='submit_files', component_property='value'),
+        Output(component_id='filename_filepath', component_property='data'),
+        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id = 'dropdown_BARN_update', component_property ='n_clicks'),
+        Input(component_id='dropdown_BARN_clear', component_property='n_clicks'),
+        State(component_id='submit_files', component_property='value'),
+        State(component_id='filename_filepath', component_property='data'),
+        prevent_initial_call = True)
+
+def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_filepath_data):
+
+
+    if ctx.triggered_id == 'dropdown_BARN_update':
+
+        if filepath1 is None or filepath1 == '':
+            error = 'No Filepath Inputted. Please Check'
+            color1 = 'danger'
+            open1 = True
+            filepath_input = ''
+            filename_filepath_data = no_update
+
+        else:
+
+            filepath2 = filepath1.replace("\\", "/")
+            filepath = filepath2.replace('"', "")
+            filename1 = os.path.basename(filepath)
+            filename = os.path.splitext(filename1)[0]
+
+            if os.path.isfile(filepath)==False:
+                error = 'Please Check Filepath'
+                color1 = 'danger'
+                open1 = True
+                filepath_input = no_update
+                filename_filepath_data = no_update
+
+            elif os.path.splitext(filename1)[1] != '.txt':
+                    error = ' Please upload .txt files'
+                    color1 = 'danger'
+                    open1 = True
+                    filepath_input = ''
+                    filename_filepath_data = no_update
+
+            else:
+
+                if filename_filepath_data is None:
+                    filename_filepath_data = [[filename],[filepath]]
+                    error = filename + ' added'
+                    color1 = 'success'
+                    open1 = True
+                    filepath_input = ''
+
+                else:
+
+                    combined_filenames = filename_filepath_data[0].copy()
+                    combined_filepaths = filename_filepath_data[1].copy()
+                    repeated_filename = []
+
+                    for value in combined_filenames:
+                        if filename == value:
+                            repeated_filename.append(filename)
+
+                    if repeated_filename != []:
+                        error = filename + ' already exists. Please check'
+                        color1 = 'danger'
+                        open1 = True
+                        filepath_input = no_update
+                        filename_filepath_data = no_update
+                        repeated_filename = []
+
+                    else:
+                        combined_filenames.append(filename)
+                        combined_filepaths.append(filepath)
+                        error = filename + ' added'
+                        color1 = 'success'
+                        open1 = True
+                        filepath_input = ''
+                        filename_filepath_data = [combined_filenames, combined_filepaths]
+
+        return filepath_input, filename_filepath_data, error, color1, open1
+
+    else:
+        raise PreventUpdate
+
+
+
+@app.callback(
+        Output(component_id='submit_files', component_property='value', allow_duplicate=True),
+        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id='dropdown_BARN_clear', component_property='n_clicks'),
+        prevent_initial_call = True)
+
+def clear_upload(n_clicks):
+
+    if ctx.triggered_id == 'dropdown_BARN_clear':
+
+        filepath_input = ''
+        error = 'Upload Files Cleared'
+        color1 = 'primary'
+        open1 = True
+        clear_filename_filepath_data = True
+
+        return filepath_input, clear_filename_filepath_data, error, color1, open1
+
+
+@ app.callback(
+    [
+    Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='filename_filepath', component_property='data', allow_duplicate=True)],
+    [Input(component_id='newfile', component_property='n_clicks'),
+    State(component_id='filename_filepath', component_property='data'),
+    State(component_id="Cal_storage", component_property='data'),
+    State(component_id='Sample_rate', component_property='value'),
+    State(component_id='filestorage', component_property='data'),
+    State(component_id="upload_file_checklist", component_property='value'),
+    State(component_id="Workspace_store", component_property='data')
+     ],
+)
+
+def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames, Workspace_data):
+
+    # Check if the "newfile" button was clicked
+    if "newfile" == ctx.triggered_id:
+
+        # Initialise data dictionary if it is None
+        if data is None:
+            data = [[],[],[]]
+
+        # Check if no files were uploaded
+        if filenames is None or filenames == []:
+
+            error = 'No Files Selected For Upload'
+            color = "danger"
+            open1 = True
+            filename_filepath_data = no_update
+            # Return the same data if no files were uploaded
+            data = no_update
+
+        elif SF is None or SF == 0:
+
+            error = 'No Sample Rate Selected'
+            color = "danger"
+            open1 = True
+            filename_filepath_data = no_update
+            # Return the same data if no files were uploaded
+            data = no_update
+
+        elif Workspace_data is None:
+            error = 'No Workspace Selected'
+            color = "danger"
+            open1 = True
+            filename_filepath_data = no_update
+            # Return the same data if no files were uploaded
+            data = no_update
+
+        else:
+
+            Oldfilenames = data[0] # Get existing file names
+
+            combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
+
+            new_value = [] # List of uploaded file names which aren't repeated
+            repeated_value = [] # List of repeated file names
+            error_file = [] # List of files with invalid formats
+            # Loop through uploaded files and process them
+
+            def save_array_memmap(array, filename, folder_path):
+                filepath = os.path.join(folder_path, filename)
+                dtype = array.dtype
+                shape = array.shape
+                array_memmap = np.memmap(filepath, dtype=dtype, shape = shape, mode='w+')
+                array_memmap[:] = array[:]
+                del array_memmap
+
+            for i, value in enumerate(filenames):
+                # Check if the file name is already in the combined list
+                if value not in combined_filenames:
+                    try:
+
+                        Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
+
+                        file_path = os.path.join(Workspace_data,value)
+
+                        if os.path.exists(file_path):
+                            filename2 = value + '_copy'
+                            file_path = os.path.join(Workspace_data, filename2)
+
+                        os.makedirs(file_path, exist_ok=True)
+
+                        save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
+                        save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
+                        save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
+                        save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
+                        save_array_memmap(Barn_data['t'], 't.dat', file_path)
+
+                        new_value.append(value)
+
+                        combined_filenames.append(value)
+
+                    # If there's an error processing the file, add it to the error list
+                    except Exception as e:
+                        print('cal' + e)
+                        error_file.append(value)
+                else:
+                    repeated_value.append(value)
+
+            data = [combined_filenames, SF, cal_data[0][0]]
+
+            upload_filename = filename_filepath_data[0]
+            upload_filepath = filename_filepath_data[1]
+
+            # Delete selected data
+            for value in filenames:
+                i = upload_filename.index(value)
+                upload_filename.remove(value)
+                del upload_filepath[i]
+
+            filename_filepath_data = [upload_filename, upload_filepath]
+
+
+            # If there are errors, return error messages
+            if repeated_value != [] or error_file != []:
+
+                error_list_complete = repeated_value + error_file
+
+                if new_value != []:
+
+                    error_start = 'There was an error processing all files: \n ' \
+                    '(' + ', '.join(error_list_complete) + ').'
+
+                else:
+
+                    error_start = 'There was an error processing files: \n ' \
+                                   '(' + ', '.join(error_list_complete) + ').'
+
+                error_repeat = ' Please check files: ' \
+                               '(' + ', '.join(repeated_value) + ') are not repeated.'
+
+                error_process = ' Please check: \n' \
+                            '(' + ', '.join(error_file) + ') for errors.'
+
+
+
+                # If there are errors in files and repeated files
+                if repeated_value != [] and error_file != []:
+                    error = error_start + error_repeat + error_process
+
+                # If there are errors in files
+                elif error_file != [] and repeated_value == []:
+                    error = error_start + '\n' + error_process
+
+                # If there are errors in files
+                elif error_file == [] and repeated_value != []:
+                    error = error_start + '\n' + error_repeat
+
+                color = "danger"
+                open1 = True
+
+            else:
+
+                # If no errors display success message
+                error = ', '.join(new_value) + ' uploaded'
+
+                color = "success"
+
+                open1 = True
+
+        return data, error, color, open1, filename_filepath_data
 
 @ app.callback(
     Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
@@ -931,6 +1211,7 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
             table_data = no_update
 
         else:
+
             t = data[chosen_file]['t']
             x = data[chosen_file]['Ux']
             y = data[chosen_file]['Uy']
@@ -938,6 +1219,8 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
 
             max1 = np.amax(np.array(data[chosen_file]['t']))
             min1 = np.amin(np.array(data[chosen_file]['t']))
+
+
 
 
             # Error messages
@@ -978,7 +1261,6 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
                 error_col = 'success'
                 error = both_t_NO_error
 
-
             x1 = x[mask]
             y1 = y[mask]
             z1 = z[mask]
@@ -1009,300 +1291,7 @@ def TI_caluculate(n_clicks, data, chosen_file, small_TI, big_TI, table_data, col
 
             table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
 
-
         return table_data, error, error_col, True
-
-# Call back to update upload file checklist once files are selected
-@app.callback(
-        Output(component_id='submit_files', component_property='value'),
-        Output(component_id='filename_filepath', component_property='data'),
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id = 'dropdown_BARN_update', component_property ='n_clicks'),
-        Input(component_id='dropdown_BARN_clear', component_property='n_clicks'),
-        State(component_id='submit_files', component_property='value'),
-        State(component_id='filename_filepath', component_property='data'),
-        prevent_initial_call = True)
-
-def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_filepath_data):
-
-
-    if ctx.triggered_id == 'dropdown_BARN_update':
-        print(filepath1)
-
-        if filepath1 is None or filepath1 == '':
-            error = 'No Filepath Inputted. Please Check'
-            color1 = 'danger'
-            open1 = True
-            filepath_input = ''
-            filename_filepath_data = no_update
-
-        else:
-
-            filepath2 = filepath1.replace("\\", "/")
-            filepath = filepath2.replace('"', "")
-
-
-            if os.path.isfile(filepath)==False:
-                error = 'Please Check Filepath'
-                color1 = 'danger'
-                open1 = True
-                filepath_input = no_update
-                filename_filepath_data = no_update
-
-            else:
-
-                filename = os.path.basename(filepath)
-
-                if filename_filepath_data is None:
-                    filename_filepath_data = [[filename],[filepath]]
-                    error = filename + ' added'
-                    color1 = 'success'
-                    open1 = True
-                    filepath_input = ''
-
-                else:
-
-                    combined_filenames = filename_filepath_data[0].copy()
-                    combined_filepaths = filename_filepath_data[1].copy()
-                    repeated_filename = []
-
-                    for value in combined_filenames:
-                        if filename == value:
-                            repeated_filename.append(filename)
-
-                    if repeated_filename != []:
-                        error = filename + ' already exists. Please check'
-                        color1 = 'danger'
-                        open1 = True
-                        filepath_input = no_update
-                        filename_filepath_data = no_update
-                        repeated_filename = []
-
-                    else:
-                        combined_filenames.append(filename)
-                        combined_filepaths.append(filepath)
-                        error = filename + ' added'
-                        color1 = 'success'
-                        open1 = True
-                        filepath_input = ''
-                        filename_filepath_data = [combined_filenames, combined_filepaths]
-
-        return filepath_input, filename_filepath_data, error, color1, open1
-
-    else:
-        raise PreventUpdate
-
-
-
-@app.callback(
-        Output(component_id='submit_files', component_property='value', allow_duplicate=True),
-        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id='dropdown_BARN_clear', component_property='n_clicks'),
-        prevent_initial_call = True)
-
-def clear_upload(n_clicks):
-
-    if ctx.triggered_id == 'dropdown_BARN_clear':
-
-        filepath_input = ''
-        error = 'Upload Files Cleared'
-        color1 = 'primary'
-        open1 = True
-        clear_filename_filepath_data = True
-
-        return filepath_input, clear_filename_filepath_data, error, color1, open1
-
-
-@ app.callback(
-    [
-    Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-    Output(component_id='filename_filepath', component_property='data', allow_duplicate=True)],
-    [Input(component_id='newfile', component_property='n_clicks'),
-    State(component_id='filename_filepath', component_property='data'),
-    State(component_id="Cal_storage", component_property='data'),
-    State(component_id='Sample_rate', component_property='value'),
-    State(component_id='filestorage', component_property='data'),
-    State(component_id="upload_file_checklist", component_property='value')],
-)
-
-def content(n_clicks,filename_filepath_data, cal_data, SF, data, filenames):
-
-    # Check if the "newfile" button was clicked
-    if "newfile" == ctx.triggered_id:
-
-        # Initialise data dictionary if it is None
-        if data is None:
-            data = [[],[],[]]
-
-        # Check if no files were uploaded
-        if filenames is None or filenames == []:
-
-            error = 'No Files Selected For Upload'
-            color = "danger"
-            open1 = True
-            filename_filepath_data = no_update
-            # Return the same data if no files were uploaded
-            data = no_update
-
-        elif SF is None or SF == 0:
-
-            error = 'No Sample Rate Selected'
-            color = "danger"
-            open1 = True
-            filename_filepath_data = no_update
-            # Return the same data if no files were uploaded
-            data = no_update
-
-
-        else:
-
-            Oldfilenames = data[0] # Get existing file names
-
-            combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
-
-            new_value = [] # List of uploaded file names which aren't repeated
-            repeated_value = [] # List of repeated file names
-            contain_text = [] # List of file names that don't have 'txt' in them
-            error_file = [] # List of files with invalid formats
-
-            # Loop through uploaded files and process them
-            for i, value in enumerate(filenames):
-
-                # Check for repeated file names
-                if value in combined_filenames:
-                    repeated_value.append(value)
-
-                # Check for file names without 'txt' in them
-                if 'txt' not in value:
-                    contain_text.append(value)
-
-                # Check if the file name is already in the combined list
-                if value not in combined_filenames:
-                    # Check if file name is not in the list of names that don't have 'txt' in them
-                    if value not in contain_text:
-
-                        try:
-                            Barn_data[value] = {value: {}}
-                            Barn_data[value] = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
-                            new_value.append(value)
-                            combined_filenames.append(value)
-                        # If there's an error processing the file, add it to the error list
-                        except Exception as e:
-                            print('cal' + e)
-                            error_file.append(value)
-
-            # If there are errors, return error messages
-            if contain_text != [] or repeated_value != [] or error_file != []:
-
-                data = [combined_filenames, SF, cal_data[0][0]]
-
-                color = "danger"
-                open1 = True
-
-                # Assign data
-                upload_filename = filename_filepath_data[0]
-                upload_filepath = filename_filepath_data[1]
-
-                # Delete selected data
-                for value in filenames:
-                    i = upload_filename.index(value)
-                    upload_filename.remove(value)
-                    del upload_filepath[i]
-
-
-                filename_filepath_data = [upload_filename, upload_filepath]
-
-                error_list_complete = contain_text + repeated_value + error_file
-
-                if new_value != []:
-
-                    error_start = 'Files (' + ', '.join(new_value) + ') uploaded.\n'
-                    'There was an error processing files: \n ' \
-                    '(' + ', '.join(error_list_complete) + ').'
-
-                else:
-
-                    error_start = 'There was an error processing files: \n ' \
-                                   '(' + ', '.join(error_list_complete) + ').'
-
-                error_repeat = ' Please check files: ' \
-                               '(' + ', '.join(repeated_value) + ') are not repeated.'
-
-                error_txt = ' Please check the file type of: \n' \
-                            '(' + ', '.join(contain_text) + '). '
-
-                error_process = ' Please check: \n' \
-                            '(' + ', '.join(error_file) + ') for errors.'
-
-                # If all three errors are present
-                if contain_text != [] and repeated_value != [] and error_file != []:
-                    error = error_start + error_repeat + error_txt + error_process
-
-                # If there are invalid file types and errors in files
-                elif contain_text != [] and repeated_value == [] and error_file != []:
-                    error = error_start + error_txt + error_process
-
-                # If there are invalid file types and repeated files
-                elif contain_text != [] and repeated_value != [] and error_file == []:
-                    error = error_start + error_repeat + error_txt
-
-                # If there are errors in files and repeated files
-                elif contain_text == [] and repeated_value != [] and error_file != []:
-                    error = error_start + error_repeat + error_process
-
-                # If there are invalid file types
-                elif contain_text != [] and repeated_value == [] and error_file == []:
-                    error = error_start + '\n' + error_txt
-
-                # If there are repeated files
-                elif contain_text == [] and repeated_value != [] and error_file == []:
-                    error = error_start + '\n' + error_repeat
-
-                # If there are errors in files
-                elif contain_text == [] and repeated_value == [] and error_file != []:
-                    error = error_start + '\n' + error_process
-
-            else:
-
-                # If no errors display success message
-                error = ', '.join(new_value) + ' uploaded'
-
-                color = "success"
-
-                open1 = True
-
-                data = [combined_filenames, SF, cal_data[0][0]]
-
-                upload_filename = filename_filepath_data[0]
-                upload_filepath = filename_filepath_data[1]
-
-                # Delete selected data
-                for value in filenames:
-                    i = upload_filename.index(value)
-                    upload_filename.remove(value)
-                    del upload_filepath[i]
-
-                filename_filepath_data = [upload_filename, upload_filepath]
-
-            folder_path = r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace'
-
-            save_Barn_data = Barn_data[value]
-
-            filename2 = value + '.npz'
-
-            file_path = os.path.join(folder_path, filename2)
-
-            np.savez(file_path, U1 = save_Barn_data['U1'], Ux = save_Barn_data['Ux'], Uy = save_Barn_data['Uy'], Uz = save_Barn_data['Uz'], t = save_Barn_data['t'])
-
-        return data, error, color, open1, filename_filepath_data
 
 
 # # Callback which updates the graph based on graph options

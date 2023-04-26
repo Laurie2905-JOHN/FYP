@@ -25,16 +25,24 @@ if not os.path.exists(folder_path):
 # Load the arrays from the file
 
 folder_path = r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace'
-file_name = 'Mon1527.txt.npz'
+file_name = 'Example 1.npz'
 file_path = os.path.join(folder_path, file_name)
 
 # loaded_data = np.load(file_path)
 #
 # print(loaded_data['Mon1527'])
 
-
+import matplotlib.pyplot as plt
 
 x = np.load(file_path)
 print(x)
 for k in x.keys():
     print(k)
+
+fig, axs = plt.subplots(4, 1)
+axs[0].plot(x['t'], x['Ux'], 'k')
+axs[1].plot(x['t'], x['Uy'], 'r')
+axs[2].plot(x['t'], x ['Uz'], 'r')
+axs[3].plot(x['t'], x['U1'], 'r')
+
+plt.show()
