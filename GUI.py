@@ -516,13 +516,14 @@ dash_table.DataTable(id = 'TI_Table',
         # Column for uploading files
         dbc.Col(
             dbc.Stack([
+
                 dbc.Button(
-                    "Analyse Selected Files",
+                    'Process Selected Files',
                     id='newfile',
                     outline=True,
                     color="primary",
                     className="me-1",
-                    n_clicks=0
+                    n_clicks=0,
                 ),
 
                 dbc.Input(id="Sample_rate", min=0, type="number", placeholder="Enter Sample Frequency", debounce=True),
@@ -634,7 +635,7 @@ dbc.Col([
         dbc.Col(
 
             dbc.Stack([
-                dbc.Button("Download", id="btn_download", size="lg"),  # Button for downloading selected data
+                dbc.Button("Download", id="btn_download", size="lg",color="primary", outline=True),  # Button for downloading selected data
 
                 dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),  # Input field for file name
 
@@ -664,6 +665,21 @@ dbc.Col([
 
 
     # # Components for storing and downloading data
+    dbc.Spinner(children = [dcc.Store(id='Loading_variable_Process', storage_type='memory')],color="primary",
+                fullscreen = True, size = 'lg', show_initially = False, delay_hide = 500, delay_show = 500),
+
+    # # Components for storing and downloading data
+    dbc.Spinner(children=[dcc.Store(id='Loading_variable_Table', storage_type='memory')], color="primary",
+                fullscreen=True, size='lg', show_initially=False, delay_hide=500, delay_show=500),
+
+    # # Components for storing and downloading data
+    dbc.Spinner(children=[dcc.Store(id='Loading_variable_Download', storage_type='memory')], color="primary",
+                fullscreen=True, size='lg', show_initially=False, delay_hide=500, delay_show=500),
+
+    # # Components for storing and downloading data
+    dbc.Spinner(children=[dcc.Store(id='Loading_variable_Graph', storage_type='memory')], color="primary",
+                fullscreen=True, size='lg', show_initially=False, delay_hide=500, delay_show=500),
+
     dcc.Download(id="download"),
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
@@ -972,7 +988,8 @@ def clear_upload(n_clicks):
     Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
     Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-    Output(component_id='filename_filepath', component_property='data', allow_duplicate=True)],
+    Output(component_id='filename_filepath', component_property='data', allow_duplicate=True),
+    Output(component_id='Loading_variable_Process', component_property='data', allow_duplicate=True)],
     [Input(component_id='newfile', component_property='n_clicks'),
     State(component_id='filename_filepath', component_property='data'),
     State(component_id="Cal_storage", component_property='data'),
@@ -1156,7 +1173,9 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
                 open1 = True
 
-        return file_data, error, color, open1, filename_filepath_data
+        loading_variable = 'done'
+
+        return file_data, error, color, open1, filename_filepath_data, loading_variable
 
 @ app.callback(
     Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
@@ -1202,7 +1221,8 @@ def clear_table(n_clicks):
     [Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
     Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
     Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True)],
+    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='Loading_variable_Table', component_property='data', allow_duplicate=True)],
     [Input(component_id='TI_btn_download', component_property='n_clicks'),
     State(component_id='filestorage', component_property='data'),
     State(component_id='DataSet_TI', component_property='value'),
@@ -1342,7 +1362,9 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
                 table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
 
-        return table_data, error, error_col, True
+        Loading_variable = 'done'
+
+        return table_data, error, error_col, True, Loading_variable
 
 #
 # data = [combined_filenames, combined_dtype_shape, Workspace_data, SF, cal_data[0][0]]
@@ -1543,7 +1565,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 def vel_sync_checklist(vel_check, all_vel_checklist):
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    vel_type = ['Ux', 'Uy', 'Uz', 't']
+    vel_type = ['U1','Ux', 'Uy', 'Uz', 't']
 
     if input_id == "vel_checklist":
         # If the velocity checklist input triggered the callback, update the all velocity checklist
@@ -1587,8 +1609,8 @@ def update_dropdowns1(data, filename_filepath_upload_data):
         DataDrop_TI = []
     else:
         # If the data is not None, set the dropdown options and checklists accordingly
-        vect_options = ['Ux', 'Uy', 'Uz']
-        vel_checklist = ['Ux', 'Uy', 'Uz', 't']
+        vect_options = ['U1','Ux', 'Uy', 'Uz']
+        vel_checklist = ['U1','Ux', 'Uy', 'Uz', 't']
         file_dropdown_options = data[0]
         file_checklist = data[0]
         DataDrop_TI = data[0]
@@ -1633,18 +1655,18 @@ def update_In(small_val, large_val):
         Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Loading_variable_Download', component_property='data'),
         Input(component_id="btn_download", component_property='n_clicks'),
         State(component_id="file_name_input", component_property='value'),
         State(component_id="small_t", component_property='value'),
         State(component_id="big_t", component_property='value'),
         State(component_id="vel_checklist", component_property='value'),
-        State(component_id="vel_checklist", component_property='options'),
         State(component_id="file_checklist", component_property='value'),
         State(component_id="type_checklist", component_property='value'),
         State(component_id='filestorage', component_property='data'),
         prevent_initial_call=True)
 
-def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_type, data):
+def download(n_clicks, selected_name, smallt, bigt, vector_value, file, file_type, file_data):
 
     # If download button is pressed
     if "btn_download" == ctx.triggered_id:
@@ -1657,174 +1679,227 @@ def download(n_clicks, selected_name, smallt, bigt, vels, vel_opts, file, file_t
                 # Display error message and don't download anything
                 text = no_update
 
-                error1 = ['No file selected', 'danger']
+                error = 'No file selected', 'danger'
+
+                error_col = 'danger'
 
             # If quantity is not picked
-            elif vels == [] or vels is None:
+            elif vector_value == [] or vector_value is None:
 
                 # Display error message and don't download anything
                 text = no_update
 
-                error1 = ['No data selected', "danger"]
+                error = 'No data selected'
+
+                error_col = 'danger'
 
             else:
 
-                # Create a dictionary of all options
-                dff = {file: {vel_opt: np.array(prb[file][vel_opt]) for vel_opt in vel_opts}}
+                for vector in vector_value:
 
-                # Create a dictionary of options selected
-                df = {file: {vel: [] for vel in vels}}
+                    def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                        filepath = os.path.join(folder_path, filename)
+                        mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
 
-                # If a time range has been selected
-                if smallt is not None or bigt is not None:
-                    # Assign variables and convert to numpy array
-                    t = np.array(dff[file]['t'])
-                    # Calculate min and  max
+                        if row_numbers == 'all':
+                            loaded_data = mapped_data[:]
+                        else:
+                            loaded_data = mapped_data[row_numbers]
+
+                        return loaded_data
+
+                    i = file_data[0].index(vector)
+
+
+                    shape_dtype = file_data[1][i]
+
+                    shape, dtype = shape_dtype
+
+                    file_path = file_data[4][i]
+
+                    t = load_array_memmap('t.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = 'all')
+
                     max1 = np.amax(t)
                     min1 = np.amin(t)
 
-                    # If both smallt and bigt isn't empty
-                    if smallt is not None and bigt is not None:
+                    # Error messages
+                    smallt_error = 'DATA DOWNLOADED. The data has been cut to the minimum time limit because the inputted time ' \
+                                                                        'is outside the available range. Please adjust your time limit accordingly.'
 
-                        # Error messages
-                        smallt_error = [
-                        file_type + ' File Downloaded.\n' + 'The data has been cut to the minimum time limit because it\n'
-                        'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
 
-                        bigt_error = [
-                            file_type + ' File Downloaded.\n' + 'The data has been cut to the maximum time limit because it\n'
-                            'is outside the available range of raw time data. Please adjust your time limit accordingly.', 'danger']
+                    bigt_error = 'DATA DOWNLOADED. The data has been cut to the maximum time limit because the inputted time ' \
+                                                                        'is outside the available range. Please adjust your time limit accordingly.'
 
-                        both_t_error = [
-                            file_type + ' File Downloaded. Warning: Both minimum and maximum time limits are outside the range\n'
-                                        'of available raw time data. The data has been trimmed to the minimum and maximum\n'
-                                        'time limits. Please adjust your time limits accordingly.', 'primary']
+                    both_t_error ='DATA DOWNLOADED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
+                                                                       'are outside the available range. Please adjust your time limit accordingly.'
 
-                        both_t_NO_error = [file_type + ' File Downloaded.\n' + 'Data has been cut to the specified limits', 'primary']
+                    both_t_NO_error = 'DATA DOWNLOADED'
 
-                        # Cut data based on conditions
+                    # Cut data based on conditions
+                    if smallt is None and bigt is None:
+                        bigt = max1
+                        smallt = min1
+                        error = both_t_error
+
+                    elif smallt is None and bigt is not None:
+                        smallt = min1
+                        error = smallt_error
+
+                    elif bigt is None and smallt is not None:
+                        bigt = max1
+                        error = bigt_error
+
+                    else:
+
                         if smallt < min1 and bigt > max1:
-                            error1 = both_t_error
-                            mask = (t >= min1) & (t <= max1)
+                            smallt = min1
+                            bigt = max1
+                            error = both_t_error
 
                         elif smallt < min1:
-                            error1 = smallt_error
-                            mask = (t >= min1)
+                            bigt = min1
+                            error = smallt_error
+
 
                         elif bigt > max1:
-                            error1 = bigt_error
-                            mask = (t <= max1)
+                            bigt = max1
+                            error = bigt_error
 
                         else:
-                            mask = (t >= smallt) & (t < bigt)
-                            error1 = both_t_NO_error
+                            error = both_t_NO_error
 
-                    # For selected options assign data
-                    for vel in vels:
-                        df[file][vel] = dff[file][vel][mask]
+                    mask = (t >= smallt) & (t <= bigt)
+                    error_col = 'primary'
+                    row_numbers = np.where(mask)[0].tolist()
 
-                # If no time range selected
+                    numpy_vect_data = load_array_memmap('Ux.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+
+
+                    stacked = numpy_vect_data
+                    list_all.append(stacked)
+                    list_all = list_all[0]
+                    str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
+
+                vels_str = ','.join(vector_value)
+                str_all = vels_str + '\n' + str_all
+                str_all = str_all.replace(' ', '')
+                str_all = str_all.replace('],', '')
+                str_all = str_all.replace(']]', '')
+                str_all = str_all.replace('[[', '')
+                str_all = str_all.replace('[', '')
+                str_all = str_all.replace(']', '')
+
+                # If no filename selected, assign filename
+                if selected_name is None or selected_name == '':
+                    value = file.split('.')
+                    filenameTXT = value[0] + ".txt"
+
+                # If filename is chosen, create filename string
                 else:
+                    filenameTXT = selected_name + ".txt"
 
-                    # Assign data
-                    for vel in vels:
-                        df[file][vel] = dff[file][vel]
+                # Assign text file to save
+                text = dict(content=str_all, filename = filenameTXT )
 
-                    # Error message
-                    error1 = [file_type + ' File Downloaded', 'primary']
-
-                # If .txt is not in file name
-                if file_type == '.txt':
-
-                    # Create an empty list
-                    list_all = []
-
-                    # Convert data to strings based on initial conditions
-                    if len(vels) == 1:
-                        stacked = df[file][vels[0]]
-                        list_all.append(stacked)
-                        list_all = list_all[0]
-                        str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
-
-                    else:
-
-                        if len(vels) == 2:
-                            stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-                            list_all.append(stacked)
-
-                        if len(vels) == 3:
-                            stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
-                            stacked2 = df[file][vels[2]].reshape(-1, 1)
-                            stacked = np.concatenate((stacked1, stacked2), axis=1)
-                            list_all.append(stacked)
-
-                        k = 0
-                        if len(vels) == 4:
-                            while k < len(vels) - 1:
-                                stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
-                                list_all.append(stacked)
-                                k = k + 2
-                        list_all = np.concatenate(list_all, axis=1)
-                        str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
-
-                    # Filter data so it is in the correct format
-                    vels_str = ','.join(vels)
-                    str_all = vels_str + '\n' + str_all
-                    str_all = str_all.replace(' ', '')
-                    str_all = str_all.replace('],', '')
-                    str_all = str_all.replace(']]', '')
-                    str_all = str_all.replace('[[', '')
-                    str_all = str_all.replace('[', '')
-                    str_all = str_all.replace(']', '')
-
-                    # If no filename selected, assign filename
-                    if selected_name is None or selected_name == '':
-                        value = file.split('.')
-                        filenameTXT = value[0] + ".txt"
-
-                    # If filename is chosen, create filename string
-                    else:
-                        filenameTXT = selected_name + ".txt"
-
-                    # Assign text file to save
-                    text = dict(content=str_all, filename = filenameTXT )
-
-                # If chosen file type is excel or CSV
-                if file_type == 'Excel' or 'CSV':
-
-                    # create an empty list to store dataframes
-                    pandaData = []
-
-                    # loop through each file and convert to dataframe
-                    for file, df in df.items():
-                        dfff = pd.DataFrame(df)
-                        pandaData.append(dfff)
-                    # concatenate all dataframes in the list
-                    PDdata = pd.concat(pandaData)
-
-                    # Assigning filenames
-                    if selected_name is None or selected_name == '':
-                        value = file.split('.')
-                        filename = value[0]
-                    else:
-                        filename = selected_name
-
-                    if file_type == 'Excel':
-                        ty = '.xlsx'
-                        text = dcc.send_data_frame(PDdata.to_excel, filename + ty)
-
-                    if file_type == 'CSV':
-                        ty = '.csv'
-                        text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
+                Loading_variable = 'done'
 
 
-        except:
+            #     # If .txt is not in file name
+            #     if file_type == '.txt':
+            #
+            #         # Create an empty list
+            #         list_all = []
+            #
+            #         # Convert data to strings based on initial conditions
+            #         if len(vector) == 1:
+            #             stacked = df[file][vels[0]]
+            #             list_all.append(stacked)
+            #             list_all = list_all[0]
+            #             str_all = np.array2string(list_all, separator=',\n', threshold=sys.maxsize)
+            #
+            #         else:
+            #
+            #             if len(vels) == 2:
+            #                 stacked = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+            #                 list_all.append(stacked)
+            #
+            #             if len(vels) == 3:
+            #                 stacked1 = np.stack((df[file][vels[0]], df[file][vels[1]]), axis=1)
+            #                 stacked2 = df[file][vels[2]].reshape(-1, 1)
+            #                 stacked = np.concatenate((stacked1, stacked2), axis=1)
+            #                 list_all.append(stacked)
+            #
+            #             k = 0
+            #             if len(vels) == 4:
+            #                 while k < len(vels) - 1:
+            #                     stacked = np.stack((df[file][vels[k]], df[file][vels[k + 1]]), axis=1)
+            #                     list_all.append(stacked)
+            #                     k = k + 2
+            #             list_all = np.concatenate(list_all, axis=1)
+            #             str_all = np.array2string(list_all, separator=',', threshold=sys.maxsize)
+            #
+            #         # Filter data so it is in the correct format
+            #         vels_str = ','.join(vels)
+            #         str_all = vels_str + '\n' + str_all
+            #         str_all = str_all.replace(' ', '')
+            #         str_all = str_all.replace('],', '')
+            #         str_all = str_all.replace(']]', '')
+            #         str_all = str_all.replace('[[', '')
+            #         str_all = str_all.replace('[', '')
+            #         str_all = str_all.replace(']', '')
+            #
+            #         # If no filename selected, assign filename
+            #         if selected_name is None or selected_name == '':
+            #             value = file.split('.')
+            #             filenameTXT = value[0] + ".txt"
+            #
+            #         # If filename is chosen, create filename string
+            #         else:
+            #             filenameTXT = selected_name + ".txt"
+            #
+            #         # Assign text file to save
+            #         text = dict(content=str_all, filename = filenameTXT )
+            #
+            #     # If chosen file type is excel or CSV
+            #     if file_type == 'Excel' or 'CSV':
+            #
+            #         # create an empty list to store dataframes
+            #         pandaData = []
+            #
+            #         # loop through each file and convert to dataframe
+            #         for file, df in df.items():
+            #             dfff = pd.DataFrame(df)
+            #             pandaData.append(dfff)
+            #         # concatenate all dataframes in the list
+            #         PDdata = pd.concat(pandaData)
+            #
+            #         # Assigning filenames
+            #         if selected_name is None or selected_name == '':
+            #             value = file.split('.')
+            #             filename = value[0]
+            #         else:
+            #             filename = selected_name
+            #
+            #         if file_type == 'Excel':
+            #             ty = '.xlsx'
+            #             text = dcc.send_data_frame(PDdata.to_excel, filename + ty)
+            #
+            #         if file_type == 'CSV':
+            #             ty = '.csv'
+            #             text = dcc.send_data_frame(PDdata.to_csv, filename + ty)
+            #
+            #
+
+
+        except Exception as e:
+
+            print(e)
 
             # If any error display message
             text = no_update
             error1 = ['ERROR', 'danger']
-
-        return text, error1[0], error1[1], True,
+            #
+            return text, error, error_col, True, Loading_variable
 
 # Callback to clear data
 @app.callback(
