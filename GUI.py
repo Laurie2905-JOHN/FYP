@@ -669,7 +669,7 @@ dbc.Col([
                 fullscreen = True, size = 'lg', show_initially = False, delay_hide = 800, delay_show = 800),
 
     # # Components for storing and downloading data
-    dbc.Spinner(children=[dcc.Store(id='Loading_variable_Table', storage_type='memory')], color="primary"
+    dbc.Spinner(children=[dcc.Store(id='Loading_variable_Table', storage_type='memory')], color="primary",
                 fullscreen=True, size='lg', show_initially=False, delay_hide=800, delay_show=800),
 
     # # Components for storing and downloading data
@@ -1416,10 +1416,10 @@ def clear_graph(n_clicks):
         State(component_id = 'Vect', component_property = 'value'),
         State(component_id='time_small', component_property='value'),
         State(component_id='time_large', component_property='value'),
-        Input(component_id='legend_Data', component_property='data'),
-        Input(component_id='title_Data', component_property='data'),
-        Input(component_id='legend_onoff', component_property='value'),
-        Input(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
+        State(component_id='legend_Data', component_property='data'),
+        State(component_id='title_Data', component_property='data'),
+        State(component_id='legend_onoff', component_property='value'),
+        State(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
 
 def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title):
 
