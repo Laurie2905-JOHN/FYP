@@ -1408,6 +1408,8 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, line_thick, s
 
         else:
 
+            fig = go.Figure()
+
             current_names = []
 
             # Error messages
@@ -1504,16 +1506,15 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, line_thick, s
                     # Creating a list of current legend names
                     current_names.append(f"{file}{' '}{vector}")
 
-
-
-                global fig
-
-                fig.replace(go.Figure())
-
                     # Plotting data
-                fig.add_trace(go.Scattergl(name=f"{'Example 1'}{' '}{'Ux'}", showlegend=True), hf_x=numpy_vect_data['Example 1']['t'], hf_y=numpy_vect_data['Example 1']['Ux'])
+                    fig.add_trace(
+                        go.Scattergl(
+                            name=f"{file}{' '}{vector}",
+                            showlegend=True,
+                            x=numpy_vect_data[file]['t'],
+                            y=numpy_vect_data[file][vector])
+                    )
 
-                fig.show_dash(mode='inline')
 
                 error = 'Graph Updated ' + error_cut
 
@@ -1523,9 +1524,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, line_thick, s
 
         return fig, error, color, open1
 
-fig.register_update_graph_callback(
-    app=app, graph_id="Velocity_Graph", trace_updater_id="trace-updater"
-)
 
 # Callback to update legend or title data
 @app.callback(
