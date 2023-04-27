@@ -187,25 +187,26 @@ app.layout = dbc.Container([
 
 dbc.Row([
 
+
+        dbc.Col(
+
+            dbc.Stack([
+
+                dbc.Button("Plot", id="plot_bttn", size="lg", color="primary", outline=True),
+
+                dbc.Button("Clear Figure", id="plot_clear_bttn", size="lg", color="primary", outline=True),
+
+            ], gap=2),
+
+            width=3),
+
+
     dbc.Col(
 
         dbc.Stack([
 
             dbc.Row([
                 dbc.Col(
-                    dbc.Button("Plot", id="plot_bttn", size="lg", color="primary", outline=True),
-                ),  # Input field for minimum time
-
-                dbc.Col(
-                    dbc.Button("Clear Figure", id="plot_clear_bttn", size="lg", color="primary", outline=True),
-                ),  # Input field for maximum time
-
-            ], justify="center"),  # Row for input fields for minimum and maximum times
-
-            # Button for downloading selected data
-
-            dbc.Row([
-                dbc.Col(
                     dcc.Dropdown(
                         id="File",
                         options=[],
@@ -217,11 +218,11 @@ dbc.Row([
 
                 dbc.Col(
                     dcc.Dropdown(
-                        id="File",
+                        id="Vect",
                         options=[],
                         multi=True,
                         value=[],
-                        placeholder="Select a Dataset"),
+                        placeholder="Select a Quantity"),
                 ),  # Input field for maximum time
 
             ], justify="center"),  # Row for input fields for minimum and maximum times
@@ -237,26 +238,30 @@ dbc.Row([
 
             ], justify="center"),  # Row for input fields for minimum and maximum times
 
-        ], gap=2),
+            dbc.Row([
+
+                dbc.Label('Line Thickness', className="text-center"),
+
+                dcc.Slider(
+                    min=0.5,
+                    max=5,
+                    value=1,
+                    step=0.1,
+                    id="line_thick",
+                    marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
+                    updatemode='drag'
+                ),
+
+
+        ], justify="center"),  # Row for input fields for minimum and maximum times
+
+        ], gap=3),
 
         width=4),
 
 
     dbc.Col(
         dbc.Stack([
-            dbc.Label('Line Thickness', className="text-center"),
-
-            dcc.Slider(
-                min=0.5,
-                max=5,
-                value=1,
-                step=0.1,
-                id="line_thick",
-                marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
-                updatemode='drag'
-            ),
-
-            html.Hr(),
 
             dbc.Row([
                 dbc.Col(
