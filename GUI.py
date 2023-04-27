@@ -712,8 +712,9 @@ dbc.Col([
     dcc.Store(id='Cal_storage', storage_type='local'),
 ])
 
-
-@ app.callback(
+# Call back to update the workspace store
+# This callback function is triggered by a click event on the 'Workspace_update' button.
+@app.callback(
     Output(component_id='Workspace_store', component_property='data'),
     Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
     Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
@@ -721,34 +722,47 @@ dbc.Col([
     Input(component_id='Workspace_update', component_property='n_clicks'),
     State(component_id='Workspace', component_property='value'),
 )
-
 def update_Workspace(n_clicks, Workspace_input):
 
-    if ctx.triggered_id == 'Workspace_update':
+    # Try/Except used to catch any errors not considered
+    try:
 
-        if Workspace_input is None or Workspace_input == '':
-            error = 'No Filepath Inputted. Please Check'
-            color1 = 'danger'
-            open1 = True
-            Workspace_data = no_update
+        # Check if the trigger is from the 'Workspace_update' button.
+        if ctx.triggered_id == 'Workspace_update':
 
-        else:
-
-            Workspace_input2 = Workspace_input.replace('"', "")
-            Workspace_input3 = os.path.normpath(Workspace_input2)
-
-            if not os.path.exists(Workspace_input3):
-                error = 'Please Check Filepath'
+            # Handle the case when no input is provided.
+            if Workspace_input is None or Workspace_input == '':
+                error = 'NO FILE PATH INPUTTED'
                 color1 = 'danger'
                 open1 = True
-                Workspace_data = no_update
-            else:
-                error = 'Workspace Updated'
-                color1 = 'success'
-                open1 = True
-                Workspace_data = Workspace_input3
+                Workspace_data = ''
 
-        return Workspace_data, error, color1, open1
+            else:
+                # Normalize and validate the file path.
+                Workspace_input2 = Workspace_input.replace('"', "")
+                Workspace_input3 = os.path.normpath(Workspace_input2)
+
+                # Check if the given path exists.
+                if not os.path.exists(Workspace_input3):
+                    error = 'PLEASE CHECK FILE PATH IS VALID'
+                    color1 = 'danger'
+                    open1 = True
+                    Workspace_data = ''
+                else:
+                    # If the path exists, update the workspace.
+                    error = 'Workspace Updated'
+                    color1 = 'success'
+                    open1 = True
+                    Workspace_dta = Workspace_input3
+
+    except Exception as e:
+        # If error there is an error print it.
+        error = str(e)
+        color1 = 'danger'
+        open1 = True
+        Workspace_data = ''
+
+    return Workspace_data, error, color1, open1
 
 
 @app.callback(
@@ -2031,12 +2045,12 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                     filename = re.sub(r'[^\w\s\-_]+', '',selected_name)
 
                     if filename != selected_name:
-                        error_special = ' Disallowed characters have been removed from the filename'
+                        error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
+                                    'THE FILE HAS BEEN SAVED AS:' + filename + '.'
 
                         if filename == '':
-                            filename = file
-                            error_special = ' Disallowed characters have been removed from the filename. ' \
-                                            'The file has been saved as: ' + file +'.'
+                            error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
+                                    'THE FILE HAS BEEN SAVED AS:' + filename + '.'
 
                     else:
                         error_special = ''
@@ -2103,8 +2117,6 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
         # display bad error message
         error = 'NO FILES DELETED'
         color = "danger"
-        # Open error message
-        open1 = True
 
 
         # No update to new main data
@@ -2115,86 +2127,67 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
         clear_file_initial = True
 
 
-    elif allclear == [] and len(whatclear) == 0:
+    else:
 
-        # display bad error message
-        error = 'NO FILES DELETED'
-        color = "danger"
-        # Open error message
-        open1 = True
+        file_path = maindata[4]
+        deleted_files = []
 
-        # No update to new main data
-        newmaindata = no_update
+        try:
 
-        clear_data_main = True
-
-        clear_file_initial = True
-
-    elif allclear == ['All'] and len(whatclear) > 0:
-
-        # display good error message
-        error = 'ALL FILES CLEARED'
-        color = "success"
-        # Open error message
-        open1 = True
-
-        # No update to new main data
-        newmaindata = no_update
-
-        clear_data_main = True
-
-        clear_file_initial = True
-
-
-    # If 1 or more files being deleted
-    elif len(whatclear) >= 1 and allclear != ['All']:
-
-        Oldfilenames = file_data[0]  # Get existing file names
-        old_dtype_shape = file_data[1]
-        Old_calData = file_data[2]
-        Old_SF = file_data[3]
-        Old_filepath = file_data[4]
-        Old_min = file_data[5]
-        Old_max = file_data[6]
-
-        for what in whatclear:
-            i = maindata[0].index(what)
-
-            os.listdir(Workspace_data)
-            path = os.path.join(Workspace_data, file_name)
-            try:
-                if os.path.isfile(path):
-                    # delete the file
-                    os.remove(path)
-                    deleted_files.append(file_name)
-                elif os.path.isdir(path):
+            for what in whatclear:
+                i = maindata[0].index(what)
+                if os.path.isdir(file_path[i]):
                     # delete the folder and its contents recursively
-                    shutil.rmtree(path)
-                    deleted_files.append(file_name)
-            except Exception as e:
-                print(f"Error deleting {path}: {e}")
+                    shutil.rmtree(file_path[i])
+                    deleted_files.append(what)
+                    for j in range(len(maindata)):
+                        del maindata[j][i]
+            error_try = ''
 
-
-        # store = maindata[0]
-        #
-        # # Delete selected data
-        # for what in whatclear:
-        #     del prb[what]
-        #     del df1[what]
-        #     df2.remove(what)
+        except Exception as e:
+            error_try = e
 
         # Assign new data
-        newmaindata = [df1, df2]
+        newmaindata = maindata
 
-        # Display error message
-        error = ', '.join(whatclear) + ' deleted'
-        color = "success"
+        if allclear == ['All'] and len(whatclear) > 0:
 
+            clear_data_main = True
 
+            clear_file_initial = True
+
+            # display good error message
+            error = 'ALL FILES CLEARED' + str(error_try)
+
+            if error_try != '':
+                color = "danger"
+            else:
+                color = "success"
+
+        else:
+
+            # display good error message
+            error = 'FILES CLEARED: ' + ', '.join(deleted_files) + str(error_try)
+
+            if error_try != '':
+                color = "danger"
+            else:
+                color = "success"
+
+            clear_data_main = False
+
+            clear_file_initial = True
 
     # Return required values
-    return  error, color, open1, clear_data_main, clear_file_initial, newmaindata,
+    return  error, color, True, newmaindata, clear_data_main, clear_file_initial,
 
+
+Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+Output(component_id='filename_filepath', component_property='clear_data'),
 
 
 # Run app
