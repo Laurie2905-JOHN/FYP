@@ -1380,6 +1380,28 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
         return table_data, error, error_col, True, Loading_variable
 
+@app.callback(
+        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+        Output(component_id='File', component_property='value'),
+        Output(component_id='Vect', component_property='value'),
+        Output(component_id='time_small', component_property='value'),
+        Output(component_id='time_large', component_property='value'),
+        Input(component_id='plot_clear_bttn', component_property='n_clicks'),
+    prevent_initial_call=True)
+
+def clear_graph(n_clicks):
+
+    if ctx.triggered_id == 'plot_clear_bttn':
+
+        fig = {}
+        file = None
+        Vect = None
+        tsmall = None
+        tbig = None
+
+        return fig, file, Vect, tsmall, tbig
+
+
 
 # Callback which updates the graph based on graph options
 @app.callback(
@@ -1387,6 +1409,7 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
         Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Loading_variable_Graph', component_property='data', allow_duplicate=True),
         Input(component_id='plot_bttn', component_property='n_clicks'),
         State(component_id = 'filestorage', component_property = 'data'),
         State(component_id = 'File', component_property = 'value'),
@@ -1399,22 +1422,18 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt)
 
     if ctx.triggered_id == 'plot_bttn':
 
-        # Initialize variables with default values
-        error = ''
-        color = 'danger'
-        open1 = False
-
         # If no input do not plot graphs
         if file_inputs == [] or vector_inputs1 == []:
 
             raise PreventUpdate
 
-            # error = 'Please Check Inputs'
-            #
-            # color = 'danger'
-            #
-            # open1 = True
+            error = 'Please Check Inputs'
 
+            color = 'danger'
+
+            open1 = True
+
+            Loading_Variable = 'done'
 
         else:
 
@@ -1449,7 +1468,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt)
 
 
             for file in file_inputs:
-
 
                 i = file_data[0].index(file)
 
@@ -1499,8 +1517,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt)
 
                 t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
 
-
-
                 mask = (t >= smallt) & (t <= bigt)
 
                 numpy_vect_data = {file: {'t': t[mask]}}
@@ -1532,7 +1548,9 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt)
 
                 open1 = True
 
-        return fig, error, color, open1
+                Loading_Variable = 'done'
+
+        return fig, error, color, open1, Loading_Variable
 
 
 # Callback to update legend or title data
