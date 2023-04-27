@@ -162,6 +162,11 @@ app.layout = dbc.Container([
 
     # Options row
     dbc.Row([
+        # Horizontal line
+        dbc.Col(
+            html.Hr(),
+            width=12
+        ),
         # Graph options header
         dbc.Col(
             html.H5('Graph Options', className="text-center"),
@@ -181,7 +186,7 @@ app.layout = dbc.Container([
                 duration=20000,
                 className='text-center'),
         ], width=12),
-        ]),
+        ], align='center', justify='center'),
 
 
 
@@ -286,7 +291,7 @@ dbc.Row([
 
         ]),
         width=5),
-    ], className='mb-2', justify="center", align="even"),
+    ], className='mb-2', justify="center", align="center"),
 
 
 
@@ -666,19 +671,19 @@ dbc.Col([
 
     # # Components for storing and downloading data
     dbc.Spinner(children = [dcc.Store(id='Loading_variable_Process', storage_type='memory')],color="primary",
-                fullscreen = True, size = 'lg', show_initially = False, delay_hide = 800, delay_show = 800),
+                fullscreen = True, size = 'lg', show_initially = False, delay_hide = 80, delay_show = 80),
 
     # # Components for storing and downloading data
     dbc.Spinner(children=[dcc.Store(id='Loading_variable_Table', storage_type='memory')], color="primary",
-                fullscreen=True, size='lg', show_initially=False, delay_hide=800, delay_show=800),
+                fullscreen=True, size='lg', show_initially=False, delay_hide=80, delay_show=80),
 
     # # Components for storing and downloading data
     dbc.Spinner(children=[dcc.Store(id='Loading_variable_Download', storage_type='memory')], color="primary",
-                fullscreen=True, size='lg', show_initially=False, delay_hide=800, delay_show=800),
+                fullscreen=True, size='lg', show_initially=False, delay_hide=80, delay_show=80),
 
     # # Components for storing and downloading data
     dbc.Spinner(children=[dcc.Store(id='Loading_variable_Graph', storage_type='memory')], color="primary",
-                fullscreen=True, size='lg', show_initially=False, delay_hide=800, delay_show=800),
+                fullscreen=True, size='lg', show_initially=False, delay_hide=80, delay_show=80),
 
     dcc.Download(id="download"),
     dcc.Store(id='legend_Data', storage_type='memory'),
@@ -731,6 +736,8 @@ def update_Workspace(n_clicks, Workspace_input):
 @app.callback(
         Output(component_id='Workspace', component_property='value', allow_duplicate=True),
         Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
@@ -767,6 +774,9 @@ def clear_Workspace(n_clicks,Workspace_data):
                     print(f"Error deleting {path}: {e}")
 
             Workspace_Clear_data = True
+            Upload_Clear_data = True
+            filedata_Clear_data = True
+
             Workspace_input = ''
 
             if deleted_files == []:
@@ -777,7 +787,7 @@ def clear_Workspace(n_clicks,Workspace_data):
 
                 error = 'Workspace Cleared. ' + ', '.join(deleted_files) + ' removed.'
 
-        return Workspace_input, Workspace_Clear_data, error, color1, True
+        return Workspace_input, Workspace_Clear_data, Upload_Clear_data, filedata_Clear_data, error, color1, True
     else:
         raise PreventUpdate
 
@@ -1476,12 +1486,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
                 i = file_data[0].index(file)
 
-                file_path = file_data[4][i]
-
-                shape_dtype = file_data[1][i]
-
-                shape, dtype = shape_dtype
-
                 min2.append(file_data[5][i])
 
                 max2.append(file_data[6][i])
@@ -1531,6 +1535,14 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
             for file in file_inputs:
 
+                i = file_data[0].index(file)
+
+                file_path = file_data[4][i]
+
+                shape_dtype = file_data[1][i]
+
+                shape, dtype = shape_dtype
+
                 t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
 
                 mask = (t >= smallt) & (t <= bigt)
@@ -1557,6 +1569,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             y=numpy_vect_data[file][vector])
                     )
 
+                print(numpy_vect_data)
 
                 # Update x and y axes labels
                 fig.update_layout(
