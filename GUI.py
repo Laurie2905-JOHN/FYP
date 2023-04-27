@@ -178,119 +178,137 @@ app.layout = dbc.Container([
                 id="Graph_alert",
                 is_open=False,
                 dismissable=True,
-                duration=20000),
+                duration=20000,
+                className='text-center'),
         ], width=12),
+        ]),
 
 
 
-dbc.Col(
+dbc.Row([
 
-            dbc.Stack([
-                dbc.Button("Plot", id="plot_bttn", size="lg",color="primary", outline=True),  # Button for downloading selected data
+    dbc.Col(
 
-                dbc.Row([
-                    dbc.Col(
-                        dcc.Dropdown(
-                            id="File",
-                            options=[],
-                            multi=True,
-                            value=[],
-                            placeholder="Select a dataset"),
-                    ),  # Input field for minimum time
+        dbc.Stack([
 
-                    dbc.Col(
-                        dcc.Dropdown(
-                            id="Vect",
-                            options=[],
-                            multi=True,
-                            value=[],
-                            placeholder="Select a quantity"),
-                    ),  # Input field for maximum time
+            dbc.Row([
+                dbc.Col(
+                    dbc.Button("Plot", id="plot_bttn", size="lg", color="primary", outline=True),
+                ),  # Input field for minimum time
 
-                ], justify="center"),  # Row for input fields for minimum and maximum times
+                dbc.Col(
+                    dbc.Button("Clear Figure", id="plot_clear_bttn", size="lg", color="primary", outline=True),
+                ),  # Input field for maximum time
 
-                dbc.Row([
-                    dbc.Col(
-                        dbc.Input(id="time_small", min = 0, type="number", placeholder="Min Time", debounce=True)
-                    ),  # Input field for minimum time
+            ], justify="center"),  # Row for input fields for minimum and maximum times
 
-                    dbc.Col(
-                        dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time", debounce=True)
-                    ),  # Input field for maximum time
+            # Button for downloading selected data
 
-                ], justify="center"),  # Row for input fields for minimum and maximum times
+            dbc.Row([
+                dbc.Col(
+                    dcc.Dropdown(
+                        id="File",
+                        options=[],
+                        multi=True,
+                        value=[],
+                        placeholder="Select a Dataset"),
 
-            ], gap=2),
+                ),  # Input field for minimum time
 
-        width = 4),
+                dbc.Col(
+                    dcc.Dropdown(
+                        id="File",
+                        options=[],
+                        multi=True,
+                        value=[],
+                        placeholder="Select a Dataset"),
+                ),  # Input field for maximum time
+
+            ], justify="center"),  # Row for input fields for minimum and maximum times
+
+            dbc.Row([
+                dbc.Col(
+                    dbc.Input(id="time_small", min=0, type="number", placeholder="Min Time", debounce=True),
+                ),  # Input field for minimum time
+
+                dbc.Col(
+                    dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time", debounce=True)
+                ),  # Input field for maximum time
+
+            ], justify="center"),  # Row for input fields for minimum and maximum times
+
+        ], gap=2),
+
+        width=4),
 
 
+    dbc.Col(
+        dbc.Stack([
+            dbc.Label('Line Thickness', className="text-center"),
 
-        dbc.Col([
-            dbc.Stack([
-                dbc.Label('Line Thickness', className="text-center"),
-                dcc.Slider(
-                    min=0.5,
-                    max=5,
-                    value=1,
-                    step=0.1,
-                    id="line_thick",
-                    marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
-                    updatemode='drag'
-                ),
-                html.Hr(),
-                dbc.Row([
-                    dbc.Col(
-                        dbc.Stack([
-                            dbc.Label("Title", className="text-start"),
-                            dbc.RadioItems(id='title_onoff', value='On', options=['On', 'Off'], inline=True)
-                        ])
-                    ),
-                    dbc.Col(
-                        dbc.Stack([
-                            dbc.Label('Legend', className="text-start"),
-                            dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
-                        ]),
-                        className='mb-3'
-                    ),
-                ]),
+            dcc.Slider(
+                min=0.5,
+                max=5,
+                value=1,
+                step=0.1,
+                id="line_thick",
+                marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
+                updatemode='drag'
+            ),
 
-                dbc.Row(
-                    # Stack of input elements for updating the title or legend
+            html.Hr(),
+
+            dbc.Row([
+                dbc.Col(
                     dbc.Stack([
-                        dbc.InputGroup([
-                            # Dropdown menu for selecting the update action
-                            dbc.DropdownMenu([
-                                dbc.DropdownMenuItem("Update Title", id="dropdown_title_update"),
-                                dbc.DropdownMenuItem("Update Legend", id="dropdown_legend_update"),
-                                dbc.DropdownMenuItem(divider=True),
-                                dbc.DropdownMenuItem("Clear", id="dropdown_clear"),
-                            ],
-                                label="Update"),
-                            # Input element for entering the new title or legend
-                            dbc.Input(
-                                id="New_name",
-                                type='text',
-                                placeholder="Enter text to update legend or title",
-                                debounce=True
-                            ),
-                        ]),
-                        # Horizontal direction of the stack
-                    ], direction="horizontal"),
+                        dbc.Label("Title", className="text-start"),
+                        dbc.RadioItems(id='title_onoff', value='On', options=['On', 'Off'], inline=True)
+                    ])
                 ),
 
+                dbc.Col(
+                    dbc.Stack([
+                        dbc.Label('Legend', className="text-start"),
+                        dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
+                    ]),
+                    className='mb-3'
+                ),
             ]),
-        ])], className = 'mb-2', justify="center", align="center"),
+
+            dbc.Row(
+                dbc.Stack([
+                    dbc.InputGroup([
+                        dbc.DropdownMenu([
+                            dbc.DropdownMenuItem("Update Title", id="dropdown_title_update"),
+                            dbc.DropdownMenuItem("Update Legend", id="dropdown_legend_update"),
+                            dbc.DropdownMenuItem(divider=True),
+                            dbc.DropdownMenuItem("Clear", id="dropdown_clear"),
+                        ], label="Update"),
+
+                        dbc.Input(
+                            id="New_name",
+                            type='text',
+                            placeholder="Enter text to update legend or title",
+                            debounce=True
+                        ),
+                    ]),
+                ], direction="horizontal"),
+            ),
+
+        ]),
+        width=5),
+    ], className='mb-2', justify="center", align="center"),
 
 
-    dbc.Row([
+
+dbc.Row([
         dbc.Col(
             html.Hr(),
             width=12
         ),  # Horizontal rule to separate content
     ], className='mb-2'),
 
-    dbc.Row(
+dbc.Row(
         dbc.Col(
             html.H5('Turbulence Parameters', className='center-text'),
             width=12,
@@ -311,7 +329,8 @@ dbc.Col(
                 id="TI_alert",
                 is_open=False,
                 dismissable=True,
-                duration=30000
+                duration=30000,
+                className='text-center',
             ),  # Alert component to show status of file download
         ], width=12),
     ),
@@ -406,7 +425,8 @@ dash_table.DataTable(id = 'TI_Table',
                 id="ClearFiles_alert",
                 is_open=False,
                 dismissable=True,
-                duration=30000
+                duration=30000,
+                className='text-center',
             ),
         ], width=12),
 
@@ -527,7 +547,7 @@ dash_table.DataTable(id = 'TI_Table',
 
                 dbc.Input(id="Sample_rate", min=0, type="number", placeholder="Enter Sample Frequency", debounce=True),
 
-                html.Label("Select files to analyse"),
+                html.Label("Select Files To Process"),
 
                 # Checkbox for uploading all files
                 dbc.Checklist(
@@ -552,7 +572,7 @@ dash_table.DataTable(id = 'TI_Table',
                     n_clicks=0
                 ),
 
-                html.Label("Select files to clear", className='center-text'),
+                html.Label("Select Files To Clear", className='center-text'),
 
                 # Checkbox for clearing all files
                 dbc.Checklist(
@@ -596,7 +616,8 @@ dash_table.DataTable(id = 'TI_Table',
                 id="Download_alert",
                 is_open=False,
                 dismissable=True,
-                duration=30000
+                duration=30000,
+                className='text-center',
             ),  # Alert component to show status of file download
         ], width=12),
     ),
@@ -678,6 +699,7 @@ dbc.Col([
     dcc.Store(id='Workspace_store', storage_type='local'),
     dcc.Store(id='Cal_storage', storage_type='local'),
 ])
+
 
 @ app.callback(
     Output(component_id='Workspace_store', component_property='data'),
