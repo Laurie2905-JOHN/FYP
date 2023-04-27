@@ -29,6 +29,20 @@ import shutil
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
+
+def update_values(large_val, small_val):
+    """
+    Update large and small input values, ensuring large_val is not less than small_val.
+    If both inputs are None, prevent update.
+    """
+    if large_val is None or small_val is None:
+        raise PreventUpdate
+
+    if large_val < small_val:
+        large_val = small_val
+
+    return large_val, small_val
+
 def calculate_turbulence_intensity(u, v, w):
 
     N = len(u)
@@ -755,6 +769,8 @@ def update_Workspace(n_clicks, Workspace_input):
                     open1 = True
                     Workspace_data = Workspace_input3
 
+        return Workspace_data, error, color1, open1
+
     except Exception as e:
         # If error there is an error print it.
         error = str(e)
@@ -772,19 +788,31 @@ def update_Workspace(n_clicks, Workspace_input):
     Input(component_id="Workspace_store", component_property='data'),
 )
 def update_Workspace_Alert(Workspace_data):
-    print(Workspace_data)
-    # Check if there is any workspace data.
-    if Workspace_data is None:
-        alert_work = 'NO WORKSPACE SELECTED'
+
+    # Try/Except, used to catch any errors not considered
+    try:
+        # Check if there is workspace data.
+        if Workspace_data is None:
+            alert_work = 'NO WORKSPACE SELECTED'
+            color1 = 'danger'
+            open1 = True
+        else:
+            # Update the alert message with the current workspace data if there is data.
+            alert_work = Workspace_data
+            color1 = 'primary'
+            open1 = True
+
+        return alert_work, color1, open1
+
+    except Exception as e:
+        # If error there is an error print it.
+        alert_work = str(e)
         color1 = 'danger'
-        open1 = True
-    else:
-        # Update the alert message with the current workspace data.
-        alert_work = Workspace_data
-        color1 = 'primary'
         open1 = True
 
     return alert_work, color1, open1
+
+
 
 @app.callback(
         Output(component_id='Workspace', component_property='value', allow_duplicate=True),
@@ -800,50 +828,52 @@ def update_Workspace_Alert(Workspace_data):
 
 def clear_Workspace(n_clicks,Workspace_data):
 
-    if ctx.triggered_id == 'Workspace_clear':
-        if Workspace_data is None:
-            error = 'No Workspace to Clear'
-            color1 = 'danger'
-            Workspace_input = None
-            Workspace_Clear_data = False
-            Upload_Clear_data = False
-            filedata_Clear_data = False
+    # Try/Except, used to catch any errors not considered
+    try:
 
-        else:
-
-            color1 = 'success'
-            deleted_files = []
-
-            for file_name in os.listdir(Workspace_data):
-                path = os.path.join(Workspace_data,file_name)
-                try:
-                    if os.path.isfile(path):
-                        # delete the file
-                        os.remove(path)
-                        deleted_files.append(file_name)
-                    elif os.path.isdir(path):
-                        # delete the folder and its contents recursively
-                        shutil.rmtree(path)
-                        deleted_files.append(file_name)
-                except Exception as e:
-                    print(f"Error deleting {path}: {e}")
-
-            Workspace_Clear_data = True
-            Upload_Clear_data = True
-            filedata_Clear_data = True
-            Workspace_input = None
-
-            if deleted_files == []:
-
-                error = 'Workspace Data Cleared'
+        if ctx.triggered_id == 'Workspace_clear':
+            if Workspace_data is None:
+                error = 'No Workspace to Clear'
+                color1 = 'danger'
+                Workspace_input = None
+                Workspace_Clear_data = False
+                Upload_Clear_data = False
+                filedata_Clear_data = False
 
             else:
 
-                error = 'Workspace Cleared. ' + ', '.join(deleted_files) + ' removed.'
+                color1 = 'success'
+                deleted_files = []
 
-        return Workspace_input, Workspace_Clear_data, Upload_Clear_data, filedata_Clear_data, error, color1, True
-    else:
-        raise PreventUpdate
+                for file_name in os.listdir(Workspace_data):
+                    path = os.path.join(Workspace_data,file_name)
+                    try:
+                        if os.path.isfile(path):
+                            # delete the file
+                            os.remove(path)
+                            deleted_files.append(file_name)
+                        elif os.path.isdir(path):
+                            # delete the folder and its contents recursively
+                            shutil.rmtree(path)
+                            deleted_files.append(file_name)
+                    except Exception as e:
+                        print(f"Error deleting {path}: {e}")
+
+                Workspace_Clear_data = True
+                Upload_Clear_data = True
+                filedata_Clear_data = True
+                Workspace_input = None
+
+                if deleted_files == []:
+
+                    error = 'Workspace Data Cleared'
+
+                else:
+
+                    error = 'Workspace Cleared. ' + ', '.join(deleted_files) + ' removed.'
+
+            return Workspace_input, Workspace_Clear_data, Upload_Clear_data, filedata_Clear_data, error, color1, True
+
 
 
 
@@ -856,12 +886,14 @@ def clear_Workspace(n_clicks,Workspace_data):
 
 def update_cal_text(Cal_data):
 
-    if Cal_data is None:
-        alert_cal = 'No Calibration File Selected'
-        color1 = 'danger'
-    else:
-        alert_cal = Cal_data[0][0] + ' Selected'
-        color1 = 'primary'
+    # Try/Except, used to catch any errors not considered
+    try:
+        if Cal_data is None:
+            alert_cal = 'No Calibration File Selected'
+            color1 = 'danger'
+        else:
+            alert_cal = Cal_data[0][0] + ' Selected'
+            color1 = 'primary'
 
 
     return alert_cal, color1, True
@@ -934,34 +966,12 @@ def cal_analysis(filename, contents):
 
 def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_filepath_data):
 
+    # Try/Except, used to catch any errors not considered
+    try:
+        if ctx.triggered_id == 'dropdown_BARN_update':
 
-    if ctx.triggered_id == 'dropdown_BARN_update':
-
-        if filepath1 is None or filepath1 == '':
-            error = 'No Filepath Inputted. Please Check'
-            color1 = 'danger'
-            open1 = True
-            filepath_input = ''
-            filename_filepath_data = no_update
-
-        else:
-
-            filepath2 = filepath1.replace('"', "")
-            filepath = os.path.normpath(filepath2)
-
-            filename1 = os.path.basename(filepath)
-            filename = os.path.splitext(filename1)[0]
-
-            if os.path.isfile(filepath)==False:
-                error = 'Please Check Filepath'
-                color1 = 'danger'
-                open1 = True
-                filepath_input = no_update
-                filename_filepath_data = no_update
-
-
-            elif os.path.splitext(filename1)[1] != '.txt' and os.path.splitext(filename1)[1] != '.csv':
-                error = ' Please upload .txt or .csv files'
+            if filepath1 is None or filepath1 == '':
+                error = 'No Filepath Inputted. Please Check'
                 color1 = 'danger'
                 open1 = True
                 filepath_input = ''
@@ -969,45 +979,64 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
 
             else:
 
-                if filename_filepath_data is None:
-                    filename_filepath_data = [[filename],[filepath]]
-                    error = filename + ' added'
-                    color1 = 'success'
+                filepath2 = filepath1.replace('"', "")
+                filepath = os.path.normpath(filepath2)
+
+                filename1 = os.path.basename(filepath)
+                filename = os.path.splitext(filename1)[0]
+
+                if os.path.isfile(filepath)==False:
+                    error = 'Please Check Filepath'
+                    color1 = 'danger'
+                    open1 = True
+                    filepath_input = no_update
+                    filename_filepath_data = no_update
+
+
+                elif os.path.splitext(filename1)[1] != '.txt' and os.path.splitext(filename1)[1] != '.csv':
+                    error = ' Please upload .txt or .csv files'
+                    color1 = 'danger'
                     open1 = True
                     filepath_input = ''
+                    filename_filepath_data = no_update
 
                 else:
 
-                    combined_filenames = filename_filepath_data[0].copy()
-                    combined_filepaths = filename_filepath_data[1].copy()
-                    repeated_filename = []
-
-                    for value in combined_filenames:
-                        if filename == value:
-                            repeated_filename.append(filename)
-
-                    if repeated_filename != []:
-                        error = filename + ' already exists. Please check'
-                        color1 = 'danger'
-                        open1 = True
-                        filepath_input = no_update
-                        filename_filepath_data = no_update
-                        repeated_filename = []
-
-                    else:
-                        combined_filenames.append(filename)
-                        combined_filepaths.append(filepath)
+                    if filename_filepath_data is None:
+                        filename_filepath_data = [[filename],[filepath]]
                         error = filename + ' added'
                         color1 = 'success'
                         open1 = True
                         filepath_input = ''
-                        filename_filepath_data = [combined_filenames, combined_filepaths]
 
-        return filepath_input, filename_filepath_data, error, color1, open1
+                    else:
 
-    else:
-        raise PreventUpdate
+                        combined_filenames = filename_filepath_data[0].copy()
+                        combined_filepaths = filename_filepath_data[1].copy()
+                        repeated_filename = []
 
+                        for value in combined_filenames:
+                            if filename == value:
+                                repeated_filename.append(filename)
+
+                        if repeated_filename != []:
+                            error = filename + ' already exists. Please check'
+                            color1 = 'danger'
+                            open1 = True
+                            filepath_input = no_update
+                            filename_filepath_data = no_update
+                            repeated_filename = []
+
+                        else:
+                            combined_filenames.append(filename)
+                            combined_filepaths.append(filepath)
+                            error = filename + ' added'
+                            color1 = 'success'
+                            open1 = True
+                            filepath_input = ''
+                            filename_filepath_data = [combined_filenames, combined_filepaths]
+
+            return filepath_input, filename_filepath_data, error, color1, open1
 
 
 @app.callback(
@@ -1021,13 +1050,16 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
 
 def clear_upload(n_clicks):
 
-    if ctx.triggered_id == 'dropdown_BARN_clear':
+    # Try/Except, used to catch any errors not considered
+    try:
 
-        filepath_input = ''
-        error = 'Upload Files Cleared'
-        color1 = 'primary'
-        open1 = True
-        clear_filename_filepath_data = True
+        if ctx.triggered_id == 'dropdown_BARN_clear':
+
+            filepath_input = ''
+            error = 'Upload Files Cleared'
+            color1 = 'primary'
+            open1 = True
+            clear_filename_filepath_data = True
 
         return filepath_input, clear_filename_filepath_data, error, color1, open1
 
@@ -1052,194 +1084,213 @@ def clear_upload(n_clicks):
 
 def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, filenames, Workspace_data):
 
-    # Check if the "newfile" button was clicked
-    if "newfile" == ctx.triggered_id:
+    # Try/Except, used to catch any errors not considered
+    try:
+        # Check if the "newfile" button was clicked
+        if "newfile" == ctx.triggered_id:
 
-        # Initialise data dictionary if it is None
-        if file_data is None:
-            file_data = [[],[],[],[],[],[],[]]
+            # Initialise data dictionary if it is None
+            if file_data is None:
+                file_data = [[],[],[],[],[],[],[]]
 
-        # Check if no files were uploaded
-        if filenames is None or filenames == []:
+            # Check if no files were uploaded
+            if filenames is None or filenames == []:
 
-            error = 'No Files Selected For Upload'
-            color = "danger"
-            open1 = True
-            filename_filepath_data = no_update
-            # Return the same data if no files were uploaded
-            file_data = no_update
-
-        elif SF is None or SF == 0:
-
-            error = 'No Sample Rate Selected'
-            color = "danger"
-            open1 = True
-            filename_filepath_data = no_update
-            # Return the same data if no files were uploaded
-            file_data = no_update
-
-        elif Workspace_data is None:
-            error = 'No Workspace Selected'
-            color = "danger"
-            open1 = True
-            filename_filepath_data = no_update
-            # Return the same data if no files were uploaded
-            file_data = no_update
-
-        else:
-
-            Oldfilenames = file_data[0] # Get existing file names
-            old_dtype_shape = file_data[1]
-            Old_calData = file_data[2]
-            Old_SF = file_data[3]
-            Old_filepath = file_data[4]
-            Old_min = file_data[5]
-            Old_max = file_data[6]
-
-            combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
-            combined_dtype_shape = old_dtype_shape.copy()
-            combined_CalData = Old_calData.copy() # Make a copy of existing file names
-            combined_SF = Old_SF.copy()
-            combined_filepath = Old_filepath.copy() # Make a copy of existing file names
-            combined_min = Old_min.copy()
-            combined_max = Old_max.copy()
-
-
-
-            new_value = [] # List of uploaded file names which aren't repeated
-            repeated_value = [] # List of repeated file names
-            error_file = [] # List of files with invalid formats
-
-            # Loop through uploaded files and process them
-
-            def save_array_memmap(array, filename, folder_path):
-                filepath = os.path.join(folder_path, filename)
-                dtype = str(array.dtype)
-                shape = array.shape
-                array_memmap = np.memmap(filepath, dtype=dtype, shape = shape, mode='w+')
-                array_memmap[:] = array[:]
-                del array_memmap
-                return shape, dtype
-
-            def get_unique_path(base_path, name):
-                counter = 1
-                new_name = name
-
-                while os.path.exists(os.path.join(base_path, new_name)):
-                    new_name = f"{name} ({counter})"
-                    counter += 1
-
-                return os.path.normpath(os.path.join(base_path, new_name))
-
-
-            for i, value in enumerate(filenames):
-                # Check if the file name is already in the combined list
-                if value not in combined_filenames:
-                    try:
-
-                        Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
-
-                        Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
-
-                        # Check if the folder exists
-                        if not os.path.exists(Workspace_Path):
-                            # Create the folder
-                            os.mkdir(Workspace_Path)
-
-                        file_path = get_unique_path(Workspace_Path, value)
-
-                        os.makedirs(file_path, exist_ok=True)
-
-                        combined_max.append(np.amax(Barn_data['t']))
-                        combined_min.append(np.amin(Barn_data['t']))
-
-
-                        save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
-                        save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
-                        save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
-                        save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
-                        shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
-
-                        new_value.append(value)
-                        combined_filenames.append(value)
-                        combined_dtype_shape.append(shape_dtype)
-                        combined_CalData.append(cal_data[0][0])
-                        combined_SF.append(SF)
-                        combined_filepath.append(file_path)
-
-                    # If there's an error processing the file, add it to the error list
-                    except Exception as e:
-                        print('cal' + e)
-                        error_file.append(value)
-                else:
-
-                    repeated_value.append(value)
-
-            file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath, combined_min, combined_max]
-
-
-            upload_filename = filename_filepath_data[0]
-            upload_filepath = filename_filepath_data[1]
-
-            # Delete selected data
-            for value in filenames:
-                i = upload_filename.index(value)
-                upload_filename.remove(value)
-                del upload_filepath[i]
-
-            filename_filepath_data = [upload_filename, upload_filepath]
-
-
-            # If there are errors, return error messages
-            if repeated_value != [] or error_file != []:
-
-                error_list_complete = repeated_value + error_file
-
-                if new_value == []:
-
-                    error_start = 'There was an error processing all files: \n ' \
-                    '(' + ', '.join(error_list_complete) + ').'
-
-                else:
-
-                    error_start = 'There was an error processing files: \n ' \
-                                   '(' + ', '.join(error_list_complete) + ').'
-
-                error_repeat = ' Please check files: ' \
-                               '(' + ', '.join(repeated_value) + ') are not repeated.'
-
-                error_process = ' Please check: \n' \
-                            '(' + ', '.join(error_file) + ') for errors.'
-
-
-
-                # If there are errors in files and repeated files
-                if repeated_value != [] and error_file != []:
-                    error = error_start + error_repeat + error_process
-
-                # If there are errors in files
-                elif error_file != [] and repeated_value == []:
-                    error = error_start + '\n' + error_process
-
-                # If there are errors in files
-                elif error_file == [] and repeated_value != []:
-                    error = error_start + '\n' + error_repeat
-
+                error = 'No Files Selected For Upload'
                 color = "danger"
                 open1 = True
+                filename_filepath_data = no_update
+                # Return the same data if no files were uploaded
+                file_data = no_update
+
+            elif SF is None or SF == 0:
+
+                error = 'No Sample Rate Selected'
+                color = "danger"
+                open1 = True
+                filename_filepath_data = no_update
+                # Return the same data if no files were uploaded
+                file_data = no_update
+
+            elif Workspace_data is None:
+                error = 'No Workspace Selected'
+                color = "danger"
+                open1 = True
+                filename_filepath_data = no_update
+                # Return the same data if no files were uploaded
+                file_data = no_update
 
             else:
 
-                # If no errors display success message
-                error = ', '.join(new_value) + ' processed'
+                Oldfilenames = file_data[0] # Get existing file names
+                old_dtype_shape = file_data[1]
+                Old_calData = file_data[2]
+                Old_SF = file_data[3]
+                Old_filepath = file_data[4]
+                Old_min = file_data[5]
+                Old_max = file_data[6]
 
-                color = "success"
+                combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
+                combined_dtype_shape = old_dtype_shape.copy()
+                combined_CalData = Old_calData.copy() # Make a copy of existing file names
+                combined_SF = Old_SF.copy()
+                combined_filepath = Old_filepath.copy() # Make a copy of existing file names
+                combined_min = Old_min.copy()
+                combined_max = Old_max.copy()
 
-                open1 = True
 
-        loading_variable = 'done'
 
-        return file_data, error, color, open1, filename_filepath_data, loading_variable
+                new_value = [] # List of uploaded file names which aren't repeated
+                repeated_value = [] # List of repeated file names
+                error_file = [] # List of files with invalid formats
+
+                # Loop through uploaded files and process them
+
+                def save_array_memmap(array, filename, folder_path):
+                    filepath = os.path.join(folder_path, filename)
+                    dtype = str(array.dtype)
+                    shape = array.shape
+                    array_memmap = np.memmap(filepath, dtype=dtype, shape = shape, mode='w+')
+                    array_memmap[:] = array[:]
+                    del array_memmap
+                    return shape, dtype
+
+                def get_unique_path(base_path, name):
+                    counter = 1
+                    new_name = name
+
+                    while os.path.exists(os.path.join(base_path, new_name)):
+                        new_name = f"{name} ({counter})"
+                        counter += 1
+
+                    return os.path.normpath(os.path.join(base_path, new_name))
+
+
+                for i, value in enumerate(filenames):
+                    # Check if the file name is already in the combined list
+                    if value not in combined_filenames:
+                        try:
+
+                            Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
+
+                            Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
+
+                            # Check if the folder exists
+                            if not os.path.exists(Workspace_Path):
+                                # Create the folder
+                                os.mkdir(Workspace_Path)
+
+                            file_path = get_unique_path(Workspace_Path, value)
+
+                            os.makedirs(file_path, exist_ok=True)
+
+                            combined_max.append(np.amax(Barn_data['t']))
+                            combined_min.append(np.amin(Barn_data['t']))
+
+
+                            save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
+                            save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
+                            save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
+                            save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
+                            shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
+
+                            new_value.append(value)
+                            combined_filenames.append(value)
+                            combined_dtype_shape.append(shape_dtype)
+                            combined_CalData.append(cal_data[0][0])
+                            combined_SF.append(SF)
+                            combined_filepath.append(file_path)
+
+                        # If there's an error processing the file, add it to the error list
+                        except Exception as e:
+                            print('cal' + e)
+                            error_file.append(value)
+                    else:
+
+                        repeated_value.append(value)
+
+                file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath, combined_min, combined_max]
+
+
+                upload_filename = filename_filepath_data[0]
+                upload_filepath = filename_filepath_data[1]
+
+                # Delete selected data
+                for value in filenames:
+                    i = upload_filename.index(value)
+                    upload_filename.remove(value)
+                    del upload_filepath[i]
+
+                filename_filepath_data = [upload_filename, upload_filepath]
+
+
+                # If there are errors, return error messages
+                if repeated_value != [] or error_file != []:
+
+                    error_list_complete = repeated_value + error_file
+
+                    if new_value == []:
+
+                        error_start = 'There was an error processing all files: \n ' \
+                        '(' + ', '.join(error_list_complete) + ').'
+
+                    else:
+
+                        error_start = 'There was an error processing files: \n ' \
+                                       '(' + ', '.join(error_list_complete) + ').'
+
+                    error_repeat = ' Please check files: ' \
+                                   '(' + ', '.join(repeated_value) + ') are not repeated.'
+
+                    error_process = ' Please check: \n' \
+                                '(' + ', '.join(error_file) + ') for errors.'
+
+
+
+                    # If there are errors in files and repeated files
+                    if repeated_value != [] and error_file != []:
+                        error = error_start + error_repeat + error_process
+
+                    # If there are errors in files
+                    elif error_file != [] and repeated_value == []:
+                        error = error_start + '\n' + error_process
+
+                    # If there are errors in files
+                    elif error_file == [] and repeated_value != []:
+                        error = error_start + '\n' + error_repeat
+
+                    color = "danger"
+                    open1 = True
+
+                else:
+
+                    # If no errors display success message
+                    error = ', '.join(new_value) + ' processed'
+
+                    color = "success"
+
+                    open1 = True
+
+            loading_variable = 'done'
+
+            return file_data, error, color, open1, filename_filepath_data, loading_variable
+
+# Call back which updates the download time range to prevent error
+@app.callback(
+        Output(component_id="big_t", component_property='value', allow_duplicate=True),
+        Output(component_id="small_t", component_property='value', allow_duplicate=True),
+        Input(component_id="small_t", component_property='value'),
+        Input(component_id="big_t", component_property='value'),
+        prevent_initial_call=True)
+
+def update_vals(small_val, large_val):
+    # Try/Except, used to catch any errors not considered
+    try:
+
+        large_val, small_val = update_values(large_val, small_val)
+
+        # Return the updated large and small input values
+        return large_val, small_val
 
 @ app.callback(
     Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
@@ -1248,17 +1299,15 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
     Input(component_id="big_t_TI", component_property='value'),
         prevent_initial_call=True)
 
-def update_In(small_val, large_val):
-    # If both inputs are None, prevent update
-    if large_val is None or small_val is None:
-        raise PreventUpdate
+def update_vals2(small_val, large_val):
 
-    # If large input is less than small input, set large input equal to small input
-    if large_val < small_val:
-        large_val = small_val
+    # Try/Except, used to catch any errors not considered
+    try:
 
-    # Return the updated large and small input values
-    return large_val, small_val
+        large_val, small_val = update_values(large_val, small_val)
+
+        # Return the updated large and small input values
+        return large_val, small_val
 
 @app.callback(
     Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
@@ -1270,15 +1319,18 @@ def update_In(small_val, large_val):
 
 def clear_table(n_clicks):
 
-    if "Clear_Table" == ctx.triggered_id:
+    # Try/Except, used to catch any errors not considered
+    try:
 
-        error = 'TABLE CLEARED'
+        if "Clear_Table" == ctx.triggered_id:
 
-        error_col = 'success'
+            error = 'TABLE CLEARED'
 
-        table_data = []
+            error_col = 'success'
 
-    return table_data, error, error_col, True
+            table_data = []
+
+        return table_data, error, error_col, True
 
 # Callback to analyse and update TI table
 @ app.callback(
@@ -1298,21 +1350,14 @@ def clear_table(n_clicks):
 
 def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data, column_data):
 
-    if "TI_btn_download" == ctx.triggered_id:
+    # Try/Except, used to catch any errors not considered
+    try:
 
-        if chosen_file is None:
+        if "TI_btn_download" == ctx.triggered_id:
 
-            error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check you have selected a dataset'
+            if chosen_file is None:
 
-            error_col = 'danger'
-
-            table_data = no_update
-
-        else:
-
-            if small_TI == big_TI and small_TI is not None and big_TI is not None:
-
-                error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
+                error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check you have selected a dataset'
 
                 error_col = 'danger'
 
@@ -1320,114 +1365,124 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
             else:
 
+                if small_TI == big_TI and small_TI is not None and big_TI is not None:
 
-                def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                    filepath = os.path.join(folder_path, filename)
-                    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+                    error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
 
-                    if row_numbers == 'all':
-                        loaded_data = mapped_data[:]
-                    else:
-                        loaded_data = mapped_data[row_numbers]
+                    error_col = 'danger'
 
-                    return loaded_data
-
-                i = file_data[0].index(chosen_file)
-
-
-                shape_dtype = file_data[1][i]
-
-                shape, dtype = shape_dtype
-
-                file_path = file_data[4][i]
-
-                min1 = file_data[5][i]
-                max1 = file_data[6][i]
-
-                # Error messages
-                smallt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum time limit because the inputted time ' \
-                                                                    'is outside the available range. Please adjust your time limit accordingly.'
-
-
-                bigt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the maximum time limit because the inputted time ' \
-                                                                    'is outside the available range. Please adjust your time limit accordingly.'
-
-                both_t_error ='TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
-                                                                   'are outside the available range. Please adjust your time limit accordingly.'
-
-                both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED'
-
-                # Cut data based on conditions
-                if small_TI is None and big_TI is None:
-                    big_TI = max1
-                    small_TI = min1
-                    error = both_t_error
-
-                elif small_TI is None and big_TI is not None:
-                    small_TI = min1
-                    error = smallt_error
-
-                elif big_TI is None and small_TI is not None:
-                    big_TI = max1
-                    error = bigt_error
+                    table_data = no_update
 
                 else:
 
-                    if small_TI < min1 and big_TI > max1:
-                        small_TI = min1
+
+                    def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                        filepath = os.path.join(folder_path, filename)
+                        mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+
+                        if row_numbers == 'all':
+                            loaded_data = mapped_data[:]
+                        else:
+                            loaded_data = mapped_data[row_numbers]
+
+                        return loaded_data
+
+                    i = file_data[0].index(chosen_file)
+
+
+                    shape_dtype = file_data[1][i]
+
+                    shape, dtype = shape_dtype
+
+                    file_path = file_data[4][i]
+
+                    min1 = file_data[5][i]
+                    max1 = file_data[6][i]
+
+                    # Error messages
+                    smallt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum time limit because the inputted time ' \
+                                                                        'is outside the available range. Please adjust your time limit accordingly.'
+
+
+                    bigt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the maximum time limit because the inputted time ' \
+                                                                        'is outside the available range. Please adjust your time limit accordingly.'
+
+                    both_t_error ='TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
+                                                                       'are outside the available range. Please adjust your time limit accordingly.'
+
+                    both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED'
+
+                    # Cut data based on conditions
+                    if small_TI is None and big_TI is None:
                         big_TI = max1
+                        small_TI = min1
                         error = both_t_error
 
-                    elif small_TI < min1:
+                    elif small_TI is None and big_TI is not None:
                         small_TI = min1
                         error = smallt_error
 
-
-                    elif big_TI > max1:
+                    elif big_TI is None and small_TI is not None:
                         big_TI = max1
                         error = bigt_error
 
                     else:
-                        error = both_t_NO_error
 
-                t = load_array_memmap('t.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = 'all')
+                        if small_TI < min1 and big_TI > max1:
+                            small_TI = min1
+                            big_TI = max1
+                            error = both_t_error
 
-                mask = (t >= small_TI) & (t <= big_TI)
-
-                error_col = 'primary'
-                row_numbers = np.where(mask)[0].tolist()
-
-                ux = load_array_memmap('Ux.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-                uy = load_array_memmap('Uy.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-                uz = load_array_memmap('Uz.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-
-                TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
+                        elif small_TI < min1:
+                            small_TI = min1
+                            error = smallt_error
 
 
-                if table_data is None:
-                    table_data = []
+                        elif big_TI > max1:
+                            big_TI = max1
+                            error = bigt_error
 
-                new_data = [
-                    {
-                    'FileName': chosen_file,
-                    'CalFile': file_data[2][i],
-                    'SF': file_data[3][i],
-                    'Time_1': round(small_TI,2),
-                    'Time_2': round(big_TI,2),
-                    'Ux': round(Ux,6),
-                    'Uy': round(Uy,6),
-                    'Uz': round(Uz,6),
-                    'U1': round(U1,6),
-                    'TI': round(TI,6),
-                }
+                        else:
+                            error = both_t_NO_error
 
-                ]
+                    t = load_array_memmap('t.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = 'all')
 
-                table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
+                    mask = (t >= small_TI) & (t <= big_TI)
 
-        Loading_variable = 'done'
+                    error_col = 'primary'
+                    row_numbers = np.where(mask)[0].tolist()
 
-        return table_data, error, error_col, True, Loading_variable
+                    ux = load_array_memmap('Ux.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+                    uy = load_array_memmap('Uy.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+                    uz = load_array_memmap('Uz.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
+
+                    TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
+
+
+                    if table_data is None:
+                        table_data = []
+
+                    new_data = [
+                        {
+                        'FileName': chosen_file,
+                        'CalFile': file_data[2][i],
+                        'SF': file_data[3][i],
+                        'Time_1': round(small_TI,2),
+                        'Time_2': round(big_TI,2),
+                        'Ux': round(Ux,6),
+                        'Uy': round(Uy,6),
+                        'Uz': round(Uz,6),
+                        'U1': round(U1,6),
+                        'TI': round(TI,6),
+                    }
+
+                    ]
+
+                    table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
+
+            Loading_variable = 'done'
+
+            return table_data, error, error_col, True, Loading_variable
 
 @app.callback(
         Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
@@ -1440,15 +1495,18 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
 def clear_graph(n_clicks):
 
-    if ctx.triggered_id == 'plot_clear_bttn':
+    # Try/Except, used to catch any errors not considered
+    try:
 
-        fig = {}
-        file = None
-        Vect = None
-        tsmall = None
-        tbig = None
+        if ctx.triggered_id == 'plot_clear_bttn':
 
-        return fig, file, Vect, tsmall, tbig
+            fig = {}
+            file = None
+            Vect = None
+            tsmall = None
+            tbig = None
+
+            return fig, file, Vect, tsmall, tbig
 
 
 
@@ -1472,244 +1530,246 @@ def clear_graph(n_clicks):
 
 def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title):
 
-    if ctx.triggered_id == 'plot_bttn':
+    # Try/Except, used to catch any errors not considered
+    try:
+        if ctx.triggered_id == 'plot_bttn':
 
-        # If no input do not plot graphs
-        if file_inputs == [] or vector_inputs1 == []:
+            # If no input do not plot graphs
+            if file_inputs == [] or vector_inputs1 == []:
 
-            fig = no_update
+                fig = no_update
 
-            error = 'Please Check Inputs'
+                error = 'Please Check Inputs'
 
-            color1 = 'danger'
+                color1 = 'danger'
 
-            Loading_Variable = 'done'
-
-        else:
-
-            fig = go.Figure()
-
-            current_names = []
-
-            min2 = []
-
-            max2 = []
-
-            # Error messages
-            smallt_error = 'The data has been cut to the minimum time limit because the inputted time ' \
-                           'is outside the available range.'
-
-            bigt_error = 'The data has been cut to the maximum time limit because the inputted time ' \
-                         'is outside the available range.'
-
-            both_t_error = 'The data has been cut to the minimum and maximum time limit because the inputted times ' \
-                           'are outside the available range.'
-
-            both_t_NO_error = 'The data has been cut to the specified limits.'
-
-
-            def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                filepath = os.path.join(folder_path, filename)
-                mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
-
-                if row_numbers == 'all':
-                    loaded_data = mapped_data[:]
-                else:
-                    loaded_data = mapped_data[row_numbers]
-
-                return loaded_data
-
-
-
-            for file in file_inputs:
-
-                i = file_data[0].index(file)
-
-                min2.append(file_data[5][i])
-
-                max2.append(file_data[6][i])
-
-            min1 = min(min2)
-
-            max1 = max(max2)
-
-            # Cut data based on conditions
-            if smallt is None and bigt is None:
-                bigt = max1
-                smallt = min1
-                error_cut = both_t_error
-                error_cut_good = ''
-
-            elif smallt is None and bigt is not None:
-                smallt = min1
-                error_cut = smallt_error
-                error_cut_good = ''
-
-            elif bigt is None and smallt is not None:
-                bigt = max1
-                error_cut = bigt_error
-                error_cut_good = ''
+                Loading_Variable = 'done'
 
             else:
 
-                if smallt < min1 and bigt > max1:
-                    smallt = min1
+                fig = go.Figure()
+
+                current_names = []
+
+                min2 = []
+
+                max2 = []
+
+                # Error messages
+                smallt_error = 'The data has been cut to the minimum time limit because the inputted time ' \
+                               'is outside the available range.'
+
+                bigt_error = 'The data has been cut to the maximum time limit because the inputted time ' \
+                             'is outside the available range.'
+
+                both_t_error = 'The data has been cut to the minimum and maximum time limit because the inputted times ' \
+                               'are outside the available range.'
+
+                both_t_NO_error = 'The data has been cut to the specified limits.'
+
+
+                def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                    filepath = os.path.join(folder_path, filename)
+                    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+
+                    if row_numbers == 'all':
+                        loaded_data = mapped_data[:]
+                    else:
+                        loaded_data = mapped_data[row_numbers]
+
+                    return loaded_data
+
+
+
+                for file in file_inputs:
+
+                    i = file_data[0].index(file)
+
+                    min2.append(file_data[5][i])
+
+                    max2.append(file_data[6][i])
+
+                min1 = min(min2)
+
+                max1 = max(max2)
+
+                # Cut data based on conditions
+                if smallt is None and bigt is None:
                     bigt = max1
+                    smallt = min1
                     error_cut = both_t_error
                     error_cut_good = ''
 
-                elif smallt < min1:
-                    bigt = min1
+                elif smallt is None and bigt is not None:
+                    smallt = min1
                     error_cut = smallt_error
                     error_cut_good = ''
 
-
-                elif bigt > max1:
+                elif bigt is None and smallt is not None:
                     bigt = max1
                     error_cut = bigt_error
                     error_cut_good = ''
+
                 else:
-                    error_cut_good = both_t_NO_error
-                    error_cut = ''
 
-            for file in file_inputs:
+                    if smallt < min1 and bigt > max1:
+                        smallt = min1
+                        bigt = max1
+                        error_cut = both_t_error
+                        error_cut_good = ''
 
-                i = file_data[0].index(file)
+                    elif smallt < min1:
+                        bigt = min1
+                        error_cut = smallt_error
+                        error_cut_good = ''
 
-                file_path = file_data[4][i]
 
-                shape_dtype = file_data[1][i]
+                    elif bigt > max1:
+                        bigt = max1
+                        error_cut = bigt_error
+                        error_cut_good = ''
+                    else:
+                        error_cut_good = both_t_NO_error
+                        error_cut = ''
 
-                shape, dtype = shape_dtype
+                for file in file_inputs:
 
-                t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+                    i = file_data[0].index(file)
 
-                mask = (t >= smallt) & (t <= bigt)
+                    file_path = file_data[4][i]
 
-                numpy_vect_data = {file: {'t': t[mask]}}
+                    shape_dtype = file_data[1][i]
 
-                row_numbers = np.where(mask)[0].tolist()
+                    shape, dtype = shape_dtype
 
-                for vector in vector_inputs1:
+                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
 
-                    numpy_vect_data[file][vector] = load_array_memmap(vector + '.dat', file_path, dtype=dtype,
-                                                                      shape=shape[0],
-                                                                      row_numbers=row_numbers)
+                    mask = (t >= smallt) & (t <= bigt)
 
-                    # Creating a list of current legend names
-                    current_names.append(f"{file}{' '}{vector}")
+                    numpy_vect_data = {file: {'t': t[mask]}}
 
-                    # Plotting data
-                    fig.add_trace(
-                        go.Scattergl(
-                            name=f"{file}{' '}{vector}",
-                            showlegend=True,
-                            x=numpy_vect_data[file]['t'],
-                            y=numpy_vect_data[file][vector])
+                    row_numbers = np.where(mask)[0].tolist()
+
+                    for vector in vector_inputs1:
+
+                        numpy_vect_data[file][vector] = load_array_memmap(vector + '.dat', file_path, dtype=dtype,
+                                                                          shape=shape[0],
+                                                                          row_numbers=row_numbers)
+
+                        # Creating a list of current legend names
+                        current_names.append(f"{file}{' '}{vector}")
+
+                        # Plotting data
+                        fig.add_trace(
+                            go.Scattergl(
+                                name=f"{file}{' '}{vector}",
+                                showlegend=True,
+                                x=numpy_vect_data[file]['t'],
+                                y=numpy_vect_data[file][vector])
+                        )
+
+
+                    # Update x and y axes labels
+                    fig.update_layout(
+                        xaxis_title="Time (s)",
+                        yaxis_title="Velocity (m/s)",
+                        legend=dict(
+                            y=1,
+                            x=0.5,
+                            orientation="h",
+                            yanchor="bottom",
+                            xanchor="center"),
                     )
 
+                    # Update legend
 
-                # Update x and y axes labels
-                fig.update_layout(
-                    xaxis_title="Time (s)",
-                    yaxis_title="Velocity (m/s)",
-                    legend=dict(
-                        y=1,
-                        x=0.5,
-                        orientation="h",
-                        yanchor="bottom",
-                        xanchor="center"),
-                )
+                    if legend_data is None:
+                        # If no legend data
 
-                # Update legend
+                        # Turn legend off
+                        if leg == 'Off':
+                            fig.layout.update(showlegend=False)
 
-                if legend_data is None:
-                    # If no legend data
+                            error_leg = ''
 
-                    # Turn legend off
-                    if leg == 'Off':
-                        fig.layout.update(showlegend=False)
-
-                        error_leg = ''
-
-                    # Turn legend on
-                    elif leg == 'On':
-                        fig.layout.update(showlegend=True)
-
-                        error_leg = ''
-
-                else:
-                    # If there is legend data
-
-                    # If legend is off
-                    if leg == 'Off':
-                        fig.layout.update(showlegend=False)
-
-                        error_leg = ''
-
-
-                    elif leg == 'On':
-                        # Split string when there is a comma
-                        legend_name_list = legend_data.split(',')
-                        # Create empty dictionary for new legend name
-                        newname_result = {}
-
-                        # If the length of the list of new legend entries is eqaul to the number of lines
-                        if len(current_names) == len(legend_name_list):
-                            # For each legend name create a dictionary of the current names and their replacements
-                            for i, current_name in enumerate(current_names):
-                                newnames = {current_name: legend_name_list[i]}
-                                newname_result.update(newnames)
-                            # Update legend names
-                            fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
-                                                                  legendgroup=newname_result[t.name],
-                                                                  hovertemplate=t.hovertemplate.replace(t.name,
-                                                                                                        newname_result[
-                                                                                                            t.name]) if t.hovertemplate is not None else None)
-                                               )
-
+                        # Turn legend on
+                        elif leg == 'On':
                             fig.layout.update(showlegend=True)
 
-                            error_leg  = ''
+                            error_leg = ''
+
+                    else:
+                        # If there is legend data
+
+                        # If legend is off
+                        if leg == 'Off':
+                            fig.layout.update(showlegend=False)
+
+                            error_leg = ''
 
 
-                        else:
+                        elif leg == 'On':
+                            # Split string when there is a comma
+                            legend_name_list = legend_data.split(',')
+                            # Create empty dictionary for new legend name
+                            newname_result = {}
 
-                            # If legend entries do not match display error message
-                            error_leg = ' Number of legend entries do not match'
+                            # If the length of the list of new legend entries is eqaul to the number of lines
+                            if len(current_names) == len(legend_name_list):
+                                # For each legend name create a dictionary of the current names and their replacements
+                                for i, current_name in enumerate(current_names):
+                                    newnames = {current_name: legend_name_list[i]}
+                                    newname_result.update(newnames)
+                                # Update legend names
+                                fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
+                                                                      legendgroup=newname_result[t.name],
+                                                                      hovertemplate=t.hovertemplate.replace(t.name,
+                                                                                                            newname_result[
+                                                                                                                t.name]) if t.hovertemplate is not None else None)
+                                                   )
+
+                                fig.layout.update(showlegend=True)
+
+                                error_leg  = ''
 
 
-                # If title data is empty
-                if title_data is None:
+                            else:
 
-                    # Turn graph title off
-                    if title == 'Off':
-                        fig.layout.update(title='')
-                    # If title is on display original title
-                    elif title == 'On':
-                        fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
+                                # If legend entries do not match display error message
+                                error_leg = ' Number of legend entries do not match'
 
-                # If title data isn't empty
+
+                    # If title data is empty
+                    if title_data is None:
+
+                        # Turn graph title off
+                        if title == 'Off':
+                            fig.layout.update(title='')
+                        # If title is on display original title
+                        elif title == 'On':
+                            fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
+
+                    # If title data isn't empty
+                    else:
+
+                        # Turn graph title off
+                        if title == 'Off':
+                            fig.layout.update(title='')
+                        # Update title with legend data if legend is on
+                        elif title == 'On':
+                            fig.layout.update(title=title_data)
+                # return figure, min and max values for slider, and error message
+
+                if error_leg == '' or error_cut == '':
+                    color1 = 'success'
                 else:
+                    color1 = 'danger'
 
-                    # Turn graph title off
-                    if title == 'Off':
-                        fig.layout.update(title='')
-                    # Update title with legend data if legend is on
-                    elif title == 'On':
-                        fig.layout.update(title=title_data)
-            # return figure, min and max values for slider, and error message
+                error = 'Graph plotted. ' + error_cut + error_cut_good + error_leg
 
-            if error_leg == '' or error_cut == '':
-                color1 = 'success'
-            else:
-                color1 = 'danger'
+                Loading_Variable ='done'
 
-            error = 'Graph plotted. ' + error_cut + error_cut_good + error_leg
-
-            Loading_Variable ='done'
-
-        return fig, error, color1, True, Loading_Variable
+            return fig, error, color1, True, Loading_Variable
 
 
 # Callback to update legend or title data
@@ -1725,37 +1785,40 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
 def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
 
-    # If legend update button is pressed
-    if ctx.triggered_id == 'dropdown_legend_update':
-        # Update legend data
-        legend_data = name_input
-        # No update to title data or name input
-        title_data = no_update
-        name_input = no_update
-    # If title update button is pressed
-    elif ctx.triggered_id == 'dropdown_title_update':
-        # Update title data
-        title_data = name_input
-        # No update to legend data or name input
-        name_input = no_update
-        legend_data = no_update
+    # Try/Except, used to catch any errors not considered
+    try:
 
-    # If clear dropdown pressed clear input box
-    elif ctx.triggered_id == 'dropdown_clear':
-        # Clear title and legend data
-        title_data = None
-        legend_data = None
-        # Clear input box
-        name_input = ''
+        # If legend update button is pressed
+        if ctx.triggered_id == 'dropdown_legend_update':
+            # Update legend data
+            legend_data = name_input
+            # No update to title data or name input
+            title_data = no_update
+            name_input = no_update
+        # If title update button is pressed
+        elif ctx.triggered_id == 'dropdown_title_update':
+            # Update title data
+            title_data = name_input
+            # No update to legend data or name input
+            name_input = no_update
+            legend_data = no_update
 
-    else:
-        # Else no update to any values
-        title_data = no_update
-        name_input = no_update
-        legend_data = no_update
+        # If clear dropdown pressed clear input box
+        elif ctx.triggered_id == 'dropdown_clear':
+            # Clear title and legend data
+            title_data = None
+            legend_data = None
+            # Clear input box
+            name_input = ''
 
-    # Return name, legend and title data
-    return name_input, legend_data, title_data
+        else:
+            # Else no update to any values
+            title_data = no_update
+            name_input = no_update
+            legend_data = no_update
+
+        # Return name, legend and title data
+        return name_input, legend_data, title_data
 
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
@@ -1769,22 +1832,26 @@ def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
         )
 
 def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filename_filepath_data):
-    # Prevent update if there are no file names
-    if filename_filepath_data is None:
-        raise PreventUpdate
 
-    # Split up the triggered callback
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    # Try/Except, used to catch any errors not considered
+    try:
 
-    if input_id == "upload_file_checklist":
-        # If the upload file checklist input triggered the callback, update the all upload file checklist
-        all_upload_file_check = ["All"] if set(upload_file_check) == set(filename_filepath_data[0]) else []
-    else:
-        # If the all upload file checklist input triggered the callback, update the upload file checklist
-        upload_file_check = filename_filepath_data[0] if all_upload_file_check else []
+        # Prevent update if there are no file names
+        if filename_filepath_data is None:
+            raise PreventUpdate
 
-    # Return the updated upload file checklist and all upload file checklist
-    return upload_file_check, all_upload_file_check
+        # Split up the triggered callback
+        input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        if input_id == "upload_file_checklist":
+            # If the upload file checklist input triggered the callback, update the all upload file checklist
+            all_upload_file_check = ["All"] if set(upload_file_check) == set(filename_filepath_data[0]) else []
+        else:
+            # If the all upload file checklist input triggered the callback, update the upload file checklist
+            upload_file_check = filename_filepath_data[0] if all_upload_file_check else []
+
+        # Return the updated upload file checklist and all upload file checklist
+        return upload_file_check, all_upload_file_check
 
 
 # Callback which syncs the all button of the clear file checklist. If all is clicked all files will be selected.
@@ -1799,25 +1866,28 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filenam
         )
 
 def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
-    # If stored data is none prevent update
-    if data is None:
-        raise PreventUpdate
 
-    # Extract the ID of the input that triggered the callback
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    # Try/Except, used to catch any errors not considered
+    try:
+        # If stored data is none prevent update
+        if data is None:
+            raise PreventUpdate
 
-    # Extract the file options from the data dictionary
-    file_options = data[0]
+        # Extract the ID of the input that triggered the callback
+        input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    if input_id == "clear_file_checklist":
-        # If the clear file checklist input triggered the callback, update the all clear checklist
-        all_clear_check = ["All"] if set(clear_file_check) == set(file_options) else []
-    else:
-        # If the all clear checklist input triggered the callback, update the clear file checklist
-        clear_file_check = file_options if all_clear_check else []
+        # Extract the file options from the data dictionary
+        file_options = data[0]
 
-    # Return the updated clear file checklist and all clear checklist
-    return clear_file_check, all_clear_check
+        if input_id == "clear_file_checklist":
+            # If the clear file checklist input triggered the callback, update the all clear checklist
+            all_clear_check = ["All"] if set(clear_file_check) == set(file_options) else []
+        else:
+            # If the all clear checklist input triggered the callback, update the clear file checklist
+            clear_file_check = file_options if all_clear_check else []
+
+        # Return the updated clear file checklist and all clear checklist
+        return clear_file_check, all_clear_check
 
 # Callback which syncs the all button of the vel checklist. If all is clicked all options will be selected.
 # If all options are clicked all will be selected
@@ -1830,19 +1900,22 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 )
 
 def vel_sync_checklist(vel_check, all_vel_checklist):
-    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    vel_type = ['t','U1','Ux', 'Uy', 'Uz']
+    # Try/Except, used to catch any errors not considered
+    try:
+        input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    if input_id == "vel_checklist":
-        # If the velocity checklist input triggered the callback, update the all velocity checklist
-        all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
-    else:
-        # If the all velocity checklist input triggered the callback, update the velocity checklist
-        vel_check = vel_type if all_vel_checklist else []
+        vel_type = ['t','U1','Ux', 'Uy', 'Uz']
 
-    # Return the updated velocity checklist and all velocity checklist
-    return vel_check, all_vel_checklist
+        if input_id == "vel_checklist":
+            # If the velocity checklist input triggered the callback, update the all velocity checklist
+            all_vel_checklist = ["All"] if set(vel_check) == set(vel_type) else []
+        else:
+            # If the all velocity checklist input triggered the callback, update the velocity checklist
+            vel_check = vel_type if all_vel_checklist else []
+
+        # Return the updated velocity checklist and all velocity checklist
+        return vel_check, all_vel_checklist
 
 
 # Callback which updates dropdowns
@@ -1859,54 +1932,35 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
     prevent_initial_call=True)
 
 def update_dropdowns1(data, filename_filepath_upload_data):
-
-    if filename_filepath_upload_data is not None:
-        upload_file_checklist = filename_filepath_upload_data[0]
-    else:
-        upload_file_checklist = []
-
-
-    if data is None:
-        # If the data is None, set all dropdown options to empty lists
-        vect_options = []
-        file_dropdown_options = []
-        file_checklist = []
-        clear_file_check = []
-        vel_checklist = []
-        DataDrop_TI = []
-    else:
-        # If the data is not None, set the dropdown options and checklists accordingly
-        vect_options = ['U1','Ux', 'Uy', 'Uz']
-        vel_checklist = ['t','U1','Ux', 'Uy', 'Uz']
-        file_dropdown_options = data[0]
-        file_checklist = data[0]
-        DataDrop_TI = data[0]
-        clear_file_check = data[0]
+    # Try/Except, used to catch any errors not considered
+    try:
+        if filename_filepath_upload_data is not None:
+            upload_file_checklist = filename_filepath_upload_data[0]
+        else:
+            upload_file_checklist = []
 
 
-    # Return the updated dropdown options and checklists
-    return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI
+        if data is None:
+            # If the data is None, set all dropdown options to empty lists
+            vect_options = []
+            file_dropdown_options = []
+            file_checklist = []
+            clear_file_check = []
+            vel_checklist = []
+            DataDrop_TI = []
+        else:
+            # If the data is not None, set the dropdown options and checklists accordingly
+            vect_options = ['U1','Ux', 'Uy', 'Uz']
+            vel_checklist = ['t','U1','Ux', 'Uy', 'Uz']
+            file_dropdown_options = data[0]
+            file_checklist = data[0]
+            DataDrop_TI = data[0]
+            clear_file_check = data[0]
 
 
-# Call back which updates the download time range to prevent error
-@app.callback(
-        Output(component_id="big_t", component_property='value', allow_duplicate=True),
-        Output(component_id="small_t", component_property='value', allow_duplicate=True),
-        Input(component_id="small_t", component_property='value'),
-        Input(component_id="big_t", component_property='value'),
-        prevent_initial_call=True)
+        # Return the updated dropdown options and checklists
+        return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI
 
-def update_In(small_val, large_val):
-    # If both inputs are None, prevent update
-    if large_val is None or small_val is None:
-        raise PreventUpdate
-
-    # If large input is less than small input, set large input equal to small input
-    if large_val < small_val:
-        large_val = small_val
-
-    # Return the updated large and small input values
-    return large_val, small_val
 
 # Callback for download button
 @app.callback(
@@ -2111,88 +2165,94 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
 def clear_files(n_clicks, maindata, whatclear, allclear):
 
-    # If the clear files button is pressed, prevent update
-    if "clear_files" != ctx.triggered_id:
-        raise PreventUpdate
+    # Try/Except, used to catch any errors not considered
+    try:
+
+        # If the clear files button is pressed, prevent update
+        if "clear_files" != ctx.triggered_id:
+            raise PreventUpdate
 
 
-    # If no files selected display error message
-    if allclear == ['All'] and len(whatclear) == 0:
+        # If no files selected display error message
+        if allclear == ['All'] and len(whatclear) == 0:
 
-        # display bad error message
-        error = 'NO FILES DELETED'
-        color = "danger"
-
-
-        # No update to new main data
-        newmaindata = no_update
-
-        clear_data_main = True
-
-        clear_file_initial = True
+            # display bad error message
+            error = 'NO FILES DELETED'
+            color = "danger"
 
 
-    else:
-
-        file_path = maindata[4]
-        deleted_files = []
-
-        try:
-
-            for what in whatclear:
-                i = maindata[0].index(what)
-                if os.path.isdir(file_path[i]):
-                    # delete the folder and its contents recursively
-                    shutil.rmtree(file_path[i])
-                    deleted_files.append(what)
-                    for j in range(len(maindata)):
-                        del maindata[j][i]
-            error_try = ''
-
-        except Exception as e:
-            error_try = e
-
-        # Assign new data
-        newmaindata = maindata
-
-        if allclear == ['All'] and len(whatclear) > 0:
+            # No update to new main data
+            newmaindata = no_update
 
             clear_data_main = True
 
             clear_file_initial = True
 
-            # display good error message
-            error = 'ALL FILES CLEARED' + str(error_try)
-
-            if error_try != '':
-                color = "danger"
-            else:
-                color = "success"
 
         else:
 
-            # display good error message
-            error = 'FILES CLEARED: ' + ', '.join(deleted_files) + str(error_try)
+            file_path = maindata[4]
+            deleted_files = []
 
-            if error_try != '':
-                color = "danger"
+            try:
+
+                for what in whatclear:
+                    i = maindata[0].index(what)
+                    if os.path.isdir(file_path[i]):
+                        # delete the folder and its contents recursively
+                        shutil.rmtree(file_path[i])
+                        deleted_files.append(what)
+                        for j in range(len(maindata)):
+                            del maindata[j][i]
+                error_try = ''
+
+            except Exception as e:
+                error_try = e
+
+            # Assign new data
+            newmaindata = maindata
+
+            if allclear == ['All'] and len(whatclear) > 0:
+
+                clear_data_main = True
+
+                clear_file_initial = True
+
+                # display good error message
+                error = 'ALL FILES CLEARED' + str(error_try)
+
+                if error_try != '':
+                    color = "danger"
+                else:
+                    color = "success"
+
             else:
-                color = "success"
 
-            clear_data_main = False
+                # display good error message
+                error = 'FILES CLEARED: ' + ', '.join(deleted_files) + str(error_try)
 
-            clear_file_initial = True
+                if error_try != '':
+                    color = "danger"
+                else:
+                    color = "success"
 
-    # Return required values
-    return  error, color, True, newmaindata, clear_data_main, clear_file_initial,
+                clear_data_main = False
 
+                clear_file_initial = True
 
-Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-Output(component_id='filename_filepath', component_property='clear_data'),
+        # Return required values
+        return  error, color, True, newmaindata, clear_data_main, clear_file_initial,
+
+    except Exception as e:
+
+        print(e)
+        # If any error display message
+        error = e
+        error_col = 'danger'
+
+        # Return required values
+        return  error, color, True, newmaindata, clear_data_main, clear_file_initial,
+
 
 
 # Run app
