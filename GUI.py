@@ -1632,16 +1632,8 @@ def update_dropdowns1(data, filename_filepath_upload_data):
 
 def update_In(small_val, large_val):
     # If both inputs are None, prevent update
-    if large_val is None and small_val is None:
+    if large_val is None or small_val is None:
         raise PreventUpdate
-
-    # If large input is None, set it to 0
-    if large_val is None:
-        large_val = 0
-
-    # If small input is None, set it to 0
-    if small_val is None:
-        small_val = 0
 
     # If large input is less than small input, set large input equal to small input
     if large_val < small_val:
