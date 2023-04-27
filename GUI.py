@@ -796,7 +796,6 @@ def clear_Workspace(n_clicks,Workspace_data):
             Workspace_Clear_data = True
             Upload_Clear_data = True
             filedata_Clear_data = True
-
             Workspace_input = ''
 
             if deleted_files == []:
@@ -941,12 +940,13 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
                 filepath_input = no_update
                 filename_filepath_data = no_update
 
-            elif os.path.splitext(filename1)[1] != '.txt':
-                    error = ' Please upload .txt files'
-                    color1 = 'danger'
-                    open1 = True
-                    filepath_input = ''
-                    filename_filepath_data = no_update
+
+            elif os.path.splitext(filename1)[1] != '.txt' and os.path.splitext(filename1)[1] != '.csv':
+                error = ' Please upload .txt or .csv files'
+                color1 = 'danger'
+                open1 = True
+                filepath_input = ''
+                filename_filepath_data = no_update
 
             else:
 
@@ -1589,7 +1589,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             y=numpy_vect_data[file][vector])
                     )
 
-                print(numpy_vect_data)
 
                 # Update x and y axes labels
                 fig.update_layout(
@@ -2079,99 +2078,101 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
 
 @app.callback(
-        Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
         Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
         Output(component_id='filename_filepath', component_property='clear_data'),
-        Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
         State(component_id="all_clear_file_checklist", component_property='value'),
         prevent_initial_call=True)
 
-def clear_files( n_clicks, maindata, whatclear, allclear):
+def clear_files(n_clicks, maindata, whatclear, allclear):
 
     # If the clear files button is pressed, prevent update
     if "clear_files" != ctx.triggered_id:
         raise PreventUpdate
 
-    # Clear figure
-    fig = {}
-
-    # Clear upload data
-    submit_val_check = []
-    upload_filename = []
-    upload_contents = []
-    # Clear selected values
-    clear_val = []
-    file_drop_val = []
-    vect_drop_val = []
 
     # If no files selected display error message
     if allclear == ['All'] and len(whatclear) == 0:
 
         # display bad error message
-        error = 'No files deleted'
+        error = 'NO FILES DELETED'
         color = "danger"
+        # Open error message
+        open1 = True
+
 
         # No update to new main data
         newmaindata = no_update
 
-        # Clear all data
         clear_data_main = True
 
-        # Make the file drop options and quantity options empty
-        file_drop_opt = []
-        vect_opt = []
+        clear_file_initial = True
 
-        # Open error message
-        open1 = True
 
     elif allclear == [] and len(whatclear) == 0:
 
         # display bad error message
-        error = 'No files deleted'
+        error = 'NO FILES DELETED'
         color = "danger"
+        # Open error message
+        open1 = True
 
         # No update to new main data
         newmaindata = no_update
 
-        # Clear all data
         clear_data_main = True
-        clear_data_file = True
-        # Make the file drop options and quantity options empty
-        file_drop_opt = no_update
-        vect_opt = no_update
 
-        # Open error message
-        open1 = True
+        clear_file_initial = True
 
     elif allclear == ['All'] and len(whatclear) > 0:
 
         # display good error message
-        error = 'All files cleared'
+        error = 'ALL FILES CLEARED'
         color = "success"
+        # Open error message
+        open1 = True
 
         # No update to new main data
         newmaindata = no_update
-        clear_data_file = True
-        # Clear all data
+
         clear_data_main = True
 
-        # Make the file drop options and quantity options empty
-        file_drop_opt = []
-        vect_opt = []
-
-        # Open error message
-        open1 = True
+        clear_file_initial = True
 
 
     # If 1 or more files being deleted
     elif len(whatclear) >= 1 and allclear != ['All']:
+
+        Oldfilenames = file_data[0]  # Get existing file names
+        old_dtype_shape = file_data[1]
+        Old_calData = file_data[2]
+        Old_SF = file_data[3]
+        Old_filepath = file_data[4]
+        Old_min = file_data[5]
+        Old_max = file_data[6]
+
+        for what in whatclear:
+            i = maindata[0].index(what)
+
+            os.listdir(Workspace_data)
+            path = os.path.join(Workspace_data, file_name)
+            try:
+                if os.path.isfile(path):
+                    # delete the file
+                    os.remove(path)
+                    deleted_files.append(file_name)
+                elif os.path.isdir(path):
+                    # delete the folder and its contents recursively
+                    shutil.rmtree(path)
+                    deleted_files.append(file_name)
+            except Exception as e:
+                print(f"Error deleting {path}: {e}")
 
 
         # store = maindata[0]
@@ -2189,21 +2190,10 @@ def clear_files( n_clicks, maindata, whatclear, allclear):
         error = ', '.join(whatclear) + ' deleted'
         color = "success"
 
-        # Do not clear main data
-        clear_data_main = False
-        clear_data_file = True
-        # No option to graph options
-        file_drop_opt = no_update
-        vect_opt = no_update
-
-        # Open error message
-        open1 = True
-
 
 
     # Return required values
-    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main , clear_data_file, clear_val, file_drop_val, vect_drop_val, submit_val_check
-
+    return  error, color, open1, clear_data_main, clear_file_initial, newmaindata,
 
 
 
