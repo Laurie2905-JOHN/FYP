@@ -724,7 +724,7 @@ dbc.Col([
 )
 def update_Workspace(n_clicks, Workspace_input):
 
-    # Try/Except used to catch any errors not considered
+    # Try/Except, used to catch any errors not considered
     try:
 
         # Check if the trigger is from the 'Workspace_update' button.
@@ -735,7 +735,7 @@ def update_Workspace(n_clicks, Workspace_input):
                 error = 'NO FILE PATH INPUTTED'
                 color1 = 'danger'
                 open1 = True
-                Workspace_data = ''
+                Workspace_data = no_update
 
             else:
                 # Normalize and validate the file path.
@@ -747,23 +747,44 @@ def update_Workspace(n_clicks, Workspace_input):
                     error = 'PLEASE CHECK FILE PATH IS VALID'
                     color1 = 'danger'
                     open1 = True
-                    Workspace_data = ''
+                    Workspace_data = no_update
                 else:
                     # If the path exists, update the workspace.
                     error = 'Workspace Updated'
                     color1 = 'success'
                     open1 = True
-                    Workspace_dta = Workspace_input3
+                    Workspace_data = Workspace_input3
 
     except Exception as e:
         # If error there is an error print it.
         error = str(e)
         color1 = 'danger'
         open1 = True
-        Workspace_data = ''
+        Workspace_data = no_update
 
     return Workspace_data, error, color1, open1
 
+# This callback function updates the workspace alert based on the current workspace data.
+@app.callback(
+    Output(component_id='Workspace_alert', component_property='children'),
+    Output(component_id='Workspace_alert', component_property='color'),
+    Output(component_id='Workspace_alert', component_property='is_open'),
+    Input(component_id="Workspace_store", component_property='data'),
+)
+def update_Workspace_Alert(Workspace_data):
+    print(Workspace_data)
+    # Check if there is any workspace data.
+    if Workspace_data is None:
+        alert_work = 'NO WORKSPACE SELECTED'
+        color1 = 'danger'
+        open1 = True
+    else:
+        # Update the alert message with the current workspace data.
+        alert_work = Workspace_data
+        color1 = 'primary'
+        open1 = True
+
+    return alert_work, color1, open1
 
 @app.callback(
         Output(component_id='Workspace', component_property='value', allow_duplicate=True),
@@ -783,7 +804,7 @@ def clear_Workspace(n_clicks,Workspace_data):
         if Workspace_data is None:
             error = 'No Workspace to Clear'
             color1 = 'danger'
-            Workspace_input = ''
+            Workspace_input = None
             Workspace_Clear_data = False
             Upload_Clear_data = False
             filedata_Clear_data = False
@@ -810,7 +831,7 @@ def clear_Workspace(n_clicks,Workspace_data):
             Workspace_Clear_data = True
             Upload_Clear_data = True
             filedata_Clear_data = True
-            Workspace_input = ''
+            Workspace_input = None
 
             if deleted_files == []:
 
@@ -825,22 +846,6 @@ def clear_Workspace(n_clicks,Workspace_data):
         raise PreventUpdate
 
 
-@app.callback(
-    Output(component_id='Workspace_alert', component_property='children'),
-    Output(component_id='Workspace_alert', component_property='color'),
-    Output(component_id='Workspace_alert', component_property='is_open'),
-    Input(component_id="Workspace_store", component_property='data'),
-)
-def update_Workspace_Alert(Workspace_data):
-
-    if Workspace_data is None:
-        alert_work = 'No Workspace Selected'
-        color1 = 'danger'
-    else:
-        alert_work = Workspace_data
-        color1 = 'primary'
-
-    return alert_work, color1, True
 
 @ app.callback(
     Output(component_id='calAlert', component_property='children'),
