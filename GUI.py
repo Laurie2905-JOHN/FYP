@@ -162,20 +162,23 @@ app.layout = dbc.Container([
 
     # Options row
     dbc.Row([
-        # Horizontal line
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),
+        dbc.Row([
+            dbc.Col(
+                html.Hr(),
+                width=12
+            ),  # Horizontal rule to separate content
+        ], className='mb-2'),
         # Graph options header
         dbc.Col(
             html.H5('Graph Options', className="text-center"),
             width = 12),
 
-        # Horizontal line
-        dbc.Col(
-            html.Hr(),
-            width = 12),
+        dbc.Row(
+            dbc.Col(
+                html.Hr(),
+                width=12
+            ),  # Horizontal rule to separate content
+        ),
 
         # Alert box
         dbc.Col([
@@ -293,9 +296,7 @@ dbc.Row([
         width=5),
     ], className='mb-2', justify="center", align="center"),
 
-
-
-dbc.Row([
+    dbc.Row([
         dbc.Col(
             html.Hr(),
             width=12
@@ -401,41 +402,23 @@ dash_table.DataTable(id = 'TI_Table',
         dbc.Col(
             html.Hr(),
             width=12
-        ),
+        ),  # Horizontal rule to separate content
     ], className='mb-2'),
 
     dbc.Row([
 
         # Column for "Upload/Clear Files" title
         dbc.Col(
-            html.H5('File Upload', className='center-text'),
-            width=12,
-            className="text-center"
-        ),
-
-        # Column for alert message (hidden by default)
-        dbc.Col([
-            dbc.Alert(
-                id="ClearFiles_alert",
-                is_open=False,
-                dismissable=True,
-                duration=30000,
-                className='text-center',
-            ),
-        ], width=12),
-
-        # Horizontal line
-        dbc.Col(
-            html.Hr(),
-            width=12
-        ),
-
-
-        # Column for "Upload/Clear Files" title
-        dbc.Col(
             html.H5('Workspace', className='center-text'),
             width=12,
             className="text-center"
+        ),
+
+        dbc.Row(
+            dbc.Col(
+                html.Hr(),
+                width=12
+            ),  # Horizontal rule to separate content
         ),
 
         dbc.Col([
@@ -466,12 +449,38 @@ dash_table.DataTable(id = 'TI_Table',
         ]),
     width =11, class_name = 'mb-3'),
 
-        # Horizontal line
+        dbc.Row([
+            dbc.Col(
+                html.Hr(),
+                width=12
+            ),  # Horizontal rule to separate content
+        ], className='mb-2'),
+
+        # Column for "Upload/Clear Files" title
         dbc.Col(
-            html.Hr(),
-            width=12
+            html.H5('File Upload', className='center-text'),
+            width=12,
+            className="text-center"
         ),
 
+        # Column for alert message (hidden by default)
+        dbc.Col([
+            dbc.Alert(
+                id="ClearFiles_alert",
+                is_open=False,
+                dismissable=True,
+                duration=30000,
+                className='text-center',
+            ),
+        ], width=12),
+
+        # Horizontal line
+        dbc.Row(
+            dbc.Col(
+                html.Hr(),
+                width=12
+            ),  # Horizontal rule to separate content
+        ),
         dbc.Col(
 
             dbc.InputGroup([
