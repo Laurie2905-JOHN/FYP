@@ -772,13 +772,13 @@ def update_Workspace(n_clicks, Workspace_input):
         return Workspace_data, error, color1, open1
 
     except Exception as e:
+
         # If error there is an error print it.
         error = str(e)
         color1 = 'danger'
         open1 = True
-        Workspace_data = no_update
 
-    return Workspace_data, error, color1, open1
+    return no_update, error, color1, open1
 
 # This callback function updates the workspace alert based on the current workspace data.
 @app.callback(
@@ -874,6 +874,14 @@ def clear_Workspace(n_clicks,Workspace_data):
 
             return Workspace_input, Workspace_Clear_data, Upload_Clear_data, filedata_Clear_data, error, color1, True
 
+    except Exception as e:
+
+        error1 = 'There was an error processing this file'
+
+        color1 = 'danger'
+
+        return no_update, no_update, no_update, no_update, error, color1, True
+
 
 
 
@@ -895,8 +903,15 @@ def update_cal_text(Cal_data):
             alert_cal = Cal_data[0][0] + ' Selected'
             color1 = 'primary'
 
+        return alert_cal, color1, True
 
-    return alert_cal, color1, True
+    except Exception as e:
+
+        error1 = 'There was an error processing this file'
+
+        color1 = 'danger'
+
+        return no_update, error1, color1, True
 
 @ app.callback(
     Output(component_id="Cal_storage", component_property='data', allow_duplicate=True),
@@ -936,6 +951,8 @@ def cal_analysis(filename, contents):
 
             cal_data = no_update
 
+        return cal_data, error1, color1, True
+
     except Exception as e:
 
         print(e)
@@ -944,11 +961,7 @@ def cal_analysis(filename, contents):
 
         color1 = 'danger'
 
-        cal_data = no_update
-
-
-    return cal_data, error1, color1, True
-
+        return no_update, error1, color1, True
 
 
 # Call back to update upload file checklist once files are selected
@@ -1038,6 +1051,14 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
 
             return filepath_input, filename_filepath_data, error, color1, open1
 
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return no_update, no_update, error, color1, open1
+
 
 @app.callback(
         Output(component_id='submit_files', component_property='value', allow_duplicate=True),
@@ -1062,6 +1083,14 @@ def clear_upload(n_clicks):
             clear_filename_filepath_data = True
 
         return filepath_input, clear_filename_filepath_data, error, color1, open1
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return no_update, no_update, error, color1, open1
 
 
 @ app.callback(
@@ -1275,6 +1304,14 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
             return file_data, error, color, open1, filename_filepath_data, loading_variable
 
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return no_update, error, color, True, no_update, no_update
+
 # Call back which updates the download time range to prevent error
 @app.callback(
         Output(component_id="big_t", component_property='value', allow_duplicate=True),
@@ -1290,7 +1327,15 @@ def update_vals(small_val, large_val):
         large_val, small_val = update_values(large_val, small_val)
 
         # Return the updated large and small input values
-        return large_val, small_val
+        return large_val, small_val, no_update, no_update, True,
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return no_update, no_update, error, error_col, True,
 
 @ app.callback(
     Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
@@ -1307,7 +1352,15 @@ def update_vals2(small_val, large_val):
         large_val, small_val = update_values(large_val, small_val)
 
         # Return the updated large and small input values
-        return large_val, small_val
+        return large_val, small_val, no_update, no_update, no_update,
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return no_update, no_update, error, error_col, True,
 
 @app.callback(
     Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
@@ -1331,6 +1384,14 @@ def clear_table(n_clicks):
             table_data = []
 
         return table_data, error, error_col, True
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return no_update, error, error_col, True
 
 # Callback to analyse and update TI table
 @ app.callback(
@@ -1484,6 +1545,14 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
             return table_data, error, error_col, True, Loading_variable
 
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return no_update, error, error_col, True, no_update
+
 @app.callback(
         Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
         Output(component_id='File', component_property='value'),
@@ -1506,7 +1575,15 @@ def clear_graph(n_clicks):
             tsmall = None
             tbig = None
 
-            return fig, file, Vect, tsmall, tbig
+            return fig, file, Vect, tsmall, tbig, error, color1, True,
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        color1 = 'danger'
+
+        return no_update, no_update, no_update, no_update, no_update, error, color1, True,
 
 
 
@@ -1771,6 +1848,16 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
             return fig, error, color1, True, Loading_Variable
 
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        color1 = 'danger'
+
+        return no_update, error, color1, True, no_update
+
+
+
 
 # Callback to update legend or title data
 @app.callback(
@@ -1820,6 +1907,14 @@ def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
         # Return name, legend and title data
         return name_input, legend_data, title_data
 
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return error, error_col, no_update, no_update, no_update
+
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
 @app.callback(
@@ -1851,7 +1946,17 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filenam
             upload_file_check = filename_filepath_data[0] if all_upload_file_check else []
 
         # Return the updated upload file checklist and all upload file checklist
-        return upload_file_check, all_upload_file_check
+        return no_update, no_update, upload_file_check, all_upload_file_check
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+        upload_file_check = no_update
+        all_upload_file_check = no_update
+
+        return error, error_col, no_update, no_update
 
 
 # Callback which syncs the all button of the clear file checklist. If all is clicked all files will be selected.
@@ -1887,7 +1992,17 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
             clear_file_check = file_options if all_clear_check else []
 
         # Return the updated clear file checklist and all clear checklist
-        return clear_file_check, all_clear_check
+        return no_update, no_update, clear_file_check, all_clear_check
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+        clear_file_check = no_update
+        all_clear_check = no_update
+
+        return error, error_col, True, no_update, no_update
 
 # Callback which syncs the all button of the vel checklist. If all is clicked all options will be selected.
 # If all options are clicked all will be selected
@@ -1903,6 +2018,7 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 
     # Try/Except, used to catch any errors not considered
     try:
+
         input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
         vel_type = ['t','U1','Ux', 'Uy', 'Uz']
@@ -1915,7 +2031,17 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
             vel_check = vel_type if all_vel_checklist else []
 
         # Return the updated velocity checklist and all velocity checklist
-        return vel_check, all_vel_checklist
+        return no_update, no_update, vel_check, all_vel_checklist
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+        vel_check = no_update
+        all_vel_checklist = no_update
+
+        return error, error_col, no_update, no_update
 
 
 # Callback which updates dropdowns
@@ -1932,6 +2058,7 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
     prevent_initial_call=True)
 
 def update_dropdowns1(data, filename_filepath_upload_data):
+
     # Try/Except, used to catch any errors not considered
     try:
         if filename_filepath_upload_data is not None:
@@ -1959,7 +2086,16 @@ def update_dropdowns1(data, filename_filepath_upload_data):
 
 
         # Return the updated dropdown options and checklists
-        return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI
+        return error, error_col, True, file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        # Return the updated dropdown options and checklists
+        return error, error_col, True, no_update, no_update, no_update, no_update, no_update,no_update, no_update
 
 
 # Callback for download button
@@ -1979,11 +2115,10 @@ def update_dropdowns1(data, filename_filepath_upload_data):
         prevent_initial_call=True)
 
 def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value, file, file_data):
+    try:
 
-    # If download button is pressed
-    if "btn_download" == ctx.triggered_id:
-
-        try:
+        # If download button is pressed
+        if "btn_download" == ctx.triggered_id:
 
             Download_Path = os.path.join(Workspace_data, 'Downloads')
 
@@ -2135,19 +2270,15 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                 error_col = 'primary'
 
-        except Exception as e:
-
-            print(e)
-
-            # If any error display message
-            error = e
-            error_col = 'danger'
-
-        Loading_variable = 'done'
-
         return error, error_col, True, Loading_variable
 
+    except Exception as e:
 
+        # If any error display message
+        error = str(e)
+        error_col = 'danger'
+
+        return error, error_col, True, no_update
 
 
 @app.callback(
@@ -2245,15 +2376,15 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
 
     except Exception as e:
 
-        print(e)
-        # If any error display message
-        error = e
-        error_col = 'danger'
+        error = str(e)
+        color = 'danger'
+        clear_data_main = no_update
+        clear_data_main = no_update
+        newmaindata = no_update
+        clear_file_initial = no_update
 
-        # Return required values
-        return  error, color, True, newmaindata, clear_data_main, clear_file_initial,
-
-
+            # Return required values
+        return  error, color, True, no_update, no_update, no_update,
 
 # Run app
 if __name__== '__main__':
