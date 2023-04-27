@@ -150,8 +150,8 @@ app.layout = dbc.Container([
 
     dbc.Row([
         dbc.Col(
-            html.H1("BARNACLE SENSOR ANALYSIS",
-                    className='text-center font-weight-bolder, mb-1'),
+            html.H1("BARNACLE DATA ANALYSIS",
+                    className='text-center fw-bold mb-1'),
             width=12),
     ]),
 
@@ -174,7 +174,7 @@ app.layout = dbc.Container([
         ], className='mb-2'),
         # Graph options header
         dbc.Col(
-            html.H5('Graph Options', className="text-center"),
+            html.H5('GRAPH OPTIONS', className="text-center fw-bold"),
             width = 12),
 
         dbc.Row(
@@ -204,9 +204,9 @@ dbc.Row([
 
             dbc.Stack([
 
-                dbc.Button("Plot", id="plot_bttn", size="lg", color="primary", outline=True),
+                dbc.Button("PLOT", id="plot_bttn", size="lg", color="primary", class_name ='fw-bold'),
 
-                dbc.Button("Clear Figure", id="plot_clear_bttn", size="lg", color="primary", outline=True),
+                dbc.Button("CLEAR FIGURE", id="plot_clear_bttn", size="lg", color="primary", class_name ='fw-bold'),
 
             ], gap=3),
 
@@ -262,14 +262,14 @@ dbc.Row([
             dbc.Row([
                 dbc.Col(
                     dbc.Stack([
-                        dbc.Label("Title", className="text-start"),
+                        dbc.Label("TITLE", className="text-start, fw-bold"),
                         dbc.RadioItems(id='title_onoff', value='On', options=['On', 'Off'], inline=True)
                     ])
                 ),
 
                 dbc.Col(
                     dbc.Stack([
-                        dbc.Label('Legend', className="text-start"),
+                        dbc.Label('LEGEND', className="text-start, fw-bold"),
                         dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
                     ]),
                     className='mb-3'
@@ -309,7 +309,7 @@ dbc.Row([
 
 dbc.Row(
         dbc.Col(
-            html.H5('Turbulence Parameters', className='center-text'),
+            html.H5('TURBULENCE PARAMETERS', className='center-text, fw-bold'),
             width=12,
             className="text-center"
         ),  # Column containing the header for the download files section
@@ -343,9 +343,9 @@ dbc.Row(
 
                 dbc.Stack([
 
-                dbc.Button("Calculate", id="TI_btn_download", size="lg",color="primary", outline=True),
+                dbc.Button("CALCULATE", id="TI_btn_download", size="lg",color="primary", className='fw-bold'),
 
-                dbc.Button("Clear Table", id="Clear_Table", size="lg",color="primary", outline=True),
+                dbc.Button("CLEAR TABLE", id="Clear_Table", size="lg",color="primary", className='fw-bold'),
 
                 ], gap = 3),
 
@@ -415,7 +415,7 @@ dash_table.DataTable(id = 'TI_Table',
 
         # Column for "Upload/Clear Files" title
         dbc.Col(
-            html.H5('Workspace', className='center-text'),
+            html.H5('WORKSPACE', className='center-text, fw-bold'),
             width=12,
             className="text-center"
         ),
@@ -428,6 +428,16 @@ dash_table.DataTable(id = 'TI_Table',
                 width=12
             ),  # Horizontal rule to separate content
         ),
+
+        dbc.Col([
+            dbc.Alert(
+                id="Workspace_alert_temp",
+                is_open=False,
+                class_name='text-center',
+                dismissable = True,
+                duration = 30000,
+            ),
+        ], class_name='mb-3', width=10),
 
         dbc.Col([
             dbc.Alert(
@@ -445,7 +455,7 @@ dash_table.DataTable(id = 'TI_Table',
                 dbc.DropdownMenuItem(divider=True),
                 dbc.DropdownMenuItem("Clear Workspace", id="Workspace_clear"),
             ],
-                label="Update"),
+                label="UPDATE"),
             # Input element for entering the new title or legend
             dbc.Input(
                 id="Workspace",
@@ -466,7 +476,7 @@ dash_table.DataTable(id = 'TI_Table',
 
         # Column for "Upload/Clear Files" title
         dbc.Col(
-            html.H5('File Upload', className='center-text'),
+            html.H5('FILE UPLOAD', className='center-text, fw-bold'),
             width=12,
             className="text-center"
         ),
@@ -499,7 +509,7 @@ dash_table.DataTable(id = 'TI_Table',
                     dbc.DropdownMenuItem(divider=True),
                     dbc.DropdownMenuItem("Clear Uploads", id="dropdown_BARN_clear"),
                 ],
-                    label="Update"),
+                    label="UPDATE"),
                 # Input element for entering the new title or legend
                 dbc.Input(
                     id="submit_files",
@@ -519,21 +529,11 @@ dash_table.DataTable(id = 'TI_Table',
 
                 dcc.Upload(
                     id='submit_Cal_file',
-                    children=html.Div([
-                        html.A(id = 'Cal_select_text',children = 'Select a Calibration File')
-                    ]),
-                    style={
-                        'height': '60px',
-                        'lineHeight': '60px',
-                        'borderWidth': '1px',
-                        'borderStyle': 'solid',
-                        'borderRadius': '15px',
-                        'textAlign': 'center',
-                        'width': '100%',
-                    },
-                    className="text-primary",
+                    children=dbc.Button(
+                        'CLICK TO SELECT A CALIBRATION FILE',
+                    className="primary fw-bold"),
                     # Allow multiple files to be uploaded
-                    multiple=True
+                    multiple=True,
                 ),
 
 
@@ -549,17 +549,16 @@ dash_table.DataTable(id = 'TI_Table',
             dbc.Stack([
 
                 dbc.Button(
-                    'Process Selected Files',
+                    'PROCESS SELECTED FILES',
                     id='newfile',
-                    outline=True,
                     color="primary",
-                    className="me-1",
+                    className="me-1, fw-bold",
                     n_clicks=0,
                 ),
 
                 dbc.Input(id="Sample_rate", min=0, type="number", placeholder="Enter Sample Frequency", debounce=True),
 
-                html.Label("Select Files To Process"),
+                html.Label("SELECT FILES TO PROCESS", className='center-text, fw-bold'),
 
                 # Checkbox for uploading all files
                 dbc.Checklist(
@@ -569,22 +568,20 @@ dash_table.DataTable(id = 'TI_Table',
                 # Checkbox for selecting individual files to upload
                 dbc.Checklist(value=[], id="upload_file_checklist", inline=True),
             ], gap=3),
-            width=3
-        ),
+            width=3),
 
         # Column for clearing files
         dbc.Col(
             dbc.Stack([
                 dbc.Button(
-                    "Clear Selected Files",
+                    "CLEAR SELECTED FILES FROM WORKSPACE",
                     id='clear_files',
-                    outline=True,
                     color="primary",
-                    className="me-1",
+                    className="me-1, fw-bold",
                     n_clicks=0
                 ),
 
-                html.Label("Select Files To Clear", className='center-text'),
+                html.Label("SELECT FILES TO CLEAR", className='center-text, fw-bold'),
 
                 # Checkbox for clearing all files
                 dbc.Checklist(
@@ -609,7 +606,7 @@ dash_table.DataTable(id = 'TI_Table',
 
     dbc.Row(
         dbc.Col(
-            html.H5('Download Data', className='center-text'),
+            html.H5('DOWNLOAD DATA', className='center-text, fw-bold'),
             width=12,
             className="text-center"
         ),  # Column containing the header for the download files section
@@ -642,11 +639,11 @@ dbc.Col([
         dbc.Col(
 
             dbc.Stack([
-                html.Label("Choose Data File"),  # Label for selecting data file
+                html.Label("CHOOSE DATASET", className ='fw-bold'),  # Label for selecting data file
 
                 dbc.RadioItems(id="file_checklist", inline=True),  # Radio buttons for selecting data file
 
-                html.Label("Choose Quantity"),  # Label for selecting quantity of data to download
+                html.Label("CHOOSE QUANTITY", className ='fw-bold'),  # Label for selecting quantity of data to download
 
                 dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),  # Checkbox to select all data
 
@@ -661,7 +658,7 @@ dbc.Col([
         dbc.Col(
 
             dbc.Stack([
-                dbc.Button("Download", id="btn_download", size="lg",color="primary", outline=True),  # Button for downloading selected data
+                dbc.Button("DOWNLOAD", class_name = 'fw-bold', id="btn_download", size="lg",color="primary"),  # Button for downloading selected data
 
                 dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),  # Input field for file name
 
@@ -684,6 +681,8 @@ dbc.Col([
         ], align='center', justify='center',className = 'mb-5'),
 
     ], width = 12),
+
+
 
 
 
@@ -716,9 +715,9 @@ dbc.Col([
 
 @ app.callback(
     Output(component_id='Workspace_store', component_property='data'),
-    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
+    Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
+    Output(component_id='Workspace_alert_temp', component_property='is_open', allow_duplicate=True),
     Input(component_id='Workspace_update', component_property='n_clicks'),
     State(component_id='Workspace', component_property='value'),
 )
@@ -757,9 +756,9 @@ def update_Workspace(n_clicks, Workspace_input):
         Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
         Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
         Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='is_open', allow_duplicate=True),
         Input(component_id='Workspace_clear', component_property='n_clicks'),
         State(component_id='Workspace_store', component_property='data'),
         prevent_initial_call = True)
@@ -768,10 +767,12 @@ def clear_Workspace(n_clicks,Workspace_data):
 
     if ctx.triggered_id == 'Workspace_clear':
         if Workspace_data is None:
-            error = 'No Workspace Selected to Clear'
+            error = 'No Workspace to Clear'
             color1 = 'danger'
             Workspace_input = ''
             Workspace_Clear_data = False
+            Upload_Clear_data = False
+            filedata_Clear_data = False
 
         else:
 
@@ -2076,137 +2077,132 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
 
 
-# Callback to clear data
-# @app.callback(
-#         Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
-#         Output(component_id="File", component_property='options', allow_duplicate=True),
-#         Output(component_id='Vect', component_property='options', allow_duplicate=True),
-#         Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-#         Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-#         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-#         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-#         Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-#         Output(component_id='filename_filepath', component_property='clear_data'),
-#         Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
-#         Output(component_id="File", component_property='value', allow_duplicate=True),
-#         Output(component_id='Vect', component_property='value', allow_duplicate=True),
-#         Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
-#         Input(component_id='clear_files', component_property='n_clicks'),
-#         State(component_id='filestorage', component_property='data'),
-#         State(component_id="clear_file_checklist", component_property='value'),
-#         State(component_id="all_clear_file_checklist", component_property='value'),
-#         prevent_initial_call=True)
-#
-# def clear_files( n_clicks, maindata, whatclear, allclear):
-#
-#     # If the clear files button is pressed, prevent update
-#     if "clear_files" != ctx.triggered_id:
-#         raise PreventUpdate
-#
-#     # Clear figure
-#     fig = {}
-#
-#     # Clear upload data
-#     submit_val_check = []
-#     upload_filename = []
-#     upload_contents = []
-#     # Clear selected values
-#     clear_val = []
-#     file_drop_val = []
-#     vect_drop_val = []
-#
-#     # If no files selected display error message
-#     if allclear == ['All'] and len(whatclear) == 0:
-#
-#         # display bad error message
-#         error = 'No files deleted'
-#         color = "danger"
-#
-#         # No update to new main data
-#         newmaindata = no_update
-#
-#         # Clear all data
-#         clear_data_main = True
-#
-#         # Make the file drop options and quantity options empty
-#         file_drop_opt = []
-#         vect_opt = []
-#
-#         # Open error message
-#         open1 = True
-#
-#     elif allclear == [] and len(whatclear) == 0:
-#
-#         # display bad error message
-#         error = 'No files deleted'
-#         color = "danger"
-#
-#         # No update to new main data
-#         newmaindata = no_update
-#
-#         # Clear all data
-#         clear_data_main = True
-#         clear_data_file = True
-#         # Make the file drop options and quantity options empty
-#         file_drop_opt = no_update
-#         vect_opt = no_update
-#
-#         # Open error message
-#         open1 = True
-#
-#     elif allclear == ['All'] and len(whatclear) > 0:
-#
-#         # display good error message
-#         error = 'All files cleared'
-#         color = "success"
-#
-#         # No update to new main data
-#         newmaindata = no_update
-#         clear_data_file = True
-#         # Clear all data
-#         clear_data_main = True
-#
-#         # Make the file drop options and quantity options empty
-#         file_drop_opt = []
-#         vect_opt = []
-#
-#         # Open error message
-#         open1 = True
-#
-#
-#     # If 1 or more files being deleted
-#     elif len(whatclear) >= 1 and allclear != ['All']:
-#
-#
-#         # store = maindata[0]
-#         #
-#         # # Delete selected data
-#         # for what in whatclear:
-#         #     del prb[what]
-#         #     del df1[what]
-#         #     df2.remove(what)
-#
-#         # Assign new data
-#         newmaindata = [df1, df2]
-#
-#         # Display error message
-#         error = ', '.join(whatclear) + ' deleted'
-#         color = "success"
-#
-#         # Do not clear main data
-#         clear_data_main = False
-#         clear_data_file = True
-#         # No option to graph options
-#         file_drop_opt = no_update
-#         vect_opt = no_update
-#
-#         # Open error message
-#         open1 = True
-#
-#
-#
-#     # Return required values
-#     return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main , clear_data_file, clear_val, file_drop_val, vect_drop_val, submit_val_check
+
+@app.callback(
+        Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filename_filepath', component_property='clear_data'),
+        Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
+        Input(component_id='clear_files', component_property='n_clicks'),
+        State(component_id='filestorage', component_property='data'),
+        State(component_id="clear_file_checklist", component_property='value'),
+        State(component_id="all_clear_file_checklist", component_property='value'),
+        prevent_initial_call=True)
+
+def clear_files( n_clicks, maindata, whatclear, allclear):
+
+    # If the clear files button is pressed, prevent update
+    if "clear_files" != ctx.triggered_id:
+        raise PreventUpdate
+
+    # Clear figure
+    fig = {}
+
+    # Clear upload data
+    submit_val_check = []
+    upload_filename = []
+    upload_contents = []
+    # Clear selected values
+    clear_val = []
+    file_drop_val = []
+    vect_drop_val = []
+
+    # If no files selected display error message
+    if allclear == ['All'] and len(whatclear) == 0:
+
+        # display bad error message
+        error = 'No files deleted'
+        color = "danger"
+
+        # No update to new main data
+        newmaindata = no_update
+
+        # Clear all data
+        clear_data_main = True
+
+        # Make the file drop options and quantity options empty
+        file_drop_opt = []
+        vect_opt = []
+
+        # Open error message
+        open1 = True
+
+    elif allclear == [] and len(whatclear) == 0:
+
+        # display bad error message
+        error = 'No files deleted'
+        color = "danger"
+
+        # No update to new main data
+        newmaindata = no_update
+
+        # Clear all data
+        clear_data_main = True
+        clear_data_file = True
+        # Make the file drop options and quantity options empty
+        file_drop_opt = no_update
+        vect_opt = no_update
+
+        # Open error message
+        open1 = True
+
+    elif allclear == ['All'] and len(whatclear) > 0:
+
+        # display good error message
+        error = 'All files cleared'
+        color = "success"
+
+        # No update to new main data
+        newmaindata = no_update
+        clear_data_file = True
+        # Clear all data
+        clear_data_main = True
+
+        # Make the file drop options and quantity options empty
+        file_drop_opt = []
+        vect_opt = []
+
+        # Open error message
+        open1 = True
+
+
+    # If 1 or more files being deleted
+    elif len(whatclear) >= 1 and allclear != ['All']:
+
+
+        # store = maindata[0]
+        #
+        # # Delete selected data
+        # for what in whatclear:
+        #     del prb[what]
+        #     del df1[what]
+        #     df2.remove(what)
+
+        # Assign new data
+        newmaindata = [df1, df2]
+
+        # Display error message
+        error = ', '.join(whatclear) + ' deleted'
+        color = "success"
+
+        # Do not clear main data
+        clear_data_main = False
+        clear_data_file = True
+        # No option to graph options
+        file_drop_opt = no_update
+        vect_opt = no_update
+
+        # Open error message
+        open1 = True
+
+
+
+    # Return required values
+    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main , clear_data_file, clear_val, file_drop_val, vect_drop_val, submit_val_check
 
 
 
