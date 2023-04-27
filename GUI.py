@@ -225,7 +225,7 @@ dbc.Row([
                         placeholder="Select a Quantity"),
                 ),  # Input field for maximum time
 
-            ], justify="center"),  # Row for input fields for minimum and maximum times
+            ], align='center', justify='center'),  # Row for input fields for minimum and maximum times
 
             dbc.Row([
                 dbc.Col(
@@ -236,26 +236,10 @@ dbc.Row([
                     dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time", debounce=True)
                 ),  # Input field for maximum time
 
-            ], justify="center"),  # Row for input fields for minimum and maximum times
-
-            dbc.Row([
-
-                dbc.Label('Line Thickness', className="text-center"),
-
-                dcc.Slider(
-                    min=0.5,
-                    max=5,
-                    value=1,
-                    step=0.1,
-                    id="line_thick",
-                    marks={0.5: {'label': 'Thin'}, 5: {'label': 'Thick'}},
-                    updatemode='drag'
-                ),
+            ], align='center', justify='center'),  # Row for input fields for minimum and maximum times
 
 
-        ], justify="center"),  # Row for input fields for minimum and maximum times
-
-        ], gap=3),
+        ], gap=2),
 
         width=4),
 
@@ -276,7 +260,7 @@ dbc.Row([
                         dbc.Label('Legend', className="text-start"),
                         dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
                     ]),
-                    className='mb-3'
+                    className='mb-2'
                 ),
             ]),
 
@@ -302,7 +286,7 @@ dbc.Row([
 
         ]),
         width=5),
-    ], className='mb-2', justify="center", align="center"),
+    ], className='mb-2', justify="center", align="even"),
 
 
 
@@ -1407,12 +1391,11 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
         State(component_id = 'filestorage', component_property = 'data'),
         State(component_id = 'File', component_property = 'value'),
         State(component_id = 'Vect', component_property = 'value'),
-        State(component_id='line_thick', component_property='value'),
         State(component_id='time_small', component_property='value'),
         State(component_id='time_large', component_property='value'),
         prevent_initial_call = True)
 
-def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, line_thick, smallt, bigt):
+def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt):
 
     if ctx.triggered_id == 'plot_bttn':
 
