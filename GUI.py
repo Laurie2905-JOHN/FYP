@@ -1558,7 +1558,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 def vel_sync_checklist(vel_check, all_vel_checklist):
     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    vel_type = ['U1','Ux', 'Uy', 'Uz', 't']
+    vel_type = ['t','U1','Ux', 'Uy', 'Uz']
 
     if input_id == "vel_checklist":
         # If the velocity checklist input triggered the callback, update the all velocity checklist
@@ -1603,7 +1603,7 @@ def update_dropdowns1(data, filename_filepath_upload_data):
     else:
         # If the data is not None, set the dropdown options and checklists accordingly
         vect_options = ['U1','Ux', 'Uy', 'Uz']
-        vel_checklist = ['U1','Ux', 'Uy', 'Uz', 't']
+        vel_checklist = ['t','U1','Ux', 'Uy', 'Uz']
         file_dropdown_options = data[0]
         file_checklist = data[0]
         DataDrop_TI = data[0]
@@ -1644,7 +1644,6 @@ def update_In(small_val, large_val):
 
 # Callback for download button
 @app.callback(
-        Output(component_id="download", component_property='data', allow_duplicate=True),
         Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
@@ -1676,18 +1675,12 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
             # If no file selected display error message
             if file is None:
 
-                # Display error message and don't download anything
-                text = no_update
-
                 error = 'No file selected', 'danger'
 
                 error_col = 'danger'
 
             # If quantity is not picked
             elif vector_value == [] or vector_value is None:
-
-                # Display error message and don't download anything
-                text = no_update
 
                 error = 'No data selected'
 
@@ -1699,115 +1692,122 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                 numpy_vect_data = []
 
-                for vector in vector_value:
+                def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                    filepath = os.path.join(folder_path, filename)
+                    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
 
-                    def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                        filepath = os.path.join(folder_path, filename)
-                        mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+                    if row_numbers == 'all':
+                        loaded_data = mapped_data[:]
+                    else:
+                        loaded_data = mapped_data[row_numbers]
 
-                        if row_numbers == 'all':
-                            loaded_data = mapped_data[:]
-                        else:
-                            loaded_data = mapped_data[row_numbers]
+                    return loaded_data
 
-                        return loaded_data
+                file_path = file_data[4][i]
 
+                shape_dtype = file_data[1][i]
 
-                    shape_dtype = file_data[1][i]
+                shape, dtype = shape_dtype
 
-                    shape, dtype = shape_dtype
+                t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
 
-                    file_path = file_data[4][i]
+                max1 = np.amax(t)
+                min1 = np.amin(t)
 
-                    t = load_array_memmap('t.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = 'all')
+                # Error messages
+                smallt_error = 'DATA DOWNLOADED. The data has been cut to the minimum time limit because the inputted time ' \
+                               'is outside the available range. Please adjust your time limit accordingly.'
 
-                    max1 = np.amax(t)
-                    min1 = np.amin(t)
+                bigt_error = 'DATA DOWNLOADED. The data has been cut to the maximum time limit because the inputted time ' \
+                             'is outside the available range. Please adjust your time limit accordingly.'
 
-                    # Error messages
-                    smallt_error = 'DATA DOWNLOADED. The data has been cut to the minimum time limit because the inputted time ' \
-                                                                        'is outside the available range. Please adjust your time limit accordingly.'
+                both_t_error = 'DATA DOWNLOADED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
+                               'are outside the available range. Please adjust your time limit accordingly.'
 
+                both_t_NO_error = 'DATA DOWNLOADED'
 
-                    bigt_error = 'DATA DOWNLOADED. The data has been cut to the maximum time limit because the inputted time ' \
-                                                                        'is outside the available range. Please adjust your time limit accordingly.'
+                # Cut data based on conditions
+                if smallt is None and bigt is None:
+                    bigt = max1
+                    smallt = min1
+                    error = both_t_error
 
-                    both_t_error ='DATA DOWNLOADED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
-                                                                       'are outside the available range. Please adjust your time limit accordingly.'
+                elif smallt is None and bigt is not None:
+                    smallt = min1
+                    error = smallt_error
 
-                    both_t_NO_error = 'DATA DOWNLOADED'
+                elif bigt is None and smallt is not None:
+                    bigt = max1
+                    error = bigt_error
 
-                    # Cut data based on conditions
-                    if smallt is None and bigt is None:
-                        bigt = max1
+                else:
+
+                    if smallt < min1 and bigt > max1:
                         smallt = min1
+                        bigt = max1
                         error = both_t_error
 
-                    elif smallt is None and bigt is not None:
-                        smallt = min1
+                    elif smallt < min1:
+                        bigt = min1
                         error = smallt_error
 
-                    elif bigt is None and smallt is not None:
+
+                    elif bigt > max1:
                         bigt = max1
                         error = bigt_error
 
                     else:
+                        error = both_t_NO_error
 
-                        if smallt < min1 and bigt > max1:
-                            smallt = min1
-                            bigt = max1
-                            error = both_t_error
+                mask = (t >= smallt) & (t <= bigt)
+                error_col = 'primary'
+                row_numbers = np.where(mask)[0].tolist()
 
-                        elif smallt < min1:
-                            bigt = min1
-                            error = smallt_error
-
-
-                        elif bigt > max1:
-                            bigt = max1
-                            error = bigt_error
-
-                        else:
-                            error = both_t_NO_error
-
-                    mask = (t >= smallt) & (t <= bigt)
-                    error_col = 'primary'
-                    row_numbers = np.where(mask)[0].tolist()
-
-                    if vector != 't':
-                        numpy_vect_data.append(load_array_memmap(vector + '.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers))
-
-                    numpy_vect_data.append(t)
+                for vector in vector_value:
+                    if vector == 't':
+                        numpy_vect_data.append(t)
+                    elif vector != 't':
+                        numpy_vect_data.append(
+                            load_array_memmap(vector + '.dat', file_path, dtype=dtype, shape=shape[0],
+                                              row_numbers=row_numbers))
 
                 # Concatenate the arrays vertically
                 concatenated_array = np.column_stack(numpy_vect_data)
 
-                print(np.array([vector_value]))
-                print(concatenated_array)
-
-                concatenated_array1 = np.concatenate((np.array(vector_value), concatenated_array))
+                concatenated_array1 = np.append([vector_value],concatenated_array,  axis=0)
 
                 # Assigning filenames
                 if selected_name is None or selected_name == '':
-                    filename = file + '.csv'
+                    filename = file
                 else:
-                    filename = selected_name + '.csv'
+                    filename = selected_name
+
+                def get_unique_filename(base_path, name):
+                    counter = 1
+                    new_name = name
+
+                    while os.path.isfile(os.path.join(base_path, new_name + '.csv')):
+                        new_name = f"{name} ({counter})"
+                        counter += 1
+
+                    return os.path.normpath(os.path.join(base_path, new_name))
+
+                new_filename_path = get_unique_filename(Download_Path, filename)
 
                 # Save the concatenated array as a CSV file
-                np.savetxt(os.path.join(Download_Path,filename), concatenated_array1, delimiter=",", fmt="%s")
+                np.savetxt(new_filename_path + '.csv', concatenated_array1, delimiter=",", fmt="%s")
 
         except Exception as e:
 
             print(e)
 
             # If any error display message
-            text = no_update
             error = 'ERROR'
             error_col = 'danger'
 
         Loading_variable = 'done'
 
-        return text, error, error_col, True, Loading_variable
+        return error, error_col, True, Loading_variable
 
 
 
