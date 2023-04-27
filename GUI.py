@@ -1078,7 +1078,14 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
                         Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
 
-                        file_path = get_unique_path(Workspace_data, value)
+                        Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
+
+                        # Check if the folder exists
+                        if not os.path.exists(Workspace_Path):
+                            # Create the folder
+                            os.mkdir(Workspace_Path)
+
+                        file_path = get_unique_path(Workspace_Path, value)
 
                         os.makedirs(file_path, exist_ok=True)
 
@@ -1675,7 +1682,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
             # If no file selected display error message
             if file is None:
 
-                error = 'No file selected', 'danger'
+                error = 'No file selected'
 
                 error_col = 'danger'
 
