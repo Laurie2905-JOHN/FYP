@@ -666,19 +666,19 @@ dbc.Col([
 
     # # Components for storing and downloading data
     dbc.Spinner(children = [dcc.Store(id='Loading_variable_Process', storage_type='memory')],color="primary",
-                fullscreen = True, size = 'lg', show_initially = False, delay_hide = 500, delay_show = 500),
+                fullscreen = True, size = 'lg', show_initially = False, delay_hide = 800, delay_show = 800),
 
     # # Components for storing and downloading data
-    dbc.Spinner(children=[dcc.Store(id='Loading_variable_Table', storage_type='memory')], color="primary",
-                fullscreen=True, size='lg', show_initially=False, delay_hide=500, delay_show=500),
+    dbc.Spinner(children=[dcc.Store(id='Loading_variable_Table', storage_type='memory')], color="primary"
+                fullscreen=True, size='lg', show_initially=False, delay_hide=800, delay_show=800),
 
     # # Components for storing and downloading data
     dbc.Spinner(children=[dcc.Store(id='Loading_variable_Download', storage_type='memory')], color="primary",
-                fullscreen=True, size='lg', show_initially=False, delay_hide=500, delay_show=500),
+                fullscreen=True, size='lg', show_initially=False, delay_hide=800, delay_show=800),
 
     # # Components for storing and downloading data
     dbc.Spinner(children=[dcc.Store(id='Loading_variable_Graph', storage_type='memory')], color="primary",
-                fullscreen=True, size='lg', show_initially=False, delay_hide=500, delay_show=500),
+                fullscreen=True, size='lg', show_initially=False, delay_hide=800, delay_show=800),
 
     dcc.Download(id="download"),
     dcc.Store(id='legend_Data', storage_type='memory'),
@@ -1416,22 +1416,23 @@ def clear_graph(n_clicks):
         State(component_id = 'Vect', component_property = 'value'),
         State(component_id='time_small', component_property='value'),
         State(component_id='time_large', component_property='value'),
-        prevent_initial_call = True)
+        Input(component_id='legend_Data', component_property='data'),
+        Input(component_id='title_Data', component_property='data'),
+        Input(component_id='legend_onoff', component_property='value'),
+        Input(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
 
-def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt):
+def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title):
 
     if ctx.triggered_id == 'plot_bttn':
 
         # If no input do not plot graphs
         if file_inputs == [] or vector_inputs1 == []:
 
-            raise PreventUpdate
+            fig = no_update
 
             error = 'Please Check Inputs'
 
-            color = 'danger'
-
-            open1 = True
+            color1 = 'danger'
 
             Loading_Variable = 'done'
 
@@ -1440,6 +1441,10 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt)
             fig = go.Figure()
 
             current_names = []
+
+            min2 = []
+
+            max2 = []
 
             # Error messages
             smallt_error = 'The data has been cut to the minimum time limit because the inputted time ' \
@@ -1477,43 +1482,54 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt)
 
                 shape, dtype = shape_dtype
 
-                min1 = file_data[5][i]
+                min2.append(file_data[5][i])
 
-                max1 = file_data[6][i]
+                max2.append(file_data[6][i])
 
+            min1 = min(min2)
 
-                # Cut data based on conditions
-                if smallt is None and bigt is None:
+            max1 = max(max2)
+
+            # Cut data based on conditions
+            if smallt is None and bigt is None:
+                bigt = max1
+                smallt = min1
+                error_cut = both_t_error
+                error_cut_good = ''
+
+            elif smallt is None and bigt is not None:
+                smallt = min1
+                error_cut = smallt_error
+                error_cut_good = ''
+
+            elif bigt is None and smallt is not None:
+                bigt = max1
+                error_cut = bigt_error
+                error_cut_good = ''
+
+            else:
+
+                if smallt < min1 and bigt > max1:
+                    smallt = min1
                     bigt = max1
-                    smallt = min1
                     error_cut = both_t_error
+                    error_cut_good = ''
 
-                elif smallt is None and bigt is not None:
-                    smallt = min1
+                elif smallt < min1:
+                    bigt = min1
                     error_cut = smallt_error
+                    error_cut_good = ''
 
-                elif bigt is None and smallt is not None:
+
+                elif bigt > max1:
                     bigt = max1
                     error_cut = bigt_error
-
+                    error_cut_good = ''
                 else:
+                    error_cut_good = both_t_NO_error
+                    error_cut = ''
 
-                    if smallt < min1 and bigt > max1:
-                        smallt = min1
-                        bigt = max1
-                        error_cut = both_t_error
-
-                    elif smallt < min1:
-                        bigt = min1
-                        error_cut = smallt_error
-
-
-                    elif bigt > max1:
-                        bigt = max1
-                        error_cut = bigt_error
-
-                    else:
-                        error_cut = both_t_NO_error
+            for file in file_inputs:
 
                 t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
 
@@ -1542,15 +1558,107 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt)
                     )
 
 
-                error = 'Graph Updated ' + error_cut
+                # Update x and y axes labels
+                fig.update_layout(
+                    xaxis_title="Time (s)",
+                    yaxis_title="Velocity (m/s)",
+                    legend=dict(
+                        y=1,
+                        x=0.5,
+                        orientation="h",
+                        yanchor="bottom",
+                        xanchor="center"),
+                )
 
-                color = 'success'
+                # Update legend
 
-                open1 = True
+                if legend_data is None:
+                    # If no legend data
 
-                Loading_Variable = 'done'
+                    # Turn legend off
+                    if leg == 'Off':
+                        fig.layout.update(showlegend=False)
 
-        return fig, error, color, open1, Loading_Variable
+                        error_leg = ''
+
+                    # Turn legend on
+                    elif leg == 'On':
+                        fig.layout.update(showlegend=True)
+
+                        error_leg = ''
+
+                else:
+                    # If there is legend data
+
+                    # If legend is off
+                    if leg == 'Off':
+                        fig.layout.update(showlegend=False)
+
+                        error_leg = ''
+
+
+                    elif leg == 'On':
+                        # Split string when there is a comma
+                        legend_name_list = legend_data.split(',')
+                        # Create empty dictionary for new legend name
+                        newname_result = {}
+
+                        # If the length of the list of new legend entries is eqaul to the number of lines
+                        if len(current_names) == len(legend_name_list):
+                            # For each legend name create a dictionary of the current names and their replacements
+                            for i, current_name in enumerate(current_names):
+                                newnames = {current_name: legend_name_list[i]}
+                                newname_result.update(newnames)
+                            # Update legend names
+                            fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
+                                                                  legendgroup=newname_result[t.name],
+                                                                  hovertemplate=t.hovertemplate.replace(t.name,
+                                                                                                        newname_result[
+                                                                                                            t.name]) if t.hovertemplate is not None else None)
+                                               )
+
+                            fig.layout.update(showlegend=True)
+
+                            error_leg  = ''
+
+
+                        else:
+
+                            # If legend entries do not match display error message
+                            error_leg = ' Number of legend entries do not match'
+
+
+                # If title data is empty
+                if title_data is None:
+
+                    # Turn graph title off
+                    if title == 'Off':
+                        fig.layout.update(title='')
+                    # If title is on display original title
+                    elif title == 'On':
+                        fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
+
+                # If title data isn't empty
+                else:
+
+                    # Turn graph title off
+                    if title == 'Off':
+                        fig.layout.update(title='')
+                    # Update title with legend data if legend is on
+                    elif title == 'On':
+                        fig.layout.update(title=title_data)
+            # return figure, min and max values for slider, and error message
+
+            if error_leg == '' or error_cut == '':
+                color1 = 'success'
+            else:
+                color1 = 'danger'
+
+            error = 'Graph plotted. ' + error_cut + error_cut_good + error_leg
+
+            Loading_Variable ='done'
+
+        return fig, error, color1, True, Loading_Variable
 
 
 # Callback to update legend or title data
