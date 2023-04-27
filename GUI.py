@@ -14,6 +14,7 @@ import base64
 import io
 import os
 import math
+import re
 import diskcache
 from dash.dependencies import Output, Input
 import dash_bootstrap_components as dbc
@@ -1722,57 +1723,57 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                 min1 = np.amin(t)
 
                 # Error messages
-                smallt_error = 'DATA DOWNLOADED. The data has been cut to the minimum time limit because the inputted time ' \
-                               'is outside the available range. Please adjust your time limit accordingly.'
+                smallt_error = 'The data has been cut to the minimum time limit because the inputted time ' \
+                               'is outside the available range.'
 
-                bigt_error = 'DATA DOWNLOADED. The data has been cut to the maximum time limit because the inputted time ' \
-                             'is outside the available range. Please adjust your time limit accordingly.'
+                bigt_error = 'The data has been cut to the maximum time limit because the inputted time ' \
+                             'is outside the available range.'
 
-                both_t_error = 'DATA DOWNLOADED. The data has been cut to the minimum and maximum time limit because the inputted times ' \
-                               'are outside the available range. Please adjust your time limit accordingly.'
+                both_t_error = 'The data has been cut to the minimum and maximum time limit because the inputted times ' \
+                               'are outside the available range.'
 
-                both_t_NO_error = 'DATA DOWNLOADED'
+                both_t_NO_error = 'The data has been cut to the specified limits.'
 
                 # Cut data based on conditions
                 if smallt is None and bigt is None:
                     bigt = max1
                     smallt = min1
-                    error = both_t_error
+                    error_cut = both_t_error
 
                 elif smallt is None and bigt is not None:
                     smallt = min1
-                    error = smallt_error
+                    error_cut = smallt_error
 
                 elif bigt is None and smallt is not None:
                     bigt = max1
-                    error = bigt_error
+                    error_cut = bigt_error
 
                 else:
 
                     if smallt < min1 and bigt > max1:
                         smallt = min1
                         bigt = max1
-                        error = both_t_error
+                        error_cut = both_t_error
 
                     elif smallt < min1:
                         bigt = min1
-                        error = smallt_error
+                        error_cut = smallt_error
 
 
                     elif bigt > max1:
                         bigt = max1
-                        error = bigt_error
+                        error_cut = bigt_error
 
                     else:
-                        error = both_t_NO_error
+                        error_cut = both_t_NO_error
 
                 mask = (t >= smallt) & (t <= bigt)
-                error_col = 'primary'
+
                 row_numbers = np.where(mask)[0].tolist()
 
                 for vector in vector_value:
                     if vector == 't':
-                        numpy_vect_data.append(t)
+                        numpy_vect_data.append(t[mask])
                     elif vector != 't':
                         numpy_vect_data.append(
                             load_array_memmap(vector + '.dat', file_path, dtype=dtype, shape=shape[0],
@@ -1786,8 +1787,20 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                 # Assigning filenames
                 if selected_name is None or selected_name == '':
                     filename = file
+                    error_special = ''
                 else:
-                    filename = selected_name
+                    filename = re.sub(r'[^\w\s\-_]+', '',selected_name)
+
+                    if filename != selected_name:
+                        error_special = ' Disallowed characters have been removed from the filename'
+
+                        if filename == '':
+                            filename = file
+                            error_special = ' Disallowed characters have been removed from the filename. ' \
+                                            'The file has been saved as: ' + file +'.'
+
+                    else:
+                        error_special = ''
 
                 def get_unique_filename(base_path, name):
                     counter = 1
@@ -1804,12 +1817,18 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                 # Save the concatenated array as a CSV file
                 np.savetxt(new_filename_path + '.csv', concatenated_array1, delimiter=",", fmt="%s")
 
+                error_filepath = ' Data saved in: ' + new_filename_path + '.csv'
+
+                error = error_cut + error_special + error_filepath
+
+                error_col = 'primary'
+
         except Exception as e:
 
             print(e)
 
             # If any error display message
-            error = 'ERROR'
+            error = e
             error_col = 'danger'
 
         Loading_variable = 'done'
