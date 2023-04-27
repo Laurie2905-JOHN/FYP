@@ -144,9 +144,13 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], prevent_i
 app.layout = dbc.Container([
 
     # Header row with title
+    dbc.Row(
+        html.Div(className ='mb-4')
+    ),
+
     dbc.Row([
         dbc.Col(
-            html.H1("BARNACLE SENSOR ANALYSIS DASHBOARD",
+            html.H1("BARNACLE SENSOR ANALYSIS",
                     className='text-center font-weight-bolder, mb-1'),
             width=12),
     ]),
@@ -178,7 +182,7 @@ app.layout = dbc.Container([
                 html.Hr(),
                 width=12
             ),  # Horizontal rule to separate content
-        ),
+        className='mb-4'),
 
         # Alert box
         dbc.Col([
@@ -204,7 +208,7 @@ dbc.Row([
 
                 dbc.Button("Clear Figure", id="plot_clear_bttn", size="lg", color="primary", outline=True),
 
-            ], gap=2),
+            ], gap=3),
 
             width=3),
 
@@ -247,7 +251,7 @@ dbc.Row([
             ], align='center', justify='center'),  # Row for input fields for minimum and maximum times
 
 
-        ], gap=2),
+        ], gap=3),
 
         width=4),
 
@@ -268,7 +272,7 @@ dbc.Row([
                         dbc.Label('Legend', className="text-start"),
                         dbc.RadioItems(id='legend_onoff', value='On', options=['On', 'Off'], inline=True),
                     ]),
-                    className='mb-2'
+                    className='mb-3'
                 ),
             ]),
 
@@ -294,7 +298,7 @@ dbc.Row([
 
         ]),
         width=5),
-    ], className='mb-2', justify="center", align="center"),
+    ], className='mb-3', justify="center", align="center"),
 
     dbc.Row([
         dbc.Col(
@@ -316,7 +320,7 @@ dbc.Row(
             html.Hr(),
             width=12
         ),  # Horizontal rule to separate content
-    ),
+        className='mb-4'),
 
     dbc.Row(
         dbc.Col([
@@ -343,7 +347,7 @@ dbc.Row(
 
                 dbc.Button("Clear Table", id="Clear_Table", size="lg",color="primary", outline=True),
 
-                ], gap = 2),
+                ], gap = 3),
 
 
             width = 3),
@@ -364,7 +368,7 @@ dbc.Row(
 
 
 
-            ], gap =2 ),
+            ], gap =3),
 
             width = 3),
 
@@ -374,7 +378,7 @@ dbc.Row(
 
 
 
-  dbc.Col(
+  dbc.Col([
 
 dash_table.DataTable(id = 'TI_Table',
                      columns =
@@ -392,10 +396,12 @@ dash_table.DataTable(id = 'TI_Table',
                      ],
                      export_format='xlsx',
                      export_headers='display',
-                     row_deletable=True
+                     row_deletable=True,
 ),
 
-  width = 12),
+      html.Div(className = 'mb-4'),
+
+ ], width = 12),
 
     # Empty row with a horizontal line
     dbc.Row([
@@ -414,6 +420,8 @@ dash_table.DataTable(id = 'TI_Table',
             className="text-center"
         ),
 
+
+
         dbc.Row(
             dbc.Col(
                 html.Hr(),
@@ -427,7 +435,7 @@ dash_table.DataTable(id = 'TI_Table',
                 is_open=False,
                 class_name='text-center'
             ),
-        ], width=10),
+        ], class_name ='mb-3', width=10),
 
         dbc.Col(
         dbc.InputGroup([
@@ -480,6 +488,7 @@ dash_table.DataTable(id = 'TI_Table',
                 html.Hr(),
                 width=12
             ),  # Horizontal rule to separate content
+            className='mb-4'
         ),
         dbc.Col(
 
@@ -501,7 +510,7 @@ dash_table.DataTable(id = 'TI_Table',
             ]),
             # Horizontal direction of the stack
 
-    width = 11, class_name = 'mb-3'),
+    width = 11, class_name = 'mb-5'),
 
 
         # Column for file selection/upload
@@ -589,7 +598,7 @@ dash_table.DataTable(id = 'TI_Table',
         ),
 
 
-    ], align='start', justify='evenly'),
+    ], align='start', justify='evenly', className = 'mb-4'),
 
     dbc.Row([
         dbc.Col(
@@ -611,6 +620,7 @@ dash_table.DataTable(id = 'TI_Table',
             html.Hr(),
             width=12
         ),  # Horizontal rule to separate content
+        className='mb-4'
     ),
 
     dbc.Row(
@@ -644,7 +654,7 @@ dbc.Col([
                 # Checkbox to select specific data
 
 
-            ], gap=2),
+            ], gap=3),
 
         width = 4),
 
@@ -666,12 +676,12 @@ dbc.Col([
 
                 ], justify="center"),  # Row for input fields for minimum and maximum times
 
-            ], gap=2),
+            ], gap=3),
 
         width = 4),
 
 
-        ], align='center', justify='center'),
+        ], align='center', justify='center',className = 'mb-5'),
 
     ], width = 12),
 
