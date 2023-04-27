@@ -1,5 +1,5 @@
 # Import libs
-from dash import Dash, dcc, Output, Input, ctx, State, dash_table
+from dash import Dash, dcc, Output, Input, ctx, State, dash_table, callback_context
 from dash.dash import no_update
 from dash.exceptions import PreventUpdate
 from dash import dcc
@@ -21,6 +21,8 @@ import dash_bootstrap_components as dbc
 import dash
 from dash import html, dash_table
 import shutil
+
+
 
 
 
@@ -137,7 +139,6 @@ def cal_velocity(BarnFilePath, cal_data, SF):
 
 # Create the Dash app object
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], prevent_initial_callbacks=True)
-Barn_data = {}
 
 # Define the layout of the app
 app.layout = dbc.Container([
@@ -152,10 +153,12 @@ app.layout = dbc.Container([
 
     # Graph row
     dbc.Row([
-        dbc.Col(
-            dcc.Graph(id='Velocity_Graph', figure={}),
+        dbc.Col([
+            dcc.Graph(id='Velocity_Graph'),
+            ],
             width=12),
     ]),
+
 
     # Options row
     dbc.Row([
@@ -172,61 +175,56 @@ app.layout = dbc.Container([
         # Alert box
         dbc.Col([
             dbc.Alert(
-                id="alert",
+                id="Graph_alert",
                 is_open=False,
                 dismissable=True,
                 duration=20000),
         ], width=12),
 
-        # Time slider row
-        dbc.Row([
-            # Time slider label
-            dbc.Col(
-                dbc.Row(
-                    dbc.Label("Time Slider", className="text-center mb-1"),
-                ),
-            ),
 
-            # Time slider component
-            dbc.Col(
-                dcc.RangeSlider(
-                    id='time-range',
-                    min=1,
-                    max=10,
-                    value=[1, 10],
-                    tooltip={"placement": "bottom", "always_visible": True},
-                    updatemode='drag'
-                ),
-                width = 12,
-                className="mb-2"
-            ),
-        ]),
-    ]),
 
-    # Create a row with one column
-    dbc.Row([
-        dbc.Col([
-            # Stack two elements vertically
+dbc.Col(
+
             dbc.Stack([
-                # Label for the dropdowns
-                dbc.Label("Data Options", className='text-center'),
-                # Stack two dropdowns vertically
-                dbc.Stack([
-                    dcc.Dropdown(
-                        id="File",
-                        options=[],
-                        multi=True,
-                        value=[],
-                        placeholder="Select a dataset"),
-                    dcc.Dropdown(
-                        id="Vect",
-                        options=[],
-                        multi=True,
-                        value=[],
-                        placeholder="Select a quantity"),
-                ], gap=3)
-            ]),
-        ]),
+                dbc.Button("Plot", id="plot_bttn", size="lg",color="primary", outline=True),  # Button for downloading selected data
+
+                dbc.Row([
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id="File",
+                            options=[],
+                            multi=True,
+                            value=[],
+                            placeholder="Select a dataset"),
+                    ),  # Input field for minimum time
+
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id="Vect",
+                            options=[],
+                            multi=True,
+                            value=[],
+                            placeholder="Select a quantity"),
+                    ),  # Input field for maximum time
+
+                ], justify="center"),  # Row for input fields for minimum and maximum times
+
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Input(id="time_small", min = 0, type="number", placeholder="Min Time", debounce=True)
+                    ),  # Input field for minimum time
+
+                    dbc.Col(
+                        dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time", debounce=True)
+                    ),  # Input field for maximum time
+
+                ], justify="center"),  # Row for input fields for minimum and maximum times
+
+            ], gap=2),
+
+        width = 4),
+
+
 
         dbc.Col([
             dbc.Stack([
@@ -327,9 +325,9 @@ app.layout = dbc.Container([
 
                 dbc.Stack([
 
-                dbc.Button("Calculate", id="TI_btn_download", size="lg"),
+                dbc.Button("Calculate", id="TI_btn_download", size="lg",color="primary", outline=True),
 
-                dbc.Button("Clear Table", id="Clear_Table", size="lg"),
+                dbc.Button("Clear Table", id="Clear_Table", size="lg",color="primary", outline=True),
 
                 ], gap = 2),
 
@@ -650,8 +648,6 @@ dbc.Col([
 
 
         ], align='center', justify='center'),
-
-
 
     ], width = 12),
 
@@ -1001,7 +997,7 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
         # Initialise data dictionary if it is None
         if file_data is None:
-            file_data = [[],[],[],[],[]]
+            file_data = [[],[],[],[],[],[],[]]
 
         # Check if no files were uploaded
         if filenames is None or filenames == []:
@@ -1037,12 +1033,16 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
             Old_calData = file_data[2]
             Old_SF = file_data[3]
             Old_filepath = file_data[4]
+            Old_min = file_data[5]
+            Old_max = file_data[6]
 
             combined_filenames = Oldfilenames.copy() # Make a copy of existing file names
             combined_dtype_shape = old_dtype_shape.copy()
             combined_CalData = Old_calData.copy() # Make a copy of existing file names
             combined_SF = Old_SF.copy()
             combined_filepath = Old_filepath.copy() # Make a copy of existing file names
+            combined_min = Old_min.copy()
+            combined_max = Old_max.copy()
 
 
 
@@ -1090,6 +1090,9 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
                         os.makedirs(file_path, exist_ok=True)
 
+                        combined_max.append(np.amax(Barn_data['t']))
+                        combined_min.append(np.amin(Barn_data['t']))
+
 
                         save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
                         save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
@@ -1112,7 +1115,7 @@ def Analyse_content(n_clicks,filename_filepath_data, cal_data, SF, file_data, fi
 
                     repeated_value.append(value)
 
-            file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath]
+            file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath, combined_min, combined_max]
 
 
             upload_filename = filename_filepath_data[0]
@@ -1278,10 +1281,8 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
                 file_path = file_data[4][i]
 
-                t = load_array_memmap('t.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = 'all')
-
-                max1 = np.amax(t)
-                min1 = np.amin(t)
+                min1 = file_data[5][i]
+                max1 = file_data[6][i]
 
                 # Error messages
                 smallt_error = 'TURBULENCE INTENSITY CALCULATED. The data has been cut to the minimum time limit because the inputted time ' \
@@ -1329,7 +1330,10 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                     else:
                         error = both_t_NO_error
 
+                t = load_array_memmap('t.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = 'all')
+
                 mask = (t >= small_TI) & (t <= big_TI)
+
                 error_col = 'primary'
                 row_numbers = np.where(mask)[0].tolist()
 
@@ -1342,8 +1346,6 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
                 if table_data is None:
                     table_data = []
-
-                i = file_data[0].index(chosen_file)
 
                 new_data = [
                     {
@@ -1367,84 +1369,163 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
         return table_data, error, error_col, True, Loading_variable
 
-#
-# data = [combined_filenames, combined_dtype_shape, Workspace_data, SF, cal_data[0][0]]
 
-# # Callback which updates the graph based on graph options
-# @app.callback(
-#         Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-#         Input(component_id = 'filestorage', component_property = 'data'),
-#         Input(component_id = 'File', component_property = 'value'),
-#         Input(component_id = 'Vect', component_property = 'value'),
-#         Input(component_id='line_thick', component_property='value'),
-#         prevent_initial_call = True)
-#
-# def update_graph(data, user_inputs, user_inputs1, line_thick):
-#
-#
-#     # If no input do not plot graphs
-#     if user_inputs == [] or user_inputs1 == []:
-#
-#         error1 = no_update
-#
-#         color = no_update
-#
-#         open1 = False
-#
-#         fig = {}
-#
-#         min_sl = 1
-#
-#         max_sl = 10
-#
-#         value =[1, 10]
-#
-#     else:
-#
-#         folder_path = r'C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\Workspace'
-#         # Plotting graphs
-#
-#         max1 = []
-#
-#         min1 = []
-#
-#         fig = go.Figure()
-#
-#         current_names = []
-#
-#         # If user inputs are changed reset time slider and plot full data
-#         if "File" == ctx.triggered_id or "Vect" == ctx.triggered_id:
-#
-#             for user_input in user_inputs:
-#                 for user_input1 in user_inputs1:
-#
-#                     # Create a new file name with the current 'value' and the '.npz' extension
-#                     filename2 = user_input + '.npz'
-#
-#                     # Join the folder path with the file name
-#                     file_path = os.path.join(folder_path, filename2)
-#
-#                     filename2 = user_input +'.npz'
-#
-#                     file_path = os.path.join(folder_path, filename2)
-#
-#                     Barn_data = np.load(file_path)
-#
-#
-#                     V = Barn_data[user_input1]
-#                     t = Barn_data['t']
-#
-#                     # Plotting data
-#                     fig.add_trace(go.Scatter(x=t, y=V, mode='lines',
-#                                             line=dict(
-#                                             width=line_thick),
-#                                             name=f"{user_input}{' '}{user_input1}"))
-#                     # Creating a list of current legend names
-#                     current_names.append(f"{user_input}{' '}{user_input1}")
-#
-#
-#
-#         return fig,
+# Callback which updates the graph based on graph options
+@app.callback(
+        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id='plot_bttn', component_property='n_clicks'),
+        State(component_id = 'filestorage', component_property = 'data'),
+        State(component_id = 'File', component_property = 'value'),
+        State(component_id = 'Vect', component_property = 'value'),
+        State(component_id='line_thick', component_property='value'),
+        State(component_id='time_small', component_property='value'),
+        State(component_id='time_large', component_property='value'),
+        prevent_initial_call = True)
+
+def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, line_thick, smallt, bigt):
+
+    if ctx.triggered_id == 'plot_bttn':
+
+        # Initialize variables with default values
+        error = ''
+        color = 'danger'
+        open1 = False
+
+        # If no input do not plot graphs
+        if file_inputs == [] or vector_inputs1 == []:
+
+            raise PreventUpdate
+
+            # error = 'Please Check Inputs'
+            #
+            # color = 'danger'
+            #
+            # open1 = True
+
+
+        else:
+
+            current_names = []
+
+            # Error messages
+            smallt_error = 'The data has been cut to the minimum time limit because the inputted time ' \
+                           'is outside the available range.'
+
+            bigt_error = 'The data has been cut to the maximum time limit because the inputted time ' \
+                         'is outside the available range.'
+
+            both_t_error = 'The data has been cut to the minimum and maximum time limit because the inputted times ' \
+                           'are outside the available range.'
+
+            both_t_NO_error = 'The data has been cut to the specified limits.'
+
+
+            def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                filepath = os.path.join(folder_path, filename)
+                mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+
+                if row_numbers == 'all':
+                    loaded_data = mapped_data[:]
+                else:
+                    loaded_data = mapped_data[row_numbers]
+
+                return loaded_data
+
+
+
+            for file in file_inputs:
+
+
+                i = file_data[0].index(file)
+
+                file_path = file_data[4][i]
+
+                shape_dtype = file_data[1][i]
+
+                shape, dtype = shape_dtype
+
+                min1 = file_data[5][i]
+
+                max1 = file_data[6][i]
+
+
+                # Cut data based on conditions
+                if smallt is None and bigt is None:
+                    bigt = max1
+                    smallt = min1
+                    error_cut = both_t_error
+
+                elif smallt is None and bigt is not None:
+                    smallt = min1
+                    error_cut = smallt_error
+
+                elif bigt is None and smallt is not None:
+                    bigt = max1
+                    error_cut = bigt_error
+
+                else:
+
+                    if smallt < min1 and bigt > max1:
+                        smallt = min1
+                        bigt = max1
+                        error_cut = both_t_error
+
+                    elif smallt < min1:
+                        bigt = min1
+                        error_cut = smallt_error
+
+
+                    elif bigt > max1:
+                        bigt = max1
+                        error_cut = bigt_error
+
+                    else:
+                        error_cut = both_t_NO_error
+
+                t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+
+
+
+                mask = (t >= smallt) & (t <= bigt)
+
+                numpy_vect_data = {file: {'t': t[mask]}}
+
+                row_numbers = np.where(mask)[0].tolist()
+
+                for vector in vector_inputs1:
+
+                    numpy_vect_data[file][vector] = load_array_memmap(vector + '.dat', file_path, dtype=dtype,
+                                                                      shape=shape[0],
+                                                                      row_numbers=row_numbers)
+
+                    # Creating a list of current legend names
+                    current_names.append(f"{file}{' '}{vector}")
+
+
+
+                global fig
+
+                fig.replace(go.Figure())
+
+                    # Plotting data
+                fig.add_trace(go.Scattergl(name=f"{'Example 1'}{' '}{'Ux'}", showlegend=True), hf_x=numpy_vect_data['Example 1']['t'], hf_y=numpy_vect_data['Example 1']['Ux'])
+
+                fig.show_dash(mode='inline')
+
+                error = 'Graph Updated ' + error_cut
+
+                color = 'success'
+
+                open1 = True
+
+        return fig, error, color, open1
+
+fig.register_update_graph_callback(
+    app=app, graph_id="Velocity_Graph", trace_updater_id="trace-updater"
+)
 
 # Callback to update legend or title data
 @app.callback(
@@ -1711,8 +1792,8 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                 t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
 
-                max1 = np.amax(t)
-                min1 = np.amin(t)
+                min1 = file_data[5][i]
+                max1 = file_data[6][i]
 
                 # Error messages
                 smallt_error = 'The data has been cut to the minimum time limit because the inputted time ' \
@@ -1830,136 +1911,136 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
 
 # Callback to clear data
-@app.callback(
-        Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
-        Output(component_id="File", component_property='options', allow_duplicate=True),
-        Output(component_id='Vect', component_property='options', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        Output(component_id='filename_filepath', component_property='clear_data'),
-        Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
-        Output(component_id="File", component_property='value', allow_duplicate=True),
-        Output(component_id='Vect', component_property='value', allow_duplicate=True),
-        Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
-        Input(component_id='clear_files', component_property='n_clicks'),
-        State(component_id='filestorage', component_property='data'),
-        State(component_id="clear_file_checklist", component_property='value'),
-        State(component_id="all_clear_file_checklist", component_property='value'),
-        prevent_initial_call=True)
-
-def clear_files( n_clicks, maindata, whatclear, allclear):
-
-    # If the clear files button is pressed, prevent update
-    if "clear_files" != ctx.triggered_id:
-        raise PreventUpdate
-
-    # Clear figure
-    fig = {}
-
-    # Clear upload data
-    submit_val_check = []
-    upload_filename = []
-    upload_contents = []
-    # Clear selected values
-    clear_val = []
-    file_drop_val = []
-    vect_drop_val = []
-
-    # If no files selected display error message
-    if allclear == ['All'] and len(whatclear) == 0:
-
-        # display bad error message
-        error = 'No files deleted'
-        color = "danger"
-
-        # No update to new main data
-        newmaindata = no_update
-
-        # Clear all data
-        clear_data_main = True
-
-        # Make the file drop options and quantity options empty
-        file_drop_opt = []
-        vect_opt = []
-
-        # Open error message
-        open1 = True
-
-    elif allclear == [] and len(whatclear) == 0:
-
-        # display bad error message
-        error = 'No files deleted'
-        color = "danger"
-
-        # No update to new main data
-        newmaindata = no_update
-
-        # Clear all data
-        clear_data_main = True
-        clear_data_file = True
-        # Make the file drop options and quantity options empty
-        file_drop_opt = no_update
-        vect_opt = no_update
-
-        # Open error message
-        open1 = True
-
-    elif allclear == ['All'] and len(whatclear) > 0:
-
-        # display good error message
-        error = 'All files cleared'
-        color = "success"
-
-        # No update to new main data
-        newmaindata = no_update
-        clear_data_file = True
-        # Clear all data
-        clear_data_main = True
-
-        # Make the file drop options and quantity options empty
-        file_drop_opt = []
-        vect_opt = []
-
-        # Open error message
-        open1 = True
-
-
-    # If 1 or more files being deleted
-    elif len(whatclear) >= 1 and allclear != ['All']:
-
-
-        # store = maindata[0]
-        #
-        # # Delete selected data
-        # for what in whatclear:
-        #     del prb[what]
-        #     del df1[what]
-        #     df2.remove(what)
-
-        # Assign new data
-        newmaindata = [df1, df2]
-
-        # Display error message
-        error = ', '.join(whatclear) + ' deleted'
-        color = "success"
-
-        # Do not clear main data
-        clear_data_main = False
-        clear_data_file = True
-        # No option to graph options
-        file_drop_opt = no_update
-        vect_opt = no_update
-
-        # Open error message
-        open1 = True
-
-
-
-    # Return required values
-    return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main , clear_data_file, clear_val, file_drop_val, vect_drop_val, submit_val_check
+# @app.callback(
+#         Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
+#         Output(component_id="File", component_property='options', allow_duplicate=True),
+#         Output(component_id='Vect', component_property='options', allow_duplicate=True),
+#         Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+#         Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+#         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+#         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+#         Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+#         Output(component_id='filename_filepath', component_property='clear_data'),
+#         Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
+#         Output(component_id="File", component_property='value', allow_duplicate=True),
+#         Output(component_id='Vect', component_property='value', allow_duplicate=True),
+#         Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
+#         Input(component_id='clear_files', component_property='n_clicks'),
+#         State(component_id='filestorage', component_property='data'),
+#         State(component_id="clear_file_checklist", component_property='value'),
+#         State(component_id="all_clear_file_checklist", component_property='value'),
+#         prevent_initial_call=True)
+#
+# def clear_files( n_clicks, maindata, whatclear, allclear):
+#
+#     # If the clear files button is pressed, prevent update
+#     if "clear_files" != ctx.triggered_id:
+#         raise PreventUpdate
+#
+#     # Clear figure
+#     fig = {}
+#
+#     # Clear upload data
+#     submit_val_check = []
+#     upload_filename = []
+#     upload_contents = []
+#     # Clear selected values
+#     clear_val = []
+#     file_drop_val = []
+#     vect_drop_val = []
+#
+#     # If no files selected display error message
+#     if allclear == ['All'] and len(whatclear) == 0:
+#
+#         # display bad error message
+#         error = 'No files deleted'
+#         color = "danger"
+#
+#         # No update to new main data
+#         newmaindata = no_update
+#
+#         # Clear all data
+#         clear_data_main = True
+#
+#         # Make the file drop options and quantity options empty
+#         file_drop_opt = []
+#         vect_opt = []
+#
+#         # Open error message
+#         open1 = True
+#
+#     elif allclear == [] and len(whatclear) == 0:
+#
+#         # display bad error message
+#         error = 'No files deleted'
+#         color = "danger"
+#
+#         # No update to new main data
+#         newmaindata = no_update
+#
+#         # Clear all data
+#         clear_data_main = True
+#         clear_data_file = True
+#         # Make the file drop options and quantity options empty
+#         file_drop_opt = no_update
+#         vect_opt = no_update
+#
+#         # Open error message
+#         open1 = True
+#
+#     elif allclear == ['All'] and len(whatclear) > 0:
+#
+#         # display good error message
+#         error = 'All files cleared'
+#         color = "success"
+#
+#         # No update to new main data
+#         newmaindata = no_update
+#         clear_data_file = True
+#         # Clear all data
+#         clear_data_main = True
+#
+#         # Make the file drop options and quantity options empty
+#         file_drop_opt = []
+#         vect_opt = []
+#
+#         # Open error message
+#         open1 = True
+#
+#
+#     # If 1 or more files being deleted
+#     elif len(whatclear) >= 1 and allclear != ['All']:
+#
+#
+#         # store = maindata[0]
+#         #
+#         # # Delete selected data
+#         # for what in whatclear:
+#         #     del prb[what]
+#         #     del df1[what]
+#         #     df2.remove(what)
+#
+#         # Assign new data
+#         newmaindata = [df1, df2]
+#
+#         # Display error message
+#         error = ', '.join(whatclear) + ' deleted'
+#         color = "success"
+#
+#         # Do not clear main data
+#         clear_data_main = False
+#         clear_data_file = True
+#         # No option to graph options
+#         file_drop_opt = no_update
+#         vect_opt = no_update
+#
+#         # Open error message
+#         open1 = True
+#
+#
+#
+#     # Return required values
+#     return fig, file_drop_opt, vect_opt, error, color, open1, newmaindata, clear_data_main , clear_data_file, clear_val, file_drop_val, vect_drop_val, submit_val_check
 
 
 
