@@ -1677,6 +1677,9 @@ def update_vals(small_val, large_val):
         Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='Loading_variable_Download', component_property='data'),
+        Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
         Input(component_id="btn_download", component_property='n_clicks'),
         State(component_id='Workspace_store', component_property='data'),
         State(component_id="file_name_input", component_property='value'),
@@ -1693,7 +1696,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
         # If download button is pressed
         if "btn_download" == ctx.triggered_id:
 
-
+            # If workspace doesn't exist clear files
             if not os.path.exists(Workspace_data):
 
                 error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
@@ -1702,8 +1705,15 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                 color_perm = 'danger'
                 open_perm = True
                 Loading_variable = 'done'
+                Workspace_store_clear = True
+                filestorage_clear = True
+                filename_filepath_clear = True
 
             else:
+
+                Workspace_store_clear = False
+                filestorage_clear = False
+                filename_filepath_clear = False
 
                 error_perm = no_update
                 color_perm = no_update
@@ -1761,14 +1771,14 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                     # Error messages
                     smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                                   ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
+                                   ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +'). '
 
                     bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
-                                 ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
+                                 ' RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +').'
 
                     both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
-                                   ' THE AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                           '(' + min1 + ' TO ' + max1 +')'
+                                   ' THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                           '(' + str(min1) + ' TO ' + str(max1) +').'
 
                     both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
 
@@ -1805,6 +1815,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                         else:
                             error_cut = both_t_NO_error
 
+
                     # Assign mask based on condition
                     mask = (t >= smallt) & (t <= bigt)
                     # From mask calculated row numbers
@@ -1820,6 +1831,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                     # Concatenate the arrays
                     concatenated_array = np.column_stack(numpy_vect_data)
+
                     concatenated_array1 = np.append([vector_value],concatenated_array,  axis=0)
 
                     # Assigning filenames
@@ -1832,10 +1844,10 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                         # Assign error message
                         if filename != selected_name:
                             error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
-                                        'THE FILE HAS BEEN SAVED AS:' + filename + '.'
+                                        'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
                             if filename == '':
                                 error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
-                                        'THE FILE HAS BEEN SAVED AS:' + filename + '.'
+                                        'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
                         else:
                             error_special = ''
 
@@ -1857,17 +1869,18 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                     np.savetxt(new_filename_path + '.csv', concatenated_array1, delimiter=",", fmt="%s")
 
                     # Prepare a message indicating the file path of the saved data
-                    error_filepath = ' Data saved in: ' + new_filename_path + '.csv'
+                    error_filepath = ' DATA SAVED IN: ' + new_filename_path + '.csv'
 
                     # Combine error messages and set the alert color to 'primary'
                     error_temp = error_cut + error_special + error_filepath
-                    color = 'primary'
+                    color_temp = 'primary'
 
                 # Update the loading status to 'done'
                 Loading_variable = 'done'
 
         # Return error message, alert color, whether the alert should be open, and loading status
-        return error_temp, color_temp, True, error_perm, color_perm, open_perm, Loading_variable
+        return error_temp, color_temp, True, error_perm, color_perm, open_perm, Loading_variable,\
+            Workspace_store_clear, filestorage_clear, filename_filepath_clear
 
     except Exception as e:
         # If any error occurs, display the error message and set the alert color to 'danger'
@@ -1875,7 +1888,8 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
         color_temp = 'danger'
 
         # Return error message, alert color, whether the alert should be open, and no update for the loading status
-        return error_temp, color_temp, True, no_update, no_update, no_update, no_update,
+        return error_temp, color_temp, True, no_update, no_update, no_update, no_update,\
+            no_update, no_update, no_update
 
 # Callback 15
 # Call back which updates the TI table time range to prevent error
