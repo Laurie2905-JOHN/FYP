@@ -1353,7 +1353,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                     loading_variable = 'done'
                     error_perm = no_update
                     color_perm = no_update
-                    open_perm = False
+                    open_perm = no_update
                     Workspace_store_clear = False
                     filestorage_clear = False
                     filename_filepath_clear = False
@@ -1920,7 +1920,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
     Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id="small_t_TI", component_property='value'),
     Input(component_id="big_t_TI", component_property='value'),
-        prevent_initial_call=True)
+    prevent_initial_call=True)
 
 def update_vals2(small_val, large_val):
 
