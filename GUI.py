@@ -1186,15 +1186,20 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
             # Check if no workspace was selected
             if Workspace_data is None:
-                error_temp = 'NO WORKSPACE SELECTED'
-                color_temp = "danger"
-                open_perm = False
+                error_temp = 'UPDATE WORKSPACE'
+                color_temp = 'danger'
+                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                color_perm = 'danger'
+                open_perm = True
                 filename_filepath_data = no_update
                 # Return the same data if no files were uploaded
                 file_data = no_update
                 error_perm = no_update
                 color_perm = no_update
                 loading_variable = no_update
+                Workspace_store_clear = True
+                filestorage_clear = True
+                filename_filepath_clear = True
 
             else:
 
@@ -1420,76 +1425,87 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
 
         # If the clear files button is pressed, prevent update
         if "clear_files" == ctx.triggered_id:
-
-            if not os.path.exists(Workspace_data):
-
-                error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
+            # If no workspace data
+            if Workspace_data is None:
+                error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
                 error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
                 color_perm = 'danger'
                 open_perm = True
-                Loading_variable = 'done'
                 newmaindata = no_update
                 clear_data_main = True
                 clear_file_initial = True
                 clear_file_checklist = []
-
             else:
 
-                error_perm = no_update
-                color_perm = no_update
-                open_perm = no_update
+                if not os.path.exists(Workspace_data):
 
-                # If no files selected display error message
-                if len(whatclear) == 0:
-
-                    clear_file_checklist = no_update
-
-                    # display bad error message
-                    error_temp = 'NO FILES DELETED'
-                    color_temp = "danger"
-
-                    # No update to new main data
+                    error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
+                    color_temp = 'danger'
+                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    color_perm = 'danger'
+                    open_perm = True
                     newmaindata = no_update
-
-                    clear_data_main = False
-
-                    clear_file_initial = False
-
-                elif len(whatclear) > 0:
-
-                    file_path = maindata[4]
-                    deleted_files = []
-
-                    try:
-
-                        # Iterate through the selected files to be deleted
-                        for what in whatclear:
-                            i = maindata[0].index(what)
-                            if os.path.isdir(file_path[i]):
-                                # delete the folder and its contents recursively
-                                shutil.rmtree(file_path[i])
-                                deleted_files.append(what)
-                                for j in range(len(maindata)):
-                                    del maindata[j][i]
-                        error_try = ''
-
-                    except Exception as e:
-                        error_try = ' ' + str(e)
-
-                    # Assign new data
-                    newmaindata = maindata
+                    clear_data_main = True
                     clear_file_initial = True
-                    clear_data_main = False
-
-                    if error_try != '':
-                        color_temp = "danger"
-                    else:
-                        color_temp = "success"
-
-                    error_temp = 'FILES CLEARED: ' + ','.join(deleted_files) + error_try
-
                     clear_file_checklist = []
+
+                else:
+
+                    error_perm = no_update
+                    color_perm = no_update
+                    open_perm = no_update
+
+                    # If no files selected display error message
+                    if len(whatclear) == 0:
+
+                        clear_file_checklist = no_update
+
+                        # display bad error message
+                        error_temp = 'NO FILES DELETED'
+                        color_temp = "danger"
+
+                        # No update to new main data
+                        newmaindata = no_update
+
+                        clear_data_main = False
+
+                        clear_file_initial = False
+
+                    elif len(whatclear) > 0:
+
+                        file_path = maindata[4]
+                        deleted_files = []
+
+                        try:
+
+                            # Iterate through the selected files to be deleted
+                            for what in whatclear:
+                                i = maindata[0].index(what)
+                                if os.path.isdir(file_path[i]):
+                                    # delete the folder and its contents recursively
+                                    shutil.rmtree(file_path[i])
+                                    deleted_files.append(what)
+                                    for j in range(len(maindata)):
+                                        del maindata[j][i]
+                            error_try = ''
+
+                        except Exception as e:
+                            error_try = ' ' + str(e)
+
+                        # Assign new data
+                        newmaindata = maindata
+                        clear_file_initial = True
+                        clear_data_main = False
+
+                        if error_try != '':
+                            color_temp = "danger"
+                        else:
+                            color_temp = "success"
+
+                        error_temp = 'FILES CLEARED: ' + ','.join(deleted_files) + error_try
+
+                        clear_file_checklist = []
 
             # Return required values
             return error_temp, color_temp, True, error_perm, color_perm, open_perm, newmaindata, clear_data_main, clear_file_initial, clear_file_checklist
@@ -1696,10 +1712,8 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
         # If download button is pressed
         if "btn_download" == ctx.triggered_id:
 
-            # If workspace doesn't exist clear files
-            if not os.path.exists(Workspace_data):
-
-                error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
+            if Workspace_data is None:
+                error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
                 error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
                 color_perm = 'danger'
@@ -1708,176 +1722,190 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                 Workspace_store_clear = True
                 filestorage_clear = True
                 filename_filepath_clear = True
-
             else:
 
-                Workspace_store_clear = False
-                filestorage_clear = False
-                filename_filepath_clear = False
+                # If workspace doesn't exist clear files
+                if not os.path.exists(Workspace_data):
 
-                error_perm = no_update
-                color_perm = no_update
-                open_perm = no_update
-
-                Download_Path = os.path.join(Workspace_data, 'Downloads')
-
-                # Check if the folder exists
-                if not os.path.exists(Download_Path):
-                    # Create the folder
-                    os.mkdir(Download_Path)
-
-                # If no file selected display error message
-                if file is None:
-
-                    error_temp = 'NO FILE SELECTED'
-
+                    error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-
-                # If quantity is not picked
-                elif vector_value == [] or vector_value is None:
-
-                    error_temp = 'NO QUANTITY SELECTED'
-
-                    color_temp = 'danger'
+                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    color_perm = 'danger'
+                    open_perm = True
+                    Loading_variable = 'done'
+                    Workspace_store_clear = True
+                    filestorage_clear = True
+                    filename_filepath_clear = True
 
                 else:
 
-                    # Load requested data sets
-                    i = file_data[0].index(file)
+                    Workspace_store_clear = False
+                    filestorage_clear = False
+                    filename_filepath_clear = False
 
-                    numpy_vect_data = []
+                    error_perm = no_update
+                    color_perm = no_update
+                    open_perm = no_update
 
-                    def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                        filepath = os.path.join(folder_path, filename)
-                        mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+                    Download_Path = os.path.join(Workspace_data, 'Downloads')
 
-                        if row_numbers == 'all':
-                            loaded_data = mapped_data[:]
-                        else:
-                            loaded_data = mapped_data[row_numbers]
+                    # Check if the folder exists
+                    if not os.path.exists(Download_Path):
+                        # Create the folder
+                        os.mkdir(Download_Path)
 
-                        return loaded_data
+                    # If no file selected display error message
+                    if file is None:
 
-                    file_path = file_data[4][i]
+                        error_temp = 'NO FILE SELECTED'
 
-                    shape_dtype = file_data[1][i]
+                        color_temp = 'danger'
 
-                    shape, dtype = shape_dtype
+                    # If quantity is not picked
+                    elif vector_value == [] or vector_value is None:
 
-                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+                        error_temp = 'NO QUANTITY SELECTED'
 
-                    min1 = file_data[5][i]
-                    max1 = file_data[6][i]
-
-                    # Error messages
-                    smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                                   ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +'). '
-
-                    bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
-                                 ' RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +').'
-
-                    both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
-                                   ' THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                           '(' + str(min1) + ' TO ' + str(max1) +').'
-
-                    both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
-
-                    # Cut data based on conditions and assign error message
-                    if smallt is None and bigt is None:
-                        bigt = max1
-                        smallt = min1
-                        error_cut = both_t_error
-
-                    elif smallt is None and bigt is not None:
-                        smallt = min1
-                        error_cut = smallt_error
-
-                    elif bigt is None and smallt is not None:
-                        bigt = max1
-                        error_cut = bigt_error
+                        color_temp = 'danger'
 
                     else:
 
-                        if smallt < min1 and bigt > max1:
-                            smallt = min1
+                        # Load requested data sets
+                        i = file_data[0].index(file)
+
+                        numpy_vect_data = []
+
+                        def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                            filepath = os.path.join(folder_path, filename)
+                            mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+
+                            if row_numbers == 'all':
+                                loaded_data = mapped_data[:]
+                            else:
+                                loaded_data = mapped_data[row_numbers]
+
+                            return loaded_data
+
+                        file_path = file_data[4][i]
+
+                        shape_dtype = file_data[1][i]
+
+                        shape, dtype = shape_dtype
+
+                        t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+
+                        min1 = file_data[5][i]
+                        max1 = file_data[6][i]
+
+                        # Error messages
+                        smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
+                                       ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +'). '
+
+                        bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
+                                     ' RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +').'
+
+                        both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
+                                       ' THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                               '(' + str(min1) + ' TO ' + str(max1) +').'
+
+                        both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
+
+                        # Cut data based on conditions and assign error message
+                        if smallt is None and bigt is None:
                             bigt = max1
+                            smallt = min1
                             error_cut = both_t_error
 
-                        elif smallt < min1:
-                            bigt = min1
+                        elif smallt is None and bigt is not None:
+                            smallt = min1
                             error_cut = smallt_error
 
-
-                        elif bigt > max1:
+                        elif bigt is None and smallt is not None:
                             bigt = max1
                             error_cut = bigt_error
 
                         else:
-                            error_cut = both_t_NO_error
+
+                            if smallt < min1 and bigt > max1:
+                                smallt = min1
+                                bigt = max1
+                                error_cut = both_t_error
+
+                            elif smallt < min1:
+                                bigt = min1
+                                error_cut = smallt_error
 
 
-                    # Assign mask based on condition
-                    mask = (t >= smallt) & (t <= bigt)
-                    # From mask calculated row numbers
-                    row_numbers = np.where(mask)[0].tolist()
-                    # Load requested data
-                    for vector in vector_value:
-                        if vector == 't':
-                            numpy_vect_data.append(t[mask])
-                        elif vector != 't':
-                            numpy_vect_data.append(
-                                load_array_memmap(vector + '.dat', file_path, dtype=dtype, shape=shape[0],
-                                                  row_numbers=row_numbers))
+                            elif bigt > max1:
+                                bigt = max1
+                                error_cut = bigt_error
 
-                    # Concatenate the arrays
-                    concatenated_array = np.column_stack(numpy_vect_data)
+                            else:
+                                error_cut = both_t_NO_error
 
-                    concatenated_array1 = np.append([vector_value],concatenated_array,  axis=0)
 
-                    # Assigning filenames
-                    if selected_name is None or selected_name == '':
-                        filename = file
-                        error_special = ''
-                    else:
-                        # Remove special characters from filename
-                        filename = re.sub(r'[^\w\s\-_]+', '',selected_name)
-                        # Assign error message
-                        if filename != selected_name:
-                            error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
-                                        'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
-                            if filename == '':
-                                filename = file
-                                error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
-                                        'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
-                        else:
+                        # Assign mask based on condition
+                        mask = (t >= smallt) & (t <= bigt)
+                        # From mask calculated row numbers
+                        row_numbers = np.where(mask)[0].tolist()
+                        # Load requested data
+                        for vector in vector_value:
+                            if vector == 't':
+                                numpy_vect_data.append(t[mask])
+                            elif vector != 't':
+                                numpy_vect_data.append(
+                                    load_array_memmap(vector + '.dat', file_path, dtype=dtype, shape=shape[0],
+                                                      row_numbers=row_numbers))
+
+                        # Concatenate the arrays
+                        concatenated_array = np.column_stack(numpy_vect_data)
+
+                        concatenated_array1 = np.append([vector_value],concatenated_array,  axis=0)
+
+                        # Assigning filenames
+                        if selected_name is None or selected_name == '':
+                            filename = file
                             error_special = ''
+                        else:
+                            # Remove special characters from filename
+                            filename = re.sub(r'[^\w\s\-_]+', '',selected_name)
+                            # Assign error message
+                            if filename != selected_name:
+                                error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
+                                            'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
+                                if filename == '':
+                                    filename = file
+                                    error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
+                                            'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
+                            else:
+                                error_special = ''
 
-                    # Function to generate a unique filename based on existing files in the directory
-                    def get_unique_filename(base_path, name):
-                        counter = 1
-                        new_name = name
+                        # Function to generate a unique filename based on existing files in the directory
+                        def get_unique_filename(base_path, name):
+                            counter = 1
+                            new_name = name
 
-                        while os.path.isfile(os.path.join(base_path, new_name + '.csv')):
-                            new_name = f"{name} ({counter})"
-                            counter += 1
+                            while os.path.isfile(os.path.join(base_path, new_name + '.csv')):
+                                new_name = f"{name} ({counter})"
+                                counter += 1
 
-                        return os.path.normpath(os.path.join(base_path, new_name))
+                            return os.path.normpath(os.path.join(base_path, new_name))
 
-                    # Get a unique filename for the CSV file to be saved
-                    new_filename_path = get_unique_filename(Download_Path, filename)
+                        # Get a unique filename for the CSV file to be saved
+                        new_filename_path = get_unique_filename(Download_Path, filename)
 
-                    # Save the concatenated array as a CSV file
-                    np.savetxt(new_filename_path + '.csv', concatenated_array1, delimiter=",", fmt="%s")
+                        # Save the concatenated array as a CSV file
+                        np.savetxt(new_filename_path + '.csv', concatenated_array1, delimiter=",", fmt="%s")
 
-                    # Prepare a message indicating the file path of the saved data
-                    error_filepath = ' DATA SAVED IN: ' + new_filename_path + '.csv'
+                        # Prepare a message indicating the file path of the saved data
+                        error_filepath = ' DATA SAVED IN: ' + new_filename_path + '.csv'
 
-                    # Combine error messages and set the alert color to 'primary'
-                    error_temp = error_cut + error_special + error_filepath
-                    color_temp = 'primary'
+                        # Combine error messages and set the alert color to 'primary'
+                        error_temp = error_cut + error_special + error_filepath
+                        color_temp = 'primary'
 
-                # Update the loading status to 'done'
-                Loading_variable = 'done'
+                    # Update the loading status to 'done'
+                    Loading_variable = 'done'
 
         # Return error message, alert color, whether the alert should be open, and loading status
         return error_temp, color_temp, True, error_perm, color_perm, open_perm, Loading_variable,\
