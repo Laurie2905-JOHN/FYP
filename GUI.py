@@ -1410,9 +1410,10 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
+        State(component_id='Workspace_store', component_property='data'),
         prevent_initial_call=True)
 
-def clear_files(n_clicks, maindata, whatclear):
+def clear_files(n_clicks, maindata, whatclear, Workspace_data):
 
     # # Try/Except, used to catch any errors not considered
     try:
@@ -1420,66 +1421,85 @@ def clear_files(n_clicks, maindata, whatclear):
         # If the clear files button is pressed, prevent update
         if "clear_files" == ctx.triggered_id:
 
-            # If no files selected display error message
-            if len(whatclear) == 0:
+            if not os.path.exists(Workspace_data):
 
-                clear_file_checklist = no_update
-
-                # display bad error message
-                error = 'NO FILES DELETED'
-                color = "danger"
-
-                # No update to new main data
+                error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
+                color_temp = 'danger'
+                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                color_perm = 'danger'
+                open_perm = True
+                Loading_variable = 'done'
                 newmaindata = no_update
-
-                clear_data_main = False
-
-                clear_file_initial = False
-
-            elif len(whatclear) > 0:
-
-                file_path = maindata[4]
-                deleted_files = []
-
-                try:
-
-                    # Iterate through the selected files to be deleted
-                    for what in whatclear:
-                        i = maindata[0].index(what)
-                        if os.path.isdir(file_path[i]):
-                            # delete the folder and its contents recursively
-                            shutil.rmtree(file_path[i])
-                            deleted_files.append(what)
-                            for j in range(len(maindata)):
-                                del maindata[j][i]
-                    error_try = ''
-
-                except Exception as e:
-                    error_try = ' ' + str(e)
-
-                # Assign new data
-                newmaindata = maindata
+                clear_data_main = True
                 clear_file_initial = True
-                clear_data_main = False
-
-                if error_try != '':
-                    color = "danger"
-                else:
-                    color = "success"
-
-                error = 'FILES CLEARED: ' + ','.join(deleted_files) + error_try
-
                 clear_file_checklist = []
 
+            else:
+
+                error_perm = no_update
+                color_perm = no_update
+                open_perm = no_update
+
+                # If no files selected display error message
+                if len(whatclear) == 0:
+
+                    clear_file_checklist = no_update
+
+                    # display bad error message
+                    error_temp = 'NO FILES DELETED'
+                    color_temp = "danger"
+
+                    # No update to new main data
+                    newmaindata = no_update
+
+                    clear_data_main = False
+
+                    clear_file_initial = False
+
+                elif len(whatclear) > 0:
+
+                    file_path = maindata[4]
+                    deleted_files = []
+
+                    try:
+
+                        # Iterate through the selected files to be deleted
+                        for what in whatclear:
+                            i = maindata[0].index(what)
+                            if os.path.isdir(file_path[i]):
+                                # delete the folder and its contents recursively
+                                shutil.rmtree(file_path[i])
+                                deleted_files.append(what)
+                                for j in range(len(maindata)):
+                                    del maindata[j][i]
+                        error_try = ''
+
+                    except Exception as e:
+                        error_try = ' ' + str(e)
+
+                    # Assign new data
+                    newmaindata = maindata
+                    clear_file_initial = True
+                    clear_data_main = False
+
+                    if error_try != '':
+                        color_temp = "danger"
+                    else:
+                        color_temp = "success"
+
+                    error_temp = 'FILES CLEARED: ' + ','.join(deleted_files) + error_try
+
+                    clear_file_checklist = []
+
             # Return required values
-            return error, color, True, newmaindata, clear_data_main, clear_file_initial, clear_file_checklist
+            return error_temp, color_temp, True, error_perm, color_perm, open_perm, newmaindata, clear_data_main, clear_file_initial, clear_file_checklist
 
     except Exception as e:
 
-        error = str(e)
-        color = 'danger'
+        error_temp = str(e)
+        color_temp = 'danger'
         # Return required values
-        return error, color, True, no_update, no_update, no_update, no_update
+        return error_temp, color_temp, True, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
 # Callback 10
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
