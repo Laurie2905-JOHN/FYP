@@ -153,12 +153,33 @@ def cal_velocity(BarnFilePath, cal_data, SF):
     prb['Uz'] = prb['U1'] * np.sin(np.deg2rad(prb['apitch']))
     prb['t'] = np.linspace(0, prb['raw'].shape[0] / SF, prb['raw'].shape[0])
 
+    def remove_nan_elements(*arrays):
+        """Remove elements at the same index in multiple NumPy arrays if any of them contains NaN."""
+        # Check for NaN values in each array and combine them
+        nan_mask = np.zeros(arrays[0].shape, dtype=bool)
+        for array in arrays:
+            nan_mask |= np.isnan(array)
+
+        # Remove elements with NaN values from each array
+        result = []
+        for array in arrays:
+            result.append(array[~nan_mask])
+
+        return result
+
+    t, Ux, Uy, Uz, U1 = remove_nan_elements(
+
+        prb['t'], prb['Ux'],
+        prb['Uy'], prb['Uz'],
+        prb['U1']
+    )
+
     prb_final = {
-        'U1': prb['U1'],
-        'Ux': prb['Ux'],
-        'Uy': prb['Uy'],
-        'Uz': prb['Uz'],
-        't': prb['t'],
+        'U1': U1,
+        'Ux': Ux,
+        'Uy': Uy,
+        'Uz': Uz,
+        't': t,
     }
     return prb_final
 
@@ -743,8 +764,8 @@ dbc.Row([
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='session'),
     dcc.Store(id='filename_filepath', storage_type='session'),
-    dcc.Store(id='Workspace_store', storage_type='local'),
-    dcc.Store(id='Cal_storage', storage_type='local'),
+    dcc.Store(id='Workspace_store', storage_type='session'),
+    dcc.Store(id='Cal_storage', storage_type='session'),
 ])
 
 # Callback 1
@@ -1270,27 +1291,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                     # Process file data
                                     Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
 
-                                    def remove_nan_elements(*arrays):
-                                        """Remove elements at the same index in multiple NumPy arrays if any of them contains NaN."""
-                                        # Check for NaN values in each array and combine them
-                                        nan_mask = np.zeros(arrays[0].shape, dtype=bool)
-                                        for array in arrays:
-                                            nan_mask |= np.isnan(array)
-
-                                        # Remove elements with NaN values from each array
-                                        result = []
-                                        for array in arrays:
-                                            result.append(array[~nan_mask])
-
-                                        return result
-
-                                    t , Ux, Uy, Uz, U1 = remove_nan_elements(
-
-                                        Barn_data['t'], Barn_data['Ux'],
-                                        Barn_data['Uy'], Barn_data['Uz'],
-                                        Barn_data['U1']
-                                                                             )
-
                                     # Create workspace folder if it doesn't exist
                                     Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
                                     if not os.path.exists(Workspace_Path):
@@ -1301,19 +1301,14 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                     os.makedirs(file_path, exist_ok=True)
 
                                     # Update data with new processed file data
-                                    combined_max.append(t)
-                                    combined_min.append(t)
-                                    print(len(Ux))
-                                    print(len(Uy))
-                                    print(len(Uz))
-                                    print(len(U1))
-                                    print(len(t))
+                                    combined_max.append(np.amax(Barn_data['t']))
+                                    combined_min.append(np.amin(Barn_data['t']))
 
-                                    save_array_memmap(Ux, 'Ux.dat', file_path)
-                                    save_array_memmap(Uy, 'Uy.dat', file_path)
-                                    save_array_memmap(Uz, 'Uz.dat', file_path)
-                                    save_array_memmap(U1, 'U1.dat', file_path)
-                                    shape_dtype = save_array_memmap(t, 't.dat', file_path)
+                                    save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
+                                    save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
+                                    save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
+                                    save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
+                                    shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
 
                                     new_value.append(value)
                                     combined_filenames.append(value)
