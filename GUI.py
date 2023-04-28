@@ -49,9 +49,6 @@ def calculate_turbulence_intensity(u, v, w):
         W (float): Mean velocity in z-direction.
     """
 
-    # Required imports
-    import numpy as np
-
     N = len(u)
 
     # Calculate mean velocities
@@ -154,7 +151,7 @@ def cal_velocity(BarnFilePath, cal_data, SF):
     prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
     prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
     prb['Uz'] = prb['U1'] * np.sin(np.deg2rad(prb['apitch']))
-    prb['t'] = np.linspace(0, prb['raw'].shape[0] / SF, prb['raw'].shape[0]);
+    prb['t'] = np.linspace(0, prb['raw'].shape[0] / SF, prb['raw'].shape[0])
 
     prb_final = {
         'U1': prb['U1'],
@@ -776,7 +773,7 @@ def update_Workspace(n_clicks, Workspace_input):
             if Workspace_input is None or Workspace_input == '':
                 error_temp = 'NO FILE PATH INPUTTED'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                 color_perm = 'danger'
                 Workspace_data = no_update
 
@@ -789,7 +786,7 @@ def update_Workspace(n_clicks, Workspace_input):
                 if not os.path.exists(Workspace_input3):
                     error_temp = 'PLEASE CHECK FILE PATH IS VALID'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                     color_perm = 'danger'
                     Workspace_data = no_update
                 else:
@@ -807,7 +804,7 @@ def update_Workspace(n_clicks, Workspace_input):
         # If error there is an error print it.
         error_temp = str(e)
         color_temp = 'danger'
-        error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+        error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
         color_perm = 'danger'
 
     return no_update, error_temp, color_temp, True, error_perm, color_perm, True
@@ -825,6 +822,7 @@ def update_Workspace(n_clicks, Workspace_input):
     Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
     Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
     Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
     Input(component_id='Workspace_clear', component_property='n_clicks'),
     State(component_id='Workspace_store', component_property='data'),
     prevent_initial_call=True
@@ -838,7 +836,7 @@ def clear_Workspace(n_clicks, Workspace_data):
             if Workspace_data is None:
                 error_temp = 'NO WORKSPACE TO CLEAR'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                 color_perm = 'danger'
                 Workspace_input = None
                 Workspace_Clear_data = False
@@ -846,13 +844,15 @@ def clear_Workspace(n_clicks, Workspace_data):
                 filedata_Clear_data = False
             else:
 
+                table_data = []
+
                 deleted_files = []
                 error_files = []
 
                 if not os.path.exists(Workspace_data):
                     error_temp = 'WORKSPACE NO LONGER EXISTS'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                     color_perm = 'danger'
                     Workspace_input = None
                     Workspace_Clear_data = True
@@ -888,29 +888,30 @@ def clear_Workspace(n_clicks, Workspace_data):
                         color_temp = 'success'
                     elif deleted_files == [] and error_files != []:
                         error_temp = 'WORKSPACE CLEARED. ' + 'NO FILES REMOVED. ' + 'ERROR DELETING: ' + ', '.join(error_files)
-                        color_temp = 'danger'
+                        color_temp = 'primary'
                     elif error_files != [] and deleted_files != []:
                         error_temp = 'WORKSPACE CLEARED. ' + ', '.join(deleted_files) + ' REMOVED. ' + 'ERROR DELETING: ' +\
                                 ', '.join(error_files)
-                        color_temp = 'danger'
+                        color_temp = 'primary'
                     elif error_files == [] and deleted_files == []:
                         error_temp = 'WORKSPACE CLEARED. ' + 'NO FILES REMOVED.'
-                        color_temp = 'danger'
+                        color_temp = 'primary'
 
                     error_perm = 'NO WORKSPACE SELECTED'
                     color_perm = 'danger'
 
             # Return updated values for UI components
             return Workspace_input, Workspace_Clear_data, Upload_Clear_data, filedata_Clear_data, error_temp,\
-                color_temp, True, error_perm, color_perm, True
+                color_temp, True, error_perm, color_perm, True, table_data
 
     except Exception as e:
         error_temp = str(e)
         color_temp = 'danger'
-        error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+        error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
         color_perm = 'danger'
         # Return no_update for output components when an exception occurs
-        return no_update, no_update, no_update, no_update, error_temp, color_temp, True, error_perm, color_perm, True
+        return no_update, no_update, no_update, no_update, error_temp, color_temp, True, error_perm, color_perm,\
+            True, table_data
 
 # Callback 3
 # Callback to update workspace alert based on data
@@ -1005,7 +1006,7 @@ def cal_analysis(filename, contents):
                 # Convert the DataFrame to a dictionary and remove NaN values
                 cal_data = cal_data.to_dict('list')
 
-                if list(cal_data.keys()) == ['Dynfit', 'Yawfit', 'Ldyn1', 'Ldyn2', 'Lyaw1', 'Lyaw2','Ldyn0','Zero',\
+                if list(cal_data.keys()) == ['Dynfit', 'Yawfit', 'Ldyn1', 'Ldyn2', 'Lyaw1', 'Lyaw2','Ldyn0','Zero',
                                              'Zero1', 'Zero2', 'Zero3', 'Zero4']:
 
                     cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
@@ -1179,7 +1180,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
             if Workspace_data is None:
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                 color_perm = 'danger'
                 open_perm = True
                 filename_filepath_data = no_update
@@ -1269,6 +1270,27 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                     # Process file data
                                     Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
 
+                                    def remove_nan_elements(*arrays):
+                                        """Remove elements at the same index in multiple NumPy arrays if any of them contains NaN."""
+                                        # Check for NaN values in each array and combine them
+                                        nan_mask = np.zeros(arrays[0].shape, dtype=bool)
+                                        for array in arrays:
+                                            nan_mask |= np.isnan(array)
+
+                                        # Remove elements with NaN values from each array
+                                        result = []
+                                        for array in arrays:
+                                            result.append(array[~nan_mask])
+
+                                        return result
+
+                                    t , Ux, Uy, Uz, U1 = remove_nan_elements(
+
+                                        Barn_data['t'], Barn_data['Ux'],
+                                        Barn_data['Uy'], Barn_data['Uz'],
+                                        Barn_data['U1']
+                                                                             )
+
                                     # Create workspace folder if it doesn't exist
                                     Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
                                     if not os.path.exists(Workspace_Path):
@@ -1279,14 +1301,19 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                     os.makedirs(file_path, exist_ok=True)
 
                                     # Update data with new processed file data
-                                    combined_max.append(np.amax(Barn_data['t']))
-                                    combined_min.append(np.amin(Barn_data['t']))
+                                    combined_max.append(t)
+                                    combined_min.append(t)
+                                    print(len(Ux))
+                                    print(len(Uy))
+                                    print(len(Uz))
+                                    print(len(U1))
+                                    print(len(t))
 
-                                    save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
-                                    save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
-                                    save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
-                                    save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
-                                    shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
+                                    save_array_memmap(Ux, 'Ux.dat', file_path)
+                                    save_array_memmap(Uy, 'Uy.dat', file_path)
+                                    save_array_memmap(Uz, 'Uz.dat', file_path)
+                                    save_array_memmap(U1, 'U1.dat', file_path)
+                                    shape_dtype = save_array_memmap(t, 't.dat', file_path)
 
                                     new_value.append(value)
                                     combined_filenames.append(value)
@@ -1363,7 +1390,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                     file_data = no_update
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                     color_perm = 'danger'
                     open_perm = True
                     Workspace_store_clear = True
@@ -1380,7 +1407,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
         # If any error display message
         error_temp = str(e)
         color_temp = 'danger'
-        error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+        error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
         color_perm = 'danger'
         upload_file_checklist = []
         Workspace_store_clear = True
@@ -1420,7 +1447,7 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
             if Workspace_data is None:
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                 color_perm = 'danger'
                 open_perm = True
                 newmaindata = no_update
@@ -1433,7 +1460,7 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
 
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                     color_perm = 'danger'
                     open_perm = True
                     newmaindata = no_update
@@ -1706,7 +1733,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
             if Workspace_data is None:
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                 color_perm = 'danger'
                 open_perm = True
                 Loading_variable = 'done'
@@ -1720,7 +1747,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                     color_perm = 'danger'
                     open_perm = True
                     Loading_variable = 'done'
@@ -1975,7 +2002,7 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
             if Workspace_data is None:
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                 color_perm = 'danger'
                 open_perm = True
                 Loading_variable = 'done'
@@ -1989,7 +2016,7 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
                     color_perm = 'danger'
                     open_perm = True
                     Loading_variable = 'done'
@@ -2063,17 +2090,17 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                             if small_TI is None and big_TI is None:
                                 big_TI = max1
                                 small_TI = min1
-                                color_temp = 'danger'
+                                color_temp = 'primary'
                                 error_temp = both_t_error
 
                             elif small_TI is None and big_TI is not None:
                                 small_TI = min1
-                                color_temp = 'danger'
+                                color_temp = 'primary'
                                 error_temp = smallt_error
 
                             elif big_TI is None and small_TI is not None:
                                 big_TI = max1
-                                color_temp = 'danger'
+                                color_temp = 'primary'
                                 error_temp = bigt_error
 
                             else:
@@ -2081,23 +2108,23 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                                 if small_TI < min1 and big_TI > max1:
                                     small_TI = min1
                                     big_TI = max1
-                                    color_temp = 'danger'
+                                    color_temp = 'primary'
                                     error_temp = both_t_error
 
                                 elif small_TI < min1:
                                     small_TI = min1
-                                    color_temp = 'danger'
+                                    color_temp = 'primary'
                                     error_temp = smallt_error
 
 
                                 elif big_TI > max1:
                                     big_TI = max1
-                                    color_temp = 'danger'
+                                    color_temp = 'primary'
                                     error_temp = bigt_error
 
                                 else:
                                     error_temp = both_t_NO_error
-                                    color_temp = 'success'
+                                    color_temp = 'primary'
 
                             # Load time data using the memmap function
                             t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
@@ -2122,7 +2149,6 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                             # If table data is empty, initialize it as an empty list
                             if table_data is None:
                                 table_data = []
-                            print(file_data[2][0])
 
                             # Create new data entry with calculated values
                             new_data = [
@@ -2199,6 +2225,12 @@ def clear_table(n_clicks):
         Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
         Output(component_id='Loading_variable_Graph', component_property='data', allow_duplicate=True),
         Input(component_id='plot_bttn', component_property='n_clicks'),
         State(component_id = 'filestorage', component_property = 'data'),
@@ -2209,204 +2241,260 @@ def clear_table(n_clicks):
         State(component_id='legend_Data', component_property='data'),
         State(component_id='title_Data', component_property='data'),
         State(component_id='legend_onoff', component_property='value'),
-        State(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
+        State(component_id='title_onoff', component_property='value'),
+        State(component_id='Workspace_store', component_property='data'),
+        prevent_initial_call = True)
 
-def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title):
+def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title, Workspace_data):
+
     # Try/Except, used to catch any errors not considered
     try:
+
         if ctx.triggered_id == 'plot_bttn':
-            # If no input do not plot graphs
-            if file_inputs == [] or vector_inputs1 == []:
-                fig = no_update
-                error = 'PLEASE CHECK INPUTS'
-                color = 'danger'
-                Loading_Variable = 'done'
+
+            if Workspace_data is None:
+                fig = {}
+                error_temp = 'UPDATE WORKSPACE'
+                color_temp = 'danger'
+                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                color_perm = 'danger'
+                open_perm = True
+                Loading_Variable = no_update
+                Workspace_Clear_data = True
+                Upload_Clear_data = True
+                filedata_Clear_data = False
+
             else:
-                fig = go.Figure()
-                current_names = []
-                min2 = []
-                max2 = []
 
-                # Function to load data from memmap file
-                def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                    filepath = os.path.join(folder_path, filename)
-                    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
-
-                    if row_numbers == 'all':
-                        loaded_data = mapped_data[:]
-                    else:
-                        loaded_data = mapped_data[row_numbers]
-
-                    return loaded_data
-
-                # Get min and max time values for each file
-                for file in file_inputs:
-                    i = file_data[0].index(file)
-                    min2.append(file_data[5][i])
-                    max2.append(file_data[6][i])
-
-                min1 = min(min2)
-                max1 = max(max2)
-
-                # Error messages
-                smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                               ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + max1 +')'
-                bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
-                             ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
-                both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
-                               ' THE AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                       '(' + min1 + ' TO ' + max1 +')'
-                both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
-
-                # Cut data based on conditions
-                if smallt is None and bigt is None:
-                    bigt = max1
-                    smallt = min1
-                    error_cut = both_t_error
-                    error_cut_good = ''
-
-                elif smallt is None and bigt is not None:
-                    smallt = min1
-                    error_cut = smallt_error
-                    error_cut_good = ''
-
-                elif bigt is None and smallt is not None:
-                    bigt = max1
-                    error_cut = bigt_error
-                    error_cut_good = ''
+                # If file path doesn't exist clear data
+                if not os.path.exists(Workspace_data):
+                    fig = {}
+                    Loading_Variable = no_update
+                    error_temp = 'WORKSPACE NO LONGER EXISTS'
+                    color_temp = 'danger'
+                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                    color_perm = 'danger'
+                    open_perm = True
+                    Workspace_Clear_data = True
+                    Upload_Clear_data = True
+                    filedata_Clear_data = True
 
                 else:
+                    error_perm = no_update
+                    color_perm = no_update
+                    open_perm = no_update
+                    Workspace_Clear_data = no_update
+                    Upload_Clear_data = no_update
+                    filedata_Clear_data = no_update
 
-                    if smallt < min1 and bigt > max1:
-                        smallt = min1
-                        bigt = max1
-                        error_cut = both_t_error
-                        error_cut_good = ''
-
-                    elif smallt < min1:
-                        bigt = min1
-                        error_cut = smallt_error
-                        error_cut_good = ''
-
-
-                    elif bigt > max1:
-                        bigt = max1
-                        error_cut = bigt_error
-                        error_cut_good = ''
+                    # If no input do not plot graphs
+                    if file_inputs == [] or vector_inputs1 == []:
+                        fig = no_update
+                        error_temp = 'PLEASE CHECK INPUTS'
+                        color_temp = 'danger'
+                        Loading_Variable = 'done'
                     else:
-                        error_cut_good = both_t_NO_error
-                        error_cut = ''
+                        fig = go.Figure()
+                        current_names = []
+                        min2 = []
+                        max2 = []
 
-                # Loop through the files and vectors to create the graph
-                for file in file_inputs:
-                    i = file_data[0].index(file)
-                    file_path = file_data[4][i]
-                    shape_dtype = file_data[1][i]
-                    shape, dtype = shape_dtype
+                        # Function to load data from memmap file
+                        def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                            filepath = os.path.join(folder_path, filename)
+                            mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
 
-                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
-                    mask = (t >= smallt) & (t <= bigt)
-
-                    numpy_vect_data = {file: {'t': t[mask]}}
-                    row_numbers = np.where(mask)[0].tolist()
-
-                    for vector in vector_inputs1:
-                        numpy_vect_data[file][vector] = load_array_memmap(vector + '.dat', file_path,
-                                                                          dtype=dtype,
-                                                                          shape=shape[0],
-                                                                          row_numbers=row_numbers)
-
-                        # Creating a list of current legend names
-                        current_names.append(f"{file}{' '}{vector}")
-
-                        # Plotting data
-                        fig.add_trace(
-                            go.Scattergl(
-                                name=f"{file}{' '}{vector}",
-                                showlegend=True,
-                                x=numpy_vect_data[file]['t'],
-                                y=numpy_vect_data[file][vector])
-                        )
-
-                    # Update x and y axes labels
-                    fig.update_layout(
-                        xaxis_title="Time (s)",
-                        yaxis_title="Velocity (m/s)",
-                        legend=dict(
-                            y=1,
-                            x=0.5,
-                            orientation="h",
-                            yanchor="bottom",
-                            xanchor="center"),
-                    )
-
-                    # Update legend and title based on user input
-                    if legend_data is None:
-                        if leg == 'Off':
-                            fig.layout.update(showlegend=False)
-                            error_leg = ''
-                        elif leg == 'On':
-                            fig.layout.update(showlegend=True)
-                            error_leg = ''
-                    else:
-                        if leg == 'Off':
-                            fig.layout.update(showlegend=False)
-                            error_leg = ''
-                        elif leg == 'On':
-                            legend_name_list = legend_data.split(',')
-                            newname_result = {}
-
-                            if len(current_names) == len(legend_name_list):
-                                for i, current_name in enumerate(current_names):
-                                    newnames = {current_name: legend_name_list[i]}
-                                    newname_result.update(newnames)
-
-                                fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
-                                                                      legendgroup=newname_result[t.name],
-                                                                      hovertemplate=t.hovertemplate.replace(
-                                                                      t.name,
-                                                                      newname_result[
-                                                                      t.name]) if t.hovertemplate is not None else None)
-                                                   )
-
-                                fig.layout.update(showlegend=True)
-
-                                error_leg  = ''
-
+                            if row_numbers == 'all':
+                                loaded_data = mapped_data[:]
                             else:
+                                loaded_data = mapped_data[row_numbers]
 
-                                # If legend entries do not match display error message
-                                error_leg = ' NUMBER OF LEGEND ENTRIES DO NOT MATCH'
+                            return loaded_data
 
-                    # Update graph title based on user input
-                    if title_data is None:
-                        if title == 'Off':
-                            fig.layout.update(title='')
-                        elif title == 'On':
-                            fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
-                    else:
-                        if title == 'Off':
-                            fig.layout.update(title='')
-                        elif title == 'On':
-                            fig.layout.update(title=title_data)
+                        # Get min and max time values for each file
+                        for file in file_inputs:
+                            i = file_data[0].index(file)
+                            min2.append(file_data[5][i])
+                            max2.append(file_data[6][i])
 
-                # Return figure, error message, alert color, and loading status
-                if error_leg == '' or error_cut == '':
-                    color = 'success'
-                else:
-                    color = 'danger'
+                        min1 = min(min2)
+                        max1 = max(max2)
 
-                error = 'GRAPH PLOTTED. ' + error_cut + error_cut_good + error_leg
-                Loading_Variable = 'done'
+                        # Error messages
+                        smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
+                                       ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +')'
 
-        return fig, error, color, True, Loading_Variable
+                        bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
+                                     ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +')'
+
+                        both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
+                                       ' THE AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                               '(' + str(min1) + ' TO ' + str(max1) +')'
+
+                        both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
+
+                        # Cut data based on conditions
+                        if smallt is None and bigt is None:
+                            bigt = max1
+                            smallt = min1
+                            error_cut = both_t_error
+                            color_temp = 'primary'
+                            error_cut_good = ''
+
+                        elif smallt is None and bigt is not None:
+                            smallt = min1
+                            error_cut = smallt_error
+                            color_temp = 'primary'
+                            error_cut_good = ''
+
+                        elif bigt is None and smallt is not None:
+                            bigt = max1
+                            error_cut = bigt_error
+                            color_temp = 'primary'
+                            error_cut_good = ''
+
+                        else:
+
+                            if smallt < min1 and bigt > max1:
+                                smallt = min1
+                                bigt = max1
+                                color_temp = 'primary'
+                                error_cut = both_t_error
+                                error_cut_good = ''
+
+                            elif smallt < min1:
+                                bigt = min1
+                                color_temp = 'primary'
+                                error_cut = smallt_error
+                                error_cut_good = ''
+
+
+                            elif bigt > max1:
+                                bigt = max1
+                                color_temp = 'primary'
+                                error_cut = bigt_error
+                                error_cut_good = ''
+                            else:
+                                error_cut_good = both_t_NO_error
+                                color_temp = 'success'
+                                error_cut = ''
+
+                        # Loop through the files and vectors to create the graph
+                        for file in file_inputs:
+                            i = file_data[0].index(file)
+                            file_path = file_data[4][i]
+                            shape_dtype = file_data[1][i]
+                            shape, dtype = shape_dtype
+
+                            t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+                            mask = (t >= smallt) & (t <= bigt)
+
+                            numpy_vect_data = {file: {'t': t[mask]}}
+                            row_numbers = np.where(mask)[0].tolist()
+
+                            for vector in vector_inputs1:
+                                numpy_vect_data[file][vector] = load_array_memmap(vector + '.dat', file_path,
+                                                                                  dtype=dtype,
+                                                                                  shape=shape[0],
+                                                                                  row_numbers=row_numbers)
+
+                                # Creating a list of current legend names
+                                current_names.append(f"{file}{' '}{vector}")
+
+                                # Plotting data
+                                fig.add_trace(
+                                    go.Scattergl(
+                                        name=f"{file}{' '}{vector}",
+                                        showlegend=True,
+                                        x=numpy_vect_data[file]['t'],
+                                        y=numpy_vect_data[file][vector])
+                                )
+
+                            # Update x and y axes labels
+                            fig.update_layout(
+                                xaxis_title="Time (s)",
+                                yaxis_title="Velocity (m/s)",
+                                legend=dict(
+                                    y=1,
+                                    x=0.5,
+                                    orientation="h",
+                                    yanchor="bottom",
+                                    xanchor="center"),
+                            )
+
+                            # Update legend and title based on user input
+                            if legend_data is None:
+                                if leg == 'Off':
+                                    fig.layout.update(showlegend=False)
+                                    error_leg = ''
+                                elif leg == 'On':
+                                    fig.layout.update(showlegend=True)
+                                    error_leg = ''
+                            else:
+                                if leg == 'Off':
+                                    fig.layout.update(showlegend=False)
+                                    error_leg = ''
+                                elif leg == 'On':
+                                    legend_name_list = legend_data.split(',')
+                                    newname_result = {}
+
+                                    if len(current_names) == len(legend_name_list):
+                                        for i, current_name in enumerate(current_names):
+                                            newnames = {current_name: legend_name_list[i]}
+                                            newname_result.update(newnames)
+
+                                        fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
+                                                                              legendgroup=newname_result[t.name],
+                                                                              hovertemplate=t.hovertemplate.replace(
+                                                                              t.name,
+                                                                              newname_result[
+                                                                              t.name]) if t.hovertemplate is not None else None)
+                                                           )
+
+                                        fig.layout.update(showlegend=True)
+
+                                        error_leg  = ''
+
+                                    else:
+
+                                        # If legend entries do not match display error message
+                                        error_leg = '. NUMBER OF LEGEND ENTRIES DO NOT MATCH'
+
+                                        color = 'danger'
+
+                            # Update graph title based on user input
+                            if title_data is None:
+                                if title == 'Off':
+                                    fig.layout.update(title='')
+                                elif title == 'On':
+                                    fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
+                            else:
+                                if title == 'Off':
+                                    fig.layout.update(title='')
+                                elif title == 'On':
+                                    fig.layout.update(title=title_data)
+
+                        error_temp = 'GRAPH PLOTTED. ' + error_cut + error_cut_good + error_leg
+                        Loading_Variable = 'done'
+
+        # Return figure, error message, alert color, and loading status
+        return fig, error_temp, color_temp, True, error_perm, color_perm, open_perm, Workspace_Clear_data, \
+            Upload_Clear_data,filedata_Clear_data, Loading_Variable
 
     except Exception as e:
         # If any error display message
-        error = str(e)
-        color = 'danger'
+        error_temp = str(e)
+        color_temp = 'danger'
+        error_perm = no_update
+        color_perm = no_update
+        open_perm = no_update
+        Workspace_Clear_data = no_update
+        Upload_Clear_data = no_update
+        filedata_Clear_data = no_update
 
-    return no_update, error, color, True, no_update
+        return no_update, error_temp, color_temp, True, error_perm, color_perm, open_perm, Workspace_Clear_data, \
+            Upload_Clear_data, filedata_Clear_data, no_update
+
 
 # Callback 19
 # Callback to clear graph through the click of a button
@@ -2460,7 +2548,6 @@ def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
 
     # Try/Except, used to catch any errors not considered
     try:
-
         # If legend update button is pressed
         if ctx.triggered_id == 'dropdown_legend_update':
             error = 'LEGEND DATA UPDATE'
@@ -2493,7 +2580,6 @@ def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
             open1 = True
             color = 'success'
             error = 'LEGEND AND TITLE DATA CLEARED'
-
         else:
             # Else no update to any values
             title_data = no_update
@@ -2502,7 +2588,6 @@ def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
             error = no_update
             color = no_update
             open1 = False
-
         # Return name, legend and title data
         return name_input, legend_data, title_data, error, color, open1
 
@@ -2511,7 +2596,6 @@ def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
         # If any error display message
         error = str(e)
         color = 'danger'
-
         return no_update, no_update, no_update, error, color, True
 
 # Callback 21
@@ -2540,7 +2624,6 @@ def update_dropdowns1(data, filename_filepath_upload_data):
         else:
             upload_file_checklist = []
 
-
         if data is None:
             # If the data is None, set all dropdown options to empty lists
             vect_options = []
@@ -2559,7 +2642,8 @@ def update_dropdowns1(data, filename_filepath_upload_data):
             clear_file_check = data[0]
 
         # Return the updated dropdown options and checklists
-        return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI, no_update, no_update, False,
+        return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check, \
+            upload_file_checklist, DataDrop_TI, no_update, no_update, no_update,
 
     except Exception as e:
 
@@ -2568,7 +2652,7 @@ def update_dropdowns1(data, filename_filepath_upload_data):
         color = 'danger'
 
         # Return the updated dropdown options and checklists
-        return no_update, no_update, no_update, no_update, no_update,no_update, no_update, error, color, False,
+        return no_update, no_update, no_update, no_update, no_update,no_update, no_update, error, color, no_update,
 
 # Run app
 if __name__== '__main__':

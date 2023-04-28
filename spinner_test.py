@@ -1,46 +1,32 @@
-import dash
-import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output, State
-import asyncio
+import numpy as np
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+# Sample data
+data1 = np.array([1, 2, np.nan, 4, 5, 6, 7, np.nan, 9, 10, 11, 12])
+data2 = np.array([13, 14, 15, 16, 17, 18, np.nan, 20, 21, 22, 23, 24])
+data3 = np.array([13, np.nan, 15, np.nan, 17, 18, np.nan, 20, 21, 22, 23, 24])
 
-app.layout = html.Div([
-    dbc.Button(
-        html.Div([
-            html.Div(dbc.Spinner(id="spinner", size="sm"), id="spinner-wrapper", style={"display": "none"}),
-            html.Span(id="button-text", children="Analyse Selected Files"),
-        ]),
-        id='newfile',
-        outline=True,
-        color="primary",
-        className="me-1",
-    ),
-    dcc.Store(id='store', storage_type='memory'),  # Add a dcc.Store component
-])
+def remove_nan_elements(*arrays):
+    """Remove elements at the same index in multiple NumPy arrays if any of them contains NaN."""
+    # Check for NaN values in each array and combine them
+    nan_mask = np.zeros(arrays[0].shape, dtype=bool)
+    for array in arrays:
+        nan_mask |= np.isnan(array)
 
-@app.callback(
-    Output('store', 'data'),
-    Input('newfile', 'n_clicks'),
-    State('store', 'data')
-)
-async def update_store(n_clicks, data):
-    if n_clicks is None:
-        return 0
-    await asyncio.sleep(5)  # Use asyncio.sleep to simulate a lengthy process without blocking the main thread
-    return n_clicks
+    # Remove elements with NaN values from each array
+    result = []
+    for array in arrays:
+        result.append(array[~nan_mask])
 
-@app.callback(
-    [Output("spinner-wrapper", "style"), Output("button-text", "children")],
-    [Input("store", "data")],
-)
-def toggle_spinner(store_data):
-    if store_data % 2 == 1:
-        return {"display": "inline-block"}, "Calculating"  # Show the spinner by setting 'display' to 'inline-block'
-    else:
-        return {"display": "none"}, "Analyse Selected Files"  # Hide the spinner by setting 'display' to 'none'
+    return result
 
-if __name__ == "__main__":
-    app.run_server(debug=True)
+
+data1_clean, data2_clean, data3_clean = remove_nan_elements(data1, data2, data3)
+
+print("Data 1 (cleaned):")
+print(data1_clean)
+
+print("\nData 2 (cleaned):")
+print(data2_clean)
+
+print("\nData 3 (cleaned):")
+print(data3_clean)
