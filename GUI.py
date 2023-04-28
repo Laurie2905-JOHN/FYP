@@ -368,42 +368,52 @@ app.layout = dbc.Container([
 
     dbc.Col([
 
+        # Row containing the buttons and dropdown menu
         dbc.Row([
 
+            # Column for buttons
             dbc.Col(
 
                 dbc.Stack([
 
+                    # Button for downloading data
                     dbc.Button("CALCULATE", id="TI_btn_download", size="lg", color="primary", className='fw-bold'),
 
+                    # Button for clearing the table
                     dbc.Button("CLEAR TABLE", id="Clear_Table", size="lg", color="primary", className='fw-bold'),
 
                 ], gap=3),
 
                 width=3),
 
+            # Column for dropdown menu and input fields
             dbc.Col(
 
                 dbc.Stack([
 
+                    # Dropdown menu for selecting dataset
                     dcc.Dropdown(
                         id="DataSet_TI",
                         options=[],
                         multi=False,
-                        placeholder="Select a Dataset"),
+                        placeholder="Select a Dataset"
+                    ),
 
+                    # Input field for minimum time
                     dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True),
 
+                    # Input field for maximum time
                     dbc.Input(id="big_t_TI", type="number", placeholder="Max Time", debounce=True),
 
                 ], gap=3),
 
                 width=3),
 
-        ], align='center', justify='center')
+        ], align='center', justify='center'),
 
     ], width=12),
 
+    # Column for displaying the table
     dbc.Col([
 
         dash_table.DataTable(
