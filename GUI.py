@@ -1291,7 +1291,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                     new_value.append(value)
                                     combined_filenames.append(value)
                                     combined_dtype_shape.append(shape_dtype)
-                                    combined_CalData.append(cal_data[0][0])
+                                    combined_CalData.append(cal_data[0])
                                     combined_SF.append(SF)
                                     combined_filepath.append(file_path)
 
@@ -2122,6 +2122,7 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                             # If table data is empty, initialize it as an empty list
                             if table_data is None:
                                 table_data = []
+                            print(file_data[2][0])
 
                             # Create new data entry with calculated values
                             new_data = [
@@ -2249,7 +2250,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
                 # Error messages
                 smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                               ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
+                               ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + max1 +')'
                 bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
                              ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
                 both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
