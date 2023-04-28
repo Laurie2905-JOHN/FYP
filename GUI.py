@@ -922,6 +922,8 @@ def clear_Workspace(n_clicks, Workspace_data):
         # Return no_update for output components when an exception occurs
         return no_update, no_update, no_update, no_update, error_temp, color_temp, True, error_perm, color_perm, True
 
+# Callback 3
+# Callback to update workspace alert based on data
 @app.callback(
     Output(component_id='Workspace_alert', component_property='children'),
     Output(component_id='Workspace_alert', component_property='color'),
@@ -939,7 +941,7 @@ def update_Workspace_Alert(Workspace_data):
 
     return alert_work, color1, True
 
-# Callback 3
+# Callback 4
 # Define callback function for updating alert text based on calibration file data.
 @app.callback(
     Output(component_id='calAlert', component_property='children'),
@@ -967,7 +969,7 @@ def update_cal_text(Cal_data):
         color = 'danger'
         return alert_cal, color, True
 
-# Callback 4
+# Callback 5
 # Define callback function for processing the uploaded calibration file
 @ app.callback(
     Output(component_id="Cal_storage", component_property='data', allow_duplicate=True),
@@ -979,31 +981,39 @@ def update_cal_text(Cal_data):
         prevent_initial_call=True)
 
 def cal_analysis(filename, contents):
+
     try:
-        # Separate the content type and actual data from the contents
-        content_type, content_string = contents[0].split(',')
 
-        # Decode the base64 encoded content string
-        decoded = base64.b64decode(content_string)
-
-        # Check if the file is an Excel file
-        if 'xlsx' or 'xlx' in filename:
-            # Read the Excel file into a pandas DataFrame
-            cal_data = pd.read_excel(io.BytesIO(decoded))
-
-            # Convert the DataFrame to a dictionary and remove NaN values
-            cal_data = cal_data.to_dict('list')
-            cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
-                                  cal_data.items()}]
-
-            # Prepare the success message
-            error = filename[0] + ' UPLOADED SUCCESSFULLY'
-            color = 'success'
-        else:
-            # If the file is not an Excel file, display an error message
-            error = 'PLEASE UPLOAD AN EXCEL FILE'
+        if filename or contents is None:
+            # If data is none or empty prevent error
+            error = 'PLEASE TRY AGAIN'
             color = 'danger'
             cal_data = no_update
+        else:
+            # Separate the content type and actual data from the contents
+            content_type, content_string = contents[0].split(',')
+
+            # Decode the base64 encoded content string
+            decoded = base64.b64decode(content_string)
+
+            # Check if the file is an Excel file
+            if 'xlsx' or 'xlx' in filename:
+                # Read the Excel file into a pandas DataFrame
+                cal_data = pd.read_excel(io.BytesIO(decoded))
+
+                # Convert the DataFrame to a dictionary and remove NaN values
+                cal_data = cal_data.to_dict('list')
+                cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
+                                      cal_data.items()}]
+
+                # Prepare the success message
+                error = filename[0] + ' UPLOADED SUCCESSFULLY'
+                color = 'success'
+            else:
+                # If the file is not an Excel file, display an error message
+                error = 'PLEASE UPLOAD AN EXCEL FILE'
+                color = 'danger'
+                cal_data = no_update
 
         # Return updated values for UI components
         return cal_data, error, color, True
@@ -1014,7 +1024,7 @@ def cal_analysis(filename, contents):
         color = 'danger'
         return no_update, error, color, True
 
-# Callback 5
+# Callback 6
 # Define callback function for updating the file upload checklist data and verifying file format
 @app.callback(
         Output(component_id='submit_files', component_property='value'),
@@ -1023,14 +1033,14 @@ def cal_analysis(filename, contents):
         Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
         Input(component_id = 'dropdown_BARN_update', component_property ='n_clicks'),
-        Input(component_id='dropdown_BARN_clear', component_property='n_clicks'),
         State(component_id='submit_files', component_property='value'),
         State(component_id='filename_filepath', component_property='data'),
         prevent_initial_call = True)
 
-def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_filepath_data):
+def update_file_to_upload_checklist(n_clicks, filepath1, filename_filepath_data):
+
     try:
-        # Check if the file upload update button is clicked
+    # Check if the file upload update button is clicked
         if ctx.triggered_id == 'dropdown_BARN_update':
             # Verify if the file path input is empty or not
             if filepath1 is None or filepath1 == '':
@@ -1077,7 +1087,6 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
                             color = 'danger'
                             filepath_input = no_update
                             filename_filepath_data = no_update
-                            repeated_filename = []
                         else:
                             combined_filenames.append(filename)
                             combined_filepaths.append(filepath)
@@ -1094,7 +1103,7 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
         color = 'danger'
         return no_update, no_update, error, color, True
 
-# Callback 6
+# Callback 7
 # Define callback function for clearing the file upload checklist data
 @app.callback(
     Output(component_id='submit_files', component_property='value', allow_duplicate=True),
@@ -1109,7 +1118,7 @@ def clear_upload(n_clicks):
     # Use try-except block to handle any unexpected errors
     try:
         # Check if the clear file upload button is clicked
-        if ctx.triggered_id == 'dropdown_BARN_clear':
+        if ctx.triggered_id == 'dropdown_BARN_clear'
             # Clear the file upload checklist and display a success message
             filepath_input = None
             error = 'UPLOAD FILES CLEARED'
@@ -1149,6 +1158,7 @@ def clear_upload(n_clicks):
     ],
 )
 def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, filenames, Workspace_data):
+
     # Handle errors and exceptions
     try:
         # Check if the "newfile" button was clicked
@@ -1364,12 +1374,12 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
 def clear_files(n_clicks, maindata, whatclear, allclear):
 
+    # If the clear files button is pressed, prevent update
+    if "clear_files" != ctx.triggered_id:
+        raise PreventUpdate
+
     # Try/Except, used to catch any errors not considered
     try:
-
-        # If the clear files button is pressed, prevent update
-        if "clear_files" != ctx.triggered_id:
-            raise PreventUpdate
 
         # If no files selected display error message
         if allclear == ['All'] and len(whatclear) == 0:
@@ -1438,7 +1448,7 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
                 clear_file_initial = True
 
         # Return required values
-        return  error, color, True, newmaindata, clear_data_main, clear_file_initial,
+        return error, color, True, newmaindata, clear_data_main, clear_file_initial,
 
     except Exception as e:
 
@@ -1446,7 +1456,7 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
         color = 'danger'
 
         # Return required values
-        return  error, color, True, no_update, no_update, no_update,
+        return error, color, True, no_update, no_update, no_update,
 
 # Callback 10
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
@@ -1459,18 +1469,18 @@ def clear_files(n_clicks, maindata, whatclear, allclear):
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
         Input(component_id="upload_file_checklist", component_property='value'),
         Input(component_id='all_upload_file_checklist', component_property='value'),
-        Input(component_id='filename_filepath', component_property='data'),
+        State(component_id='filename_filepath', component_property='data'),
         prevent_initial_call=True
         )
 
 def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filename_filepath_data):
 
+    # Prevent update if there are no file names
+    if filename_filepath_data is None:
+        raise PreventUpdate
+
     # Try/Except, used to catch any errors not considered
     try:
-
-        # Prevent update if there are no file names
-        if filename_filepath_data is None:
-            raise PreventUpdate
 
         # Split up the triggered callback
         input_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -1483,7 +1493,7 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filenam
             upload_file_check = filename_filepath_data[0] if all_upload_file_check else []
 
         # Return the updated upload file checklist and all upload file checklist
-        return upload_file_check, all_upload_file_check, no_update, no_update, False
+        return upload_file_check, all_upload_file_check, no_update, no_update, no_update
 
     except Exception as e:
 
@@ -1510,11 +1520,12 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filenam
 
 def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 
+    # If stored data is none prevent update
+    if data is None:
+        raise PreventUpdate
+
     # Try/Except, used to catch any errors not considered
     try:
-        # If stored data is none prevent update
-        if data is None:
-            raise PreventUpdate
 
         # Extract the ID of the input that triggered the callback
         input_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -1530,7 +1541,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
             clear_file_check = file_options if all_clear_check else []
 
         # Return the updated upload file checklist and all upload file checklist
-        return clear_file_check, all_clear_check, no_update, no_update, False
+        return clear_file_check, all_clear_check, no_update, no_update, no_update
 
     except Exception as e:
 
@@ -1538,7 +1549,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
         error = str(e)
         color = 'danger'
 
-        return no_update, no_update, error, color, True
+    return no_update, no_update, error, color, True
 
 # Callback 12
 # Callback which syncs the all button of the vel checklist. If all is clicked all options will be selected.
