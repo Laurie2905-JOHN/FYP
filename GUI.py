@@ -761,7 +761,8 @@ dbc.Row([
     dcc.Store(id='Cal_storage', storage_type='local'),
 ])
 
-# Call back to update the workspace filepath
+# Callback 1
+# Call back to update the workspace filepath.
 # This callback function is triggered by a click event on the 'Workspace_update' button.
 @app.callback(
     Output(component_id='Workspace_store', component_property='data'),
@@ -811,6 +812,7 @@ def update_Workspace(n_clicks, Workspace_input):
 
     return no_update, error, color, True
 
+# Callback 2
 # This callback function updates the workspace alert based on the current workspace data.
 @app.callback(
     Output(component_id='Workspace_alert', component_property='children'),
@@ -842,8 +844,8 @@ def update_Workspace_Alert(Workspace_data):
 
     return alert_work, color, True
 
-
-# Callback function for clearing the workspace store
+# Callback 3
+# Callback function for clearing the workspace store.
 @app.callback(
     Output(component_id='Workspace', component_property='value', allow_duplicate=True),
     Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
@@ -917,8 +919,8 @@ def clear_Workspace(n_clicks, Workspace_data):
         # Return no_update for output components when an exception occurs
         return no_update, no_update, no_update, no_update, error, color, True
 
-
-# Define callback function for updating alert text based on calibration file data
+# Callback 4
+# Define callback function for updating alert text based on calibration file data.
 @app.callback(
     Output(component_id='calAlert', component_property='children'),
     Output(component_id='calAlert', component_property='color'),
@@ -945,6 +947,7 @@ def update_cal_text(Cal_data):
         color = 'danger'
         return alert_cal, color, True
 
+# Callback 5
 # Define callback function for processing the uploaded calibration file
 @ app.callback(
     Output(component_id="Cal_storage", component_property='data', allow_duplicate=True),
@@ -991,7 +994,7 @@ def cal_analysis(filename, contents):
         color = 'danger'
         return no_update, error, color, True
 
-
+# Callback 6
 # Define callback function for updating the file upload checklist data and verifying file format
 @app.callback(
         Output(component_id='submit_files', component_property='value'),
@@ -1071,8 +1074,8 @@ def update_file_to_upload_checklist(n_clicks, n_clicks2, filepath1, filename_fil
         color = 'danger'
         return no_update, no_update, error, color, True
 
-
-# Define callback function for clearing the file upload checklist
+# Callback 7
+# Define callback function for clearing the file upload checklist data
 @app.callback(
     Output(component_id='submit_files', component_property='value', allow_duplicate=True),
     Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
@@ -1101,6 +1104,7 @@ def clear_upload(n_clicks):
         color = 'danger'
         return no_update, no_update, error, color, True
 
+# Callback 8
 # Callback to analyse data from uploaded files
 @app.callback(
     [
@@ -1301,591 +1305,112 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
         return no_update, error, color, True, no_update, no_update
 
-# Call back which updates the download time range to prevent error
+# Callback 9
+# Callback to clear data
 @app.callback(
-        Output(component_id="big_t", component_property='value', allow_duplicate=True),
-        Output(component_id="small_t", component_property='value', allow_duplicate=True),
-        Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id="small_t", component_property='value'),
-        Input(component_id="big_t", component_property='value'),
+        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filename_filepath', component_property='clear_data'),
+        Input(component_id='clear_files', component_property='n_clicks'),
+        State(component_id='filestorage', component_property='data'),
+        State(component_id="clear_file_checklist", component_property='value'),
+        State(component_id="all_clear_file_checklist", component_property='value'),
         prevent_initial_call=True)
 
-def update_vals(small_val, large_val):
+def clear_files(n_clicks, maindata, whatclear, allclear):
 
     # Try/Except, used to catch any errors not considered
     try:
 
-        large_val, small_val = update_values(large_val, small_val)
+        # If the clear files button is pressed, prevent update
+        if "clear_files" != ctx.triggered_id:
+            raise PreventUpdate
 
-        # Return the updated large and small input values
-        return large_val, small_val, no_update, no_update, False,
+        # If no files selected display error message
+        if allclear == ['All'] and len(whatclear) == 0:
 
-    except Exception as e:
+            # display bad error message
+            error = 'NO FILES DELETED'
+            color = "danger"
 
-        # If any error display message
-        error = str(e)
-        color = 'danger'
+            # No update to new main data
+            newmaindata = no_update
 
-        return no_update, no_update, error, color, True,
+            clear_data_main = True
 
-# Call back which updates the download time range to prevent error
-@ app.callback(
-    Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
-    Output(component_id="small_t_TI", component_property='value', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
-    Input(component_id="small_t_TI", component_property='value'),
-    Input(component_id="big_t_TI", component_property='value'),
-        prevent_initial_call=True)
-
-def update_vals2(small_val, large_val):
-
-    # Try/Except, used to catch any errors not considered
-    try:
-
-        large_val, small_val = update_values(large_val, small_val)
-
-        # Return the updated large and small input values
-        return large_val, small_val, no_update, no_update, False,
-
-    except Exception as e:
-
-        # If any error display message
-        error = str(e)
-        color = 'danger'
-
-        return no_update, no_update, error, color, True,
-
-# Callback to clear parameters table
-@app.callback(
-    Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
-    Input(component_id='Clear_Table', component_property='n_clicks'),
-    prevent_initial_call=True)
-
-def clear_table(n_clicks):
-
-    # Try/Except, used to catch any errors not considered
-    try:
-
-        # If clear table pressed clear data and display error message
-        if "Clear_Table" == ctx.triggered_id:
-
-            error = 'TABLE CLEARED'
-
-            color = 'success'
-
-            table_data = []
-
-        return table_data, error, color, True
-
-    except Exception as e:
-
-        # If any error display message
-        error = str(e)
-        color = 'danger'
-
-        return no_update, error, color, True
-
-# Callback to analyse data and update TI table
-@ app.callback(
-    [Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
-    Output(component_id='Loading_variable_Table', component_property='data', allow_duplicate=True)],
-    [Input(component_id='TI_btn_download', component_property='n_clicks'),
-    State(component_id='filestorage', component_property='data'),
-    State(component_id='DataSet_TI', component_property='value'),
-    State(component_id="small_t_TI", component_property='value'),
-    State(component_id="big_t_TI", component_property='value'),
-    State(component_id='TI_Table', component_property='data'),
-    State(component_id='TI_Table', component_property='columns')])
-
-
-# Define a function to calculate turbulence intensity and update the table
-def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data, column_data):
-    # Use try-except to catch any unexpected errors
-    try:
-        # Check if the button with ID "TI_btn_download" was clicked
-        if "TI_btn_download" == ctx.triggered_id:
-            # If no dataset is chosen, show an error message and don't update the table data
-            if chosen_file is None:
-                error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check you have selected a dataset'
-                color = 'danger'
-                table_data = no_update
-            else:
-                # Check if the inputted time range is correct
-                if small_TI == big_TI and small_TI is not None and big_TI is not None:
-                    error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
-                    color = 'danger'
-                    table_data = no_update
-                else:
-                    # Define a function to load data from a memmap file
-                    def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                        filepath = os.path.join(folder_path, filename)
-                        mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
-
-                        if row_numbers == 'all':
-                            loaded_data = mapped_data[:]
-                        else:
-                            loaded_data = mapped_data[row_numbers]
-
-                        return loaded_data
-
-                    # Find the index of the chosen file in file_data list
-                    i = file_data[0].index(chosen_file)
-
-                    # Get shape and dtype information for the chosen file
-                    shape_dtype = file_data[1][i]
-                    shape, dtype = shape_dtype
-
-                    # Get the file path, min and max time values for the chosen file
-                    file_path = file_data[4][i]
-                    min1 = file_data[5][i]
-                    max1 = file_data[6][i]
-
-                    # Error messages
-                    smallt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE' \
-                                   ' REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' +\
-                                   'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
-
-                    bigt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE' \
-                                 ' REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' +\
-                                 'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
-
-                    both_t_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM' \
-                                   ' TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' +\
-                                   'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
-
-                    both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
-
-
-
-                    # Cut data based on conditions
-                    if small_TI is None and big_TI is None:
-                        big_TI = max1
-                        small_TI = min1
-                        color = 'danger'
-                        error = both_t_error
-
-                    elif small_TI is None and big_TI is not None:
-                        small_TI = min1
-                        color = 'danger'
-                        error = smallt_error
-
-                    elif big_TI is None and small_TI is not None:
-                        big_TI = max1
-                        color = 'danger'
-                        error = bigt_error
-
-                    else:
-
-                        if small_TI < min1 and big_TI > max1:
-                            small_TI = min1
-                            big_TI = max1
-                            color = 'danger'
-                            error = both_t_error
-
-                        elif small_TI < min1:
-                            small_TI = min1
-                            color = 'danger'
-                            error = smallt_error
-
-
-                        elif big_TI > max1:
-                            big_TI = max1
-                            color = 'danger'
-                            error = bigt_error
-
-                        else:
-                            error = both_t_NO_error
-                            color = 'success'
-
-                    # Load time data using the memmap function
-                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
-
-                    # Apply a mask based on the specified time range
-                    mask = (t >= small_TI) & (t <= big_TI)
-
-                    # Update color and row numbers based on the mask
-                    row_numbers = np.where(mask)[0].tolist()
-
-                    # Load velocity components data using the memmap function
-                    ux = load_array_memmap('Ux.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-                    uy = load_array_memmap('Uy.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-                    uz = load_array_memmap('Uz.dat',file_path, dtype= dtype, shape= shape[0], row_numbers = row_numbers)
-
-                    # Calculate turbulence intensity and mean velocity components
-                    TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
-
-                    # If table data is empty, initialize it as an empty list
-                    if table_data is None:
-                        table_data = []
-
-                    # Create new data entry with calculated values
-                    new_data = [
-                        {
-                            'FileName': chosen_file,
-                            'CalFile': file_data[2][i],
-                            'SF': file_data[3][i],
-                            'Time_1': round(small_TI, 2),
-                            'Time_2': round(big_TI, 2),
-                            'Ux': round(Ux, 6),
-                            'Uy': round(Uy, 6),
-                            'Uz': round(Uz, 6),
-                            'U1': round(U1, 6),
-                            'TI': round(TI, 6),
-                        }
-                    ]
-
-                    # Append new data to the table_data
-                    table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
-
-                    # Set loading variable to 'done'
-                Loading_variable = 'done'
-
-                # Return updated table data, error message, color, and loading variable
-                return table_data, error, color, True, Loading_variable
-
-    except Exception as e:
-        # If any error occurs, display the error message
-        error = str(e)
-        color = 'danger'
-
-        return no_update, error, color, True, no_update
-
-# Callback to clear graph through the click of a button
-@app.callback(
-        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-        Output(component_id='File', component_property='value'),
-        Output(component_id='Vect', component_property='value'),
-        Output(component_id='time_small', component_property='value'),
-        Output(component_id='time_large', component_property='value'),
-        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id='plot_clear_bttn', component_property='n_clicks'),
-    prevent_initial_call=True)
-
-def clear_graph(n_clicks):
-
-    # Try/Except, used to catch any errors not considered
-    try:
-        if ctx.triggered_id == 'plot_clear_bttn':
-            fig = {}
-            file = None
-            Vect = None
-            tsmall = None
-            tbig = None
-            return fig, file, Vect, tsmall, tbig, no_update, no_update, False,
-
-    except Exception as e:
-        # If any error display message
-        error = str(e)
-        color = 'danger'
-
-        return no_update, no_update, no_update, no_update, no_update, error, color, True,
-
-
-# Callback which updates the graph based on graph options
-@app.callback(
-        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='Loading_variable_Graph', component_property='data', allow_duplicate=True),
-        Input(component_id='plot_bttn', component_property='n_clicks'),
-        State(component_id = 'filestorage', component_property = 'data'),
-        State(component_id = 'File', component_property = 'value'),
-        State(component_id = 'Vect', component_property = 'value'),
-        State(component_id='time_small', component_property='value'),
-        State(component_id='time_large', component_property='value'),
-        State(component_id='legend_Data', component_property='data'),
-        State(component_id='title_Data', component_property='data'),
-        State(component_id='legend_onoff', component_property='value'),
-        State(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
-
-def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title):
-    # Try/Except, used to catch any errors not considered
-    try:
-        if ctx.triggered_id == 'plot_bttn':
-            # If no input do not plot graphs
-            if file_inputs == [] or vector_inputs1 == []:
-                fig = no_update
-                error = 'PLEASE CHECK INPUTS'
-                color = 'danger'
-                Loading_Variable = 'done'
-            else:
-                fig = go.Figure()
-                current_names = []
-                min2 = []
-                max2 = []
-
-                # Function to load data from memmap file
-                def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                    filepath = os.path.join(folder_path, filename)
-                    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
-
-                    if row_numbers == 'all':
-                        loaded_data = mapped_data[:]
-                    else:
-                        loaded_data = mapped_data[row_numbers]
-
-                    return loaded_data
-
-                # Get min and max time values for each file
-                for file in file_inputs:
-                    i = file_data[0].index(file)
-                    min2.append(file_data[5][i])
-                    max2.append(file_data[6][i])
-
-                min1 = min(min2)
-                max1 = max(max2)
-
-                # Error messages
-                smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                               ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
-                bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
-                             ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
-                both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
-                               ' THE AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                       '(' + min1 + ' TO ' + max1 +')'
-                both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
-
-                # Cut data based on conditions
-                if smallt is None and bigt is None:
-                    bigt = max1
-                    smallt = min1
-                    error_cut = both_t_error
-                    error_cut_good = ''
-
-                elif smallt is None and bigt is not None:
-                    smallt = min1
-                    error_cut = smallt_error
-                    error_cut_good = ''
-
-                elif bigt is None and smallt is not None:
-                    bigt = max1
-                    error_cut = bigt_error
-                    error_cut_good = ''
-
-                else:
-
-                    if smallt < min1 and bigt > max1:
-                        smallt = min1
-                        bigt = max1
-                        error_cut = both_t_error
-                        error_cut_good = ''
-
-                    elif smallt < min1:
-                        bigt = min1
-                        error_cut = smallt_error
-                        error_cut_good = ''
-
-
-                    elif bigt > max1:
-                        bigt = max1
-                        error_cut = bigt_error
-                        error_cut_good = ''
-                    else:
-                        error_cut_good = both_t_NO_error
-                        error_cut = ''
-
-                # Loop through the files and vectors to create the graph
-                for file in file_inputs:
-                    i = file_data[0].index(file)
-                    file_path = file_data[4][i]
-                    shape_dtype = file_data[1][i]
-                    shape, dtype = shape_dtype
-
-                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
-                    mask = (t >= smallt) & (t <= bigt)
-
-                    numpy_vect_data = {file: {'t': t[mask]}}
-                    row_numbers = np.where(mask)[0].tolist()
-
-                    for vector in vector_inputs1:
-                        numpy_vect_data[file][vector] = load_array_memmap(vector + '.dat', file_path,
-                                                                          dtype=dtype,
-                                                                          shape=shape[0],
-                                                                          row_numbers=row_numbers)
-
-                        # Creating a list of current legend names
-                        current_names.append(f"{file}{' '}{vector}")
-
-                        # Plotting data
-                        fig.add_trace(
-                            go.Scattergl(
-                                name=f"{file}{' '}{vector}",
-                                showlegend=True,
-                                x=numpy_vect_data[file]['t'],
-                                y=numpy_vect_data[file][vector])
-                        )
-
-                    # Update x and y axes labels
-                    fig.update_layout(
-                        xaxis_title="Time (s)",
-                        yaxis_title="Velocity (m/s)",
-                        legend=dict(
-                            y=1,
-                            x=0.5,
-                            orientation="h",
-                            yanchor="bottom",
-                            xanchor="center"),
-                    )
-
-                    # Update legend and title based on user input
-                    if legend_data is None:
-                        if leg == 'Off':
-                            fig.layout.update(showlegend=False)
-                            error_leg = ''
-                        elif leg == 'On':
-                            fig.layout.update(showlegend=True)
-                            error_leg = ''
-                    else:
-                        if leg == 'Off':
-                            fig.layout.update(showlegend=False)
-                            error_leg = ''
-                        elif leg == 'On':
-                            legend_name_list = legend_data.split(',')
-                            newname_result = {}
-
-                            if len(current_names) == len(legend_name_list):
-                                for i, current_name in enumerate(current_names):
-                                    newnames = {current_name: legend_name_list[i]}
-                                    newname_result.update(newnames)
-
-                                fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
-                                                                      legendgroup=newname_result[t.name],
-                                                                      hovertemplate=t.hovertemplate.replace(
-                                                                          t.name,
-                                                                          newname_result[
-                                                                              t.name]) if t.hovertemplate is not None else None)
-                                                   )
-
-                                fig.layout.update(showlegend=True)
-
-                                error_leg  = ''
-
-
-                            else:
-
-                                # If legend entries do not match display error message
-                                error_leg = ' NUMBER OF LEGEND ENTRIES DO NOT MATCH'
-
-                    # Update graph title based on user input
-                    if title_data is None:
-                        if title == 'Off':
-                            fig.layout.update(title='')
-                        elif title == 'On':
-                            fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
-                    else:
-                        if title == 'Off':
-                            fig.layout.update(title='')
-                        elif title == 'On':
-                            fig.layout.update(title=title_data)
-
-                # Return figure, error message, alert color, and loading status
-                if error_leg == '' or error_cut == '':
-                    color = 'success'
-                else:
-                    color = 'danger'
-
-                error = 'GRAPH PLOTTED. ' + error_cut + error_cut_good + error_leg
-                Loading_Variable = 'done'
-
-        return fig, error, color, True, Loading_Variable
-
-    except Exception as e:
-        # If any error display message
-        error = str(e)
-        color = 'danger'
-
-    return no_update, error, color, True, no_update
-
-
-
-
-# Callback to update legend or title data
-@app.callback(
-     Output(component_id='New_name', component_property='value'),
-     Output(component_id='legend_Data', component_property='data'),
-     Output(component_id='title_Data', component_property='data'),
-     Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-     Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-     Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-     Input(component_id="dropdown_legend_update", component_property='n_clicks'),
-     Input(component_id="dropdown_title_update", component_property='n_clicks'),
-     Input(component_id="dropdown_clear", component_property='n_clicks'),
-     State(component_id='New_name', component_property='value'),
-     prevent_initial_call = True)
-
-def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
-
-    # Try/Except, used to catch any errors not considered
-    try:
-
-        # If legend update button is pressed
-        if ctx.triggered_id == 'dropdown_legend_update':
-            error = 'LEGEND DATA UPDATE'
-            color = 'success'
-            # Update legend data
-            legend_data = name_input
-            # No update to title data or name input
-            title_data = no_update
-            name_input = no_update
-            open1 = True
-        # If title update button is pressed
-        elif ctx.triggered_id == 'dropdown_title_update':
-            error = 'LEGEND DATA UPDATE'
-            color = 'success'
-            # Update title data
-            title_data = name_input
-            # No update to legend data or name input
-            name_input = no_update
-            legend_data = no_update
-            open1 = True
-            error = 'TITLE DATA UPDATED'
-
-        # If clear dropdown pressed clear input box
-        elif ctx.triggered_id == 'dropdown_clear':
-            # Clear title and legend data
-            title_data = None
-            legend_data = None
-            # Clear input box
-            name_input = ''
-            open1 = True
-            color = 'success'
-            error = 'LEGEND AND TITLE DATA CLEARED'
+            clear_file_initial = True
 
         else:
-            # Else no update to any values
-            title_data = no_update
-            name_input = no_update
-            legend_data = no_update
-            error = no_update
-            color = no_update
-            open1 = False
 
-        # Return name, legend and title data
-        return name_input, legend_data, title_data, error, color, open1
+            file_path = maindata[4]
+            deleted_files = []
+
+            try:
+
+                # Iterate through the selected files to be deleted
+                for what in whatclear:
+                    i = maindata[0].index(what)
+                    if os.path.isdir(file_path[i]):
+                        # delete the folder and its contents recursively
+                        shutil.rmtree(file_path[i])
+                        deleted_files.append(what)
+                        for j in range(len(maindata)):
+                            del maindata[j][i]
+                error_try = ''
+
+            except Exception as e:
+                error_try = e
+
+            # Assign new data
+            newmaindata = maindata
+
+            if allclear == ['All'] and len(whatclear) > 0:
+
+                clear_data_main = True
+
+                clear_file_initial = True
+
+                # display good error message
+                error = 'ALL FILES CLEARED' + str(error_try)
+
+                if error_try != '':
+                    color = "danger"
+                else:
+                    color = "success"
+
+            else:
+
+                # display good error message
+                error = 'FILES CLEARED: ' + ', '.join(deleted_files) + str(error_try)
+
+                if error_try != '':
+                    color = "danger"
+                else:
+                    color = "success"
+
+                clear_data_main = False
+
+                clear_file_initial = True
+
+        # Return required values
+        return  error, color, True, newmaindata, clear_data_main, clear_file_initial,
 
     except Exception as e:
 
-        # If any error display message
         error = str(e)
         color = 'danger'
+        clear_data_main = no_update
+        clear_data_main = no_update
+        newmaindata = no_update
+        clear_file_initial = no_update
 
-        return no_update, no_update, no_update, error, color, True
+        # Return required values
+        return  error, color, True, no_update, no_update, no_update,
 
-
-
+# Callback 10
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
 @app.callback(
@@ -1930,7 +1455,7 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filenam
 
         return no_update, no_update, error, color, True
 
-
+# Callback 11
 # Callback which syncs the all button of the clear file checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
 @app.callback(
@@ -1977,6 +1502,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 
         return no_update, no_update, error, color, True
 
+# Callback 12
 # Callback which syncs the all button of the vel checklist. If all is clicked all options will be selected.
 # If all options are clicked all will be selected
 @app.callback(
@@ -2017,53 +1543,26 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 
         return no_update, no_update, error, color, True
 
-
-# Callback which updates dropdowns
+# Callback 13
+# Call back which updates the download time range to prevent error
 @app.callback(
-    Output(component_id="File", component_property='options'),
-    Output(component_id='Vect', component_property='options'),
-    Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
-    Output(component_id='DataSet_TI', component_property='options'),
-    Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-    Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-    Input(component_id='filestorage', component_property='data'),
-    Input(component_id='filename_filepath', component_property='data'),
-    prevent_initial_call=True)
+        Output(component_id="big_t", component_property='value', allow_duplicate=True),
+        Output(component_id="small_t", component_property='value', allow_duplicate=True),
+        Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id="small_t", component_property='value'),
+        Input(component_id="big_t", component_property='value'),
+        prevent_initial_call=True)
 
-def update_dropdowns1(data, filename_filepath_upload_data):
+def update_vals(small_val, large_val):
 
     # Try/Except, used to catch any errors not considered
     try:
-        if filename_filepath_upload_data is not None:
-            upload_file_checklist = filename_filepath_upload_data[0]
-        else:
-            upload_file_checklist = []
+        large_val, small_val = update_values(large_val, small_val)
 
-
-        if data is None:
-            # If the data is None, set all dropdown options to empty lists
-            vect_options = []
-            file_dropdown_options = []
-            file_checklist = []
-            clear_file_check = []
-            vel_checklist = []
-            DataDrop_TI = []
-        else:
-            # If the data is not None, set the dropdown options and checklists accordingly
-            vect_options = ['U1','Ux', 'Uy', 'Uz']
-            vel_checklist = ['t','U1','Ux', 'Uy', 'Uz']
-            file_dropdown_options = data[0]
-            file_checklist = data[0]
-            DataDrop_TI = data[0]
-            clear_file_check = data[0]
-
-
-        # Return the updated dropdown options and checklists
-        return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI, no_update, no_update, False,
+        # Return the updated large and small input values
+        return large_val, small_val, no_update, no_update, False,
 
     except Exception as e:
 
@@ -2071,10 +1570,9 @@ def update_dropdowns1(data, filename_filepath_upload_data):
         error = str(e)
         color = 'danger'
 
-        # Return the updated dropdown options and checklists
-        return no_update, no_update, no_update, no_update, no_update,no_update, no_update, error, color, False,
+        return no_update, no_update, error, color, True,
 
-
+# Callback 14
 # Callback to download data
 @app.callback(
         Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
@@ -2265,109 +1763,615 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
     # Return error message, alert color, whether the alert should be open, and no update for the loading status
     return error, color, True, no_update
 
-# Callback to clear data
-@app.callback(
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        Output(component_id='filename_filepath', component_property='clear_data'),
-        Input(component_id='clear_files', component_property='n_clicks'),
-        State(component_id='filestorage', component_property='data'),
-        State(component_id="clear_file_checklist", component_property='value'),
-        State(component_id="all_clear_file_checklist", component_property='value'),
+# Callback 15
+# Call back which updates the TI table time range to prevent error
+@ app.callback(
+    Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
+    Output(component_id="small_t_TI", component_property='value', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id="small_t_TI", component_property='value'),
+    Input(component_id="big_t_TI", component_property='value'),
         prevent_initial_call=True)
 
-def clear_files(n_clicks, maindata, whatclear, allclear):
+def update_vals2(small_val, large_val):
 
     # Try/Except, used to catch any errors not considered
     try:
 
-        # If the clear files button is pressed, prevent update
-        if "clear_files" != ctx.triggered_id:
-            raise PreventUpdate
+        large_val, small_val = update_values(large_val, small_val)
 
-        # If no files selected display error message
-        if allclear == ['All'] and len(whatclear) == 0:
-
-            # display bad error message
-            error = 'NO FILES DELETED'
-            color = "danger"
-
-            # No update to new main data
-            newmaindata = no_update
-
-            clear_data_main = True
-
-            clear_file_initial = True
-
-        else:
-
-            file_path = maindata[4]
-            deleted_files = []
-
-            try:
-
-                # Iterate through the selected files to be deleted
-                for what in whatclear:
-                    i = maindata[0].index(what)
-                    if os.path.isdir(file_path[i]):
-                        # delete the folder and its contents recursively
-                        shutil.rmtree(file_path[i])
-                        deleted_files.append(what)
-                        for j in range(len(maindata)):
-                            del maindata[j][i]
-                error_try = ''
-
-            except Exception as e:
-                error_try = e
-
-            # Assign new data
-            newmaindata = maindata
-
-            if allclear == ['All'] and len(whatclear) > 0:
-
-                clear_data_main = True
-
-                clear_file_initial = True
-
-                # display good error message
-                error = 'ALL FILES CLEARED' + str(error_try)
-
-                if error_try != '':
-                    color = "danger"
-                else:
-                    color = "success"
-
-            else:
-
-                # display good error message
-                error = 'FILES CLEARED: ' + ', '.join(deleted_files) + str(error_try)
-
-                if error_try != '':
-                    color = "danger"
-                else:
-                    color = "success"
-
-                clear_data_main = False
-
-                clear_file_initial = True
-
-        # Return required values
-        return  error, color, True, newmaindata, clear_data_main, clear_file_initial,
+        # Return the updated large and small input values
+        return large_val, small_val, no_update, no_update, False,
 
     except Exception as e:
 
+        # If any error display message
         error = str(e)
         color = 'danger'
-        clear_data_main = no_update
-        clear_data_main = no_update
-        newmaindata = no_update
-        clear_file_initial = no_update
 
-        # Return required values
-        return  error, color, True, no_update, no_update, no_update,
+        return no_update, no_update, error, color, True,
+
+# Callback 16
+# Callback to analyse data and update TI table
+@app.callback(
+    [Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
+     Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
+     Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
+     Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
+     Output(component_id='Loading_variable_Table', component_property='data', allow_duplicate=True)],
+    [Input(component_id='TI_btn_download', component_property='n_clicks'),
+     State(component_id='filestorage', component_property='data'),
+     State(component_id='DataSet_TI', component_property='value'),
+     State(component_id="small_t_TI", component_property='value'),
+     State(component_id="big_t_TI", component_property='value'),
+     State(component_id='TI_Table', component_property='data'),
+     State(component_id='TI_Table', component_property='columns')])
+# Define a function to calculate turbulence intensity and update the table
+def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data, column_data):
+    # Use try-except to catch any unexpected errors
+    try:
+        # Check if the button with ID "TI_btn_download" was clicked
+        if "TI_btn_download" == ctx.triggered_id:
+            # If no dataset is chosen, show an error message and don't update the table data
+            if chosen_file is None:
+                error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check you have selected a dataset'
+                color = 'danger'
+                table_data = no_update
+            else:
+                # Check if the inputted time range is correct
+                if small_TI == big_TI and small_TI is not None and big_TI is not None:
+                    error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
+                    color = 'danger'
+                    table_data = no_update
+                else:
+                    # Define a function to load data from a memmap file
+                    def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                        filepath = os.path.join(folder_path, filename)
+                        mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+
+                        if row_numbers == 'all':
+                            loaded_data = mapped_data[:]
+                        else:
+                            loaded_data = mapped_data[row_numbers]
+
+                        return loaded_data
+
+                    # Find the index of the chosen file in file_data list
+                    i = file_data[0].index(chosen_file)
+
+                    # Get shape and dtype information for the chosen file
+                    shape_dtype = file_data[1][i]
+                    shape, dtype = shape_dtype
+
+                    # Get the file path, min and max time values for the chosen file
+                    file_path = file_data[4][i]
+                    min1 = file_data[5][i]
+                    max1 = file_data[6][i]
+
+                    # Error messages
+                    smallt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE' \
+                                   ' REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
+                                   'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
+
+                    bigt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE' \
+                                 ' REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
+                                 'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
+
+                    both_t_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM' \
+                                   ' TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
+                                   'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
+
+                    both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
+
+                    # Cut data based on conditions
+                    if small_TI is None and big_TI is None:
+                        big_TI = max1
+                        small_TI = min1
+                        color = 'danger'
+                        error = both_t_error
+
+                    elif small_TI is None and big_TI is not None:
+                        small_TI = min1
+                        color = 'danger'
+                        error = smallt_error
+
+                    elif big_TI is None and small_TI is not None:
+                        big_TI = max1
+                        color = 'danger'
+                        error = bigt_error
+
+                    else:
+
+                        if small_TI < min1 and big_TI > max1:
+                            small_TI = min1
+                            big_TI = max1
+                            color = 'danger'
+                            error = both_t_error
+
+                        elif small_TI < min1:
+                            small_TI = min1
+                            color = 'danger'
+                            error = smallt_error
+
+
+                        elif big_TI > max1:
+                            big_TI = max1
+                            color = 'danger'
+                            error = bigt_error
+
+                        else:
+                            error = both_t_NO_error
+                            color = 'success'
+
+                    # Load time data using the memmap function
+                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+
+                    # Apply a mask based on the specified time range
+                    mask = (t >= small_TI) & (t <= big_TI)
+
+                    # Update color and row numbers based on the mask
+                    row_numbers = np.where(mask)[0].tolist()
+
+                    # Load velocity components data using the memmap function
+                    ux = load_array_memmap('Ux.dat', file_path, dtype=dtype, shape=shape[0],
+                                           row_numbers=row_numbers)
+                    uy = load_array_memmap('Uy.dat', file_path, dtype=dtype, shape=shape[0],
+                                           row_numbers=row_numbers)
+                    uz = load_array_memmap('Uz.dat', file_path, dtype=dtype, shape=shape[0],
+                                           row_numbers=row_numbers)
+
+                    # Calculate turbulence intensity and mean velocity components
+                    TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
+
+                    # If table data is empty, initialize it as an empty list
+                    if table_data is None:
+                        table_data = []
+
+                    # Create new data entry with calculated values
+                    new_data = [
+                        {
+                            'FileName': chosen_file,
+                            'CalFile': file_data[2][i],
+                            'SF': file_data[3][i],
+                            'Time_1': round(small_TI, 2),
+                            'Time_2': round(big_TI, 2),
+                            'Ux': round(Ux, 6),
+                            'Uy': round(Uy, 6),
+                            'Uz': round(Uz, 6),
+                            'U1': round(U1, 6),
+                            'TI': round(TI, 6),
+                        }
+                    ]
+
+                    # Append new data to the table_data
+                    table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
+
+                    # Set loading variable to 'done'
+                Loading_variable = 'done'
+
+                # Return updated table data, error message, color, and loading variable
+                return table_data, error, color, True, Loading_variable
+
+    except Exception as e:
+        # If any error occurs, display the error message
+        error = str(e)
+        color = 'danger'
+
+        return no_update, error, color, True, no_update
+
+# Callback 17
+# Callback to clear parameters table
+@app.callback(
+    Output(component_id='TI_Table', component_property='data', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id='Clear_Table', component_property='n_clicks'),
+    prevent_initial_call=True)
+
+def clear_table(n_clicks):
+
+    # Try/Except, used to catch any errors not considered
+    try:
+
+        # If clear table pressed clear data and display error message
+        if "Clear_Table" == ctx.triggered_id:
+
+            error = 'TABLE CLEARED'
+
+            color = 'success'
+
+            table_data = []
+
+        return table_data, error, color, True
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        color = 'danger'
+
+        return no_update, error, color, True
+
+# Callback 18
+# Callback which updates the graph based on graph options
+@app.callback(
+        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Loading_variable_Graph', component_property='data', allow_duplicate=True),
+        Input(component_id='plot_bttn', component_property='n_clicks'),
+        State(component_id = 'filestorage', component_property = 'data'),
+        State(component_id = 'File', component_property = 'value'),
+        State(component_id = 'Vect', component_property = 'value'),
+        State(component_id='time_small', component_property='value'),
+        State(component_id='time_large', component_property='value'),
+        State(component_id='legend_Data', component_property='data'),
+        State(component_id='title_Data', component_property='data'),
+        State(component_id='legend_onoff', component_property='value'),
+        State(component_id='title_onoff', component_property='value'), prevent_initial_call = True)
+
+def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title):
+    # Try/Except, used to catch any errors not considered
+    try:
+        if ctx.triggered_id == 'plot_bttn':
+            # If no input do not plot graphs
+            if file_inputs == [] or vector_inputs1 == []:
+                fig = no_update
+                error = 'PLEASE CHECK INPUTS'
+                color = 'danger'
+                Loading_Variable = 'done'
+            else:
+                fig = go.Figure()
+                current_names = []
+                min2 = []
+                max2 = []
+
+                # Function to load data from memmap file
+                def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                    filepath = os.path.join(folder_path, filename)
+                    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+
+                    if row_numbers == 'all':
+                        loaded_data = mapped_data[:]
+                    else:
+                        loaded_data = mapped_data[row_numbers]
+
+                    return loaded_data
+
+                # Get min and max time values for each file
+                for file in file_inputs:
+                    i = file_data[0].index(file)
+                    min2.append(file_data[5][i])
+                    max2.append(file_data[6][i])
+
+                min1 = min(min2)
+                max1 = max(max2)
+
+                # Error messages
+                smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
+                               ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
+                bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
+                             ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
+                both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
+                               ' THE AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                       '(' + min1 + ' TO ' + max1 +')'
+                both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
+
+                # Cut data based on conditions
+                if smallt is None and bigt is None:
+                    bigt = max1
+                    smallt = min1
+                    error_cut = both_t_error
+                    error_cut_good = ''
+
+                elif smallt is None and bigt is not None:
+                    smallt = min1
+                    error_cut = smallt_error
+                    error_cut_good = ''
+
+                elif bigt is None and smallt is not None:
+                    bigt = max1
+                    error_cut = bigt_error
+                    error_cut_good = ''
+
+                else:
+
+                    if smallt < min1 and bigt > max1:
+                        smallt = min1
+                        bigt = max1
+                        error_cut = both_t_error
+                        error_cut_good = ''
+
+                    elif smallt < min1:
+                        bigt = min1
+                        error_cut = smallt_error
+                        error_cut_good = ''
+
+
+                    elif bigt > max1:
+                        bigt = max1
+                        error_cut = bigt_error
+                        error_cut_good = ''
+                    else:
+                        error_cut_good = both_t_NO_error
+                        error_cut = ''
+
+                # Loop through the files and vectors to create the graph
+                for file in file_inputs:
+                    i = file_data[0].index(file)
+                    file_path = file_data[4][i]
+                    shape_dtype = file_data[1][i]
+                    shape, dtype = shape_dtype
+
+                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+                    mask = (t >= smallt) & (t <= bigt)
+
+                    numpy_vect_data = {file: {'t': t[mask]}}
+                    row_numbers = np.where(mask)[0].tolist()
+
+                    for vector in vector_inputs1:
+                        numpy_vect_data[file][vector] = load_array_memmap(vector + '.dat', file_path,
+                                                                          dtype=dtype,
+                                                                          shape=shape[0],
+                                                                          row_numbers=row_numbers)
+
+                        # Creating a list of current legend names
+                        current_names.append(f"{file}{' '}{vector}")
+
+                        # Plotting data
+                        fig.add_trace(
+                            go.Scattergl(
+                                name=f"{file}{' '}{vector}",
+                                showlegend=True,
+                                x=numpy_vect_data[file]['t'],
+                                y=numpy_vect_data[file][vector])
+                        )
+
+                    # Update x and y axes labels
+                    fig.update_layout(
+                        xaxis_title="Time (s)",
+                        yaxis_title="Velocity (m/s)",
+                        legend=dict(
+                            y=1,
+                            x=0.5,
+                            orientation="h",
+                            yanchor="bottom",
+                            xanchor="center"),
+                    )
+
+                    # Update legend and title based on user input
+                    if legend_data is None:
+                        if leg == 'Off':
+                            fig.layout.update(showlegend=False)
+                            error_leg = ''
+                        elif leg == 'On':
+                            fig.layout.update(showlegend=True)
+                            error_leg = ''
+                    else:
+                        if leg == 'Off':
+                            fig.layout.update(showlegend=False)
+                            error_leg = ''
+                        elif leg == 'On':
+                            legend_name_list = legend_data.split(',')
+                            newname_result = {}
+
+                            if len(current_names) == len(legend_name_list):
+                                for i, current_name in enumerate(current_names):
+                                    newnames = {current_name: legend_name_list[i]}
+                                    newname_result.update(newnames)
+
+                                fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
+                                                                      legendgroup=newname_result[t.name],
+                                                                      hovertemplate=t.hovertemplate.replace(
+                                                                      t.name,
+                                                                      newname_result[
+                                                                      t.name]) if t.hovertemplate is not None else None)
+                                                   )
+
+                                fig.layout.update(showlegend=True)
+
+                                error_leg  = ''
+
+                            else:
+
+                                # If legend entries do not match display error message
+                                error_leg = ' NUMBER OF LEGEND ENTRIES DO NOT MATCH'
+
+                    # Update graph title based on user input
+                    if title_data is None:
+                        if title == 'Off':
+                            fig.layout.update(title='')
+                        elif title == 'On':
+                            fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
+                    else:
+                        if title == 'Off':
+                            fig.layout.update(title='')
+                        elif title == 'On':
+                            fig.layout.update(title=title_data)
+
+                # Return figure, error message, alert color, and loading status
+                if error_leg == '' or error_cut == '':
+                    color = 'success'
+                else:
+                    color = 'danger'
+
+                error = 'GRAPH PLOTTED. ' + error_cut + error_cut_good + error_leg
+                Loading_Variable = 'done'
+
+        return fig, error, color, True, Loading_Variable
+
+    except Exception as e:
+        # If any error display message
+        error = str(e)
+        color = 'danger'
+
+    return no_update, error, color, True, no_update
+
+# Callback 19
+# Callback to clear graph through the click of a button
+@app.callback(
+        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
+        Output(component_id='File', component_property='value'),
+        Output(component_id='Vect', component_property='value'),
+        Output(component_id='time_small', component_property='value'),
+        Output(component_id='time_large', component_property='value'),
+        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id='plot_clear_bttn', component_property='n_clicks'),
+    prevent_initial_call=True)
+
+def clear_graph(n_clicks):
+
+    # Try/Except, used to catch any errors not considered
+    try:
+        if ctx.triggered_id == 'plot_clear_bttn':
+            fig = {}
+            file = None
+            Vect = None
+            tsmall = None
+            tbig = None
+            return fig, file, Vect, tsmall, tbig, no_update, no_update, False,
+
+    except Exception as e:
+        # If any error display message
+        error = str(e)
+        color = 'danger'
+
+        return no_update, no_update, no_update, no_update, no_update, error, color, True,
+
+# Callback 20
+# Callback to update legend or title data
+@app.callback(
+     Output(component_id='New_name', component_property='value'),
+     Output(component_id='legend_Data', component_property='data'),
+     Output(component_id='title_Data', component_property='data'),
+     Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+     Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+     Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+     Input(component_id="dropdown_legend_update", component_property='n_clicks'),
+     Input(component_id="dropdown_title_update", component_property='n_clicks'),
+     Input(component_id="dropdown_clear", component_property='n_clicks'),
+     State(component_id='New_name', component_property='value'),
+     prevent_initial_call = True)
+
+def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
+
+    # Try/Except, used to catch any errors not considered
+    try:
+
+        # If legend update button is pressed
+        if ctx.triggered_id == 'dropdown_legend_update':
+            error = 'LEGEND DATA UPDATE'
+            color = 'success'
+            # Update legend data
+            legend_data = name_input
+            # No update to title data or name input
+            title_data = no_update
+            name_input = no_update
+            open1 = True
+        # If title update button is pressed
+        elif ctx.triggered_id == 'dropdown_title_update':
+            error = 'LEGEND DATA UPDATE'
+            color = 'success'
+            # Update title data
+            title_data = name_input
+            # No update to legend data or name input
+            name_input = no_update
+            legend_data = no_update
+            open1 = True
+            error = 'TITLE DATA UPDATED'
+
+        # If clear dropdown pressed clear input box
+        elif ctx.triggered_id == 'dropdown_clear':
+            # Clear title and legend data
+            title_data = None
+            legend_data = None
+            # Clear input box
+            name_input = ''
+            open1 = True
+            color = 'success'
+            error = 'LEGEND AND TITLE DATA CLEARED'
+
+        else:
+            # Else no update to any values
+            title_data = no_update
+            name_input = no_update
+            legend_data = no_update
+            error = no_update
+            color = no_update
+            open1 = False
+
+        # Return name, legend and title data
+        return name_input, legend_data, title_data, error, color, open1
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        color = 'danger'
+
+        return no_update, no_update, no_update, error, color, True
+
+# Callback 21
+# Callback which updates dropdowns
+@app.callback(
+    Output(component_id="File", component_property='options'),
+    Output(component_id='Vect', component_property='options'),
+    Output(component_id="file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="vel_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="clear_file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id="upload_file_checklist", component_property='options', allow_duplicate=True),
+    Output(component_id='DataSet_TI', component_property='options'),
+    Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id='filestorage', component_property='data'),
+    Input(component_id='filename_filepath', component_property='data'),
+    prevent_initial_call=True)
+
+def update_dropdowns1(data, filename_filepath_upload_data):
+
+    # Try/Except, used to catch any errors not considered
+    try:
+        if filename_filepath_upload_data is not None:
+            upload_file_checklist = filename_filepath_upload_data[0]
+        else:
+            upload_file_checklist = []
+
+
+        if data is None:
+            # If the data is None, set all dropdown options to empty lists
+            vect_options = []
+            file_dropdown_options = []
+            file_checklist = []
+            clear_file_check = []
+            vel_checklist = []
+            DataDrop_TI = []
+        else:
+            # If the data is not None, set the dropdown options and checklists accordingly
+            vect_options = ['U1','Ux', 'Uy', 'Uz']
+            vel_checklist = ['t','U1','Ux', 'Uy', 'Uz']
+            file_dropdown_options = data[0]
+            file_checklist = data[0]
+            DataDrop_TI = data[0]
+            clear_file_check = data[0]
+
+        # Return the updated dropdown options and checklists
+        return file_dropdown_options, vect_options, file_checklist, vel_checklist, clear_file_check,upload_file_checklist, DataDrop_TI, no_update, no_update, False,
+
+    except Exception as e:
+
+        # If any error display message
+        error = str(e)
+        color = 'danger'
+
+        # Return the updated dropdown options and checklists
+        return no_update, no_update, no_update, no_update, no_update,no_update, no_update, error, color, False,
 
 # Run app
 if __name__== '__main__':
