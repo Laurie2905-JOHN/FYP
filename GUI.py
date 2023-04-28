@@ -1846,6 +1846,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                             error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
                                         'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
                             if filename == '':
+                                filename = file
                                 error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
                                         'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
                         else:
