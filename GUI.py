@@ -571,7 +571,7 @@ app.layout = dbc.Container([
                         className="primary fw-bold"
                     ),
                     # Allow multiple files to be uploaded
-                    multiple=True,
+                    multiple=False,
                 ),
                 dbc.Alert(
                     id='calAlert',
@@ -841,6 +841,7 @@ def update_Workspace(n_clicks, Workspace_input):
     prevent_initial_call=True
 )
 def clear_Workspace(n_clicks, Workspace_data):
+
     try:
         # If the callback was triggered by the 'Workspace_clear' button
         if ctx.triggered_id == 'Workspace_clear':
@@ -860,7 +861,7 @@ def clear_Workspace(n_clicks, Workspace_data):
                 error_files = []
 
                 if not os.path.exists(Workspace_data):
-                    error_temp = 'NO WORKSPACE TO CLEAR'
+                    error_temp = 'WORKSPACE NO LONGER EXISTS'
                     color_temp = 'danger'
                     error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
                     color_perm = 'danger'
@@ -932,14 +933,18 @@ def clear_Workspace(n_clicks, Workspace_data):
 )
 def update_Workspace_Alert(Workspace_data):
 
-    if Workspace_data is None:
-        alert_work = 'NO WORKSPACE SELECTED'
-        color1 = 'danger'
-    else:
-        alert_work = 'WORKSPACE: ' + Workspace_data
-        color1 = 'primary'
+    try:
 
-    return alert_work, color1, True
+        if Workspace_data is None:
+            alert_work = 'NO WORKSPACE SELECTED'
+            color1 = 'danger'
+        else:
+            alert_work = 'WORKSPACE: ' + Workspace_data
+            color1 = 'primary'
+
+        return alert_work, color1, True
+    except Exception as e:
+        return str(e), 'danger', True
 
 # Callback 4
 # Define callback function for updating alert text based on calibration file data.
@@ -950,14 +955,16 @@ def update_Workspace_Alert(Workspace_data):
     Input(component_id="Cal_storage", component_property='data'),
 )
 def update_cal_text(Cal_data):
+
     try:
         # If there's no calibration data provided
         if Cal_data is None:
             alert_cal = 'NO CALIBRATION FILE SELECTED'
             color = 'danger'
         else:
+
             # Create a success message with the name of the selected calibration file
-            alert_cal = Cal_data[0][0] + ' Selected'
+            alert_cal = Cal_data[0] + ' Selected'
             color = 'primary'
 
         # Return updated values for the alert component
@@ -984,36 +991,40 @@ def cal_analysis(filename, contents):
 
     try:
 
-        if filename or contents is None:
+        if filename == '' or contents == '':
             # If data is none or empty prevent error
-            error = 'PLEASE TRY AGAIN'
+            error = 'PLEASE TRY AGAIN AND CHECK THE FILE'
             color = 'danger'
             cal_data = no_update
         else:
             # Separate the content type and actual data from the contents
-            content_type, content_string = contents[0].split(',')
+            content_type, content_string = contents.split(',')
 
             # Decode the base64 encoded content string
             decoded = base64.b64decode(content_string)
-
             # Check if the file is an Excel file
-            if 'xlsx' or 'xlx' in filename:
-                # Read the Excel file into a pandas DataFrame
-                cal_data = pd.read_excel(io.BytesIO(decoded))
 
-                # Convert the DataFrame to a dictionary and remove NaN values
-                cal_data = cal_data.to_dict('list')
-                cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
-                                      cal_data.items()}]
-
-                # Prepare the success message
-                error = filename[0] + ' UPLOADED SUCCESSFULLY'
-                color = 'success'
-            else:
+            if filename.split('.')[1] != 'xlsx' or 'xlx':
+                print(filename.split('.')[1])
                 # If the file is not an Excel file, display an error message
                 error = 'PLEASE UPLOAD AN EXCEL FILE'
                 color = 'danger'
                 cal_data = no_update
+            else:
+                # Read the Excel file into a pandas DataFrame
+                cal_data = pd.read_excel(io.BytesIO(decoded))
+
+                print(cal_data)
+
+                # Convert the DataFrame to a dictionary and remove NaN values
+                cal_data = cal_data.to_dict('list')
+                cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
+                                       cal_data.items()}]
+
+                # Prepare the success message
+                error = filename + ' UPLOADED SUCCESSFULLY'
+                color = 'success'
+
 
         # Return updated values for UI components
         return cal_data, error, color, True
@@ -1118,7 +1129,7 @@ def clear_upload(n_clicks):
     # Use try-except block to handle any unexpected errors
     try:
         # Check if the clear file upload button is clicked
-        if ctx.triggered_id == 'dropdown_BARN_clear'
+        if ctx.triggered_id == 'dropdown_BARN_clear':
             # Clear the file upload checklist and display a success message
             filepath_input = None
             error = 'UPLOAD FILES CLEARED'
