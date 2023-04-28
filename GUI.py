@@ -25,8 +25,6 @@ def update_values(large_val, small_val):
     Update large and small input values, ensuring large_val is not less than small_val.
     If both inputs are None, prevent update.
     """
-    if large_val is None or small_val is None:
-        raise PreventUpdate
 
     if large_val < small_val:
         large_val = small_val
@@ -866,9 +864,9 @@ def clear_Workspace(n_clicks, Workspace_data):
                     error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
                     color_perm = 'danger'
                     Workspace_input = None
-                    Workspace_Clear_data = False
-                    Upload_Clear_data = False
-                    filedata_Clear_data = False
+                    Workspace_Clear_data = True
+                    Upload_Clear_data = True
+                    filedata_Clear_data = True
 
                 else:
 
@@ -1004,27 +1002,34 @@ def cal_analysis(filename, contents):
             decoded = base64.b64decode(content_string)
             # Check if the file is an Excel file
 
-            if filename.split('.')[1] != 'xlsx' or 'xlx':
-                print(filename.split('.')[1])
+            if filename.split('.')[1] != 'xlsx':
                 # If the file is not an Excel file, display an error message
-                error = 'PLEASE UPLOAD AN EXCEL FILE'
+                error = 'PLEASE UPLOAD A .xlsx FILE'
                 color = 'danger'
                 cal_data = no_update
             else:
                 # Read the Excel file into a pandas DataFrame
                 cal_data = pd.read_excel(io.BytesIO(decoded))
 
-                print(cal_data)
-
                 # Convert the DataFrame to a dictionary and remove NaN values
                 cal_data = cal_data.to_dict('list')
-                cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
+
+                if list(cal_data.keys()) == ['Dynfit', 'Yawfit', 'Ldyn1', 'Ldyn2', 'Lyaw1', 'Lyaw2','Ldyn0','Zero',\
+                                             'Zero1', 'Zero2', 'Zero3', 'Zero4']:
+
+                    cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
                                        cal_data.items()}]
 
-                # Prepare the success message
-                error = filename + ' UPLOADED SUCCESSFULLY'
-                color = 'success'
+                    # Prepare the success message
+                    error = filename + ' UPLOADED SUCCESSFULLY'
+                    color = 'success'
 
+                else:
+
+                    cal_data = no_update
+                    # Prepare the success message
+                    error = 'PLEASE TRY AGAIN AND CHECK THE FILE HAS THE CORRECT FORMAT'
+                    color = 'success'
 
         # Return updated values for UI components
         return cal_data, error, color, True
@@ -1073,7 +1078,7 @@ def update_file_to_upload_checklist(n_clicks, filepath1, filename_filepath_data)
                     filepath_input = no_update
                     filename_filepath_data = no_update
                 elif os.path.splitext(filename1)[1] not in ('.txt', '.csv'):
-                    error = 'PLEASE UPLOAD .TXT OR CSV FILES'
+                    error = 'PLEASE UPLOAD .TXT OR .CSV FILES'
                     color = 'danger'
                     filepath_input = None
                     filename_filepath_data = no_update
@@ -1105,7 +1110,6 @@ def update_file_to_upload_checklist(n_clicks, filepath1, filename_filepath_data)
                             color = 'success'
                             filepath_input = None
                             filename_filepath_data = [combined_filenames, combined_filepaths]
-
             return filepath_input, filename_filepath_data, error, color, True
 
     except Exception as e:
@@ -1156,7 +1160,11 @@ def clear_upload(n_clicks):
         Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filename_filepath', component_property='data', allow_duplicate=True),
-        Output(component_id='Loading_variable_Process', component_property='data', allow_duplicate=True)
+        Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
+        Output(component_id='Loading_variable_Process', component_property='data', allow_duplicate=True),
+        Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
+        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True)
     ],
     [
         Input(component_id='newfile', component_property='n_clicks'),
@@ -1174,190 +1182,203 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
     try:
         # Check if the "newfile" button was clicked
         if "newfile" == ctx.triggered_id:
+            upload_file_checklist = []
 
-            if os.path.exists(Workspace_data):
-
-                # Initialise data dictionary if it is None
-                if file_data is None:
-                    file_data = [[], [], [], [], [], [], []]
-
-                # Check if no files were uploaded
-                if filenames is None or filenames == []:
-                    error_temp = 'NO FILES SELECTED FOR UPLOAD'
-                    color_temp = "danger"
-                    filename_filepath_data = no_update
-                    # Return the same data if no files were uploaded
-                    file_data = no_update
-
-                # Check if no sample rate was selected
-                elif SF is None or SF == 0:
-                    error_temp = 'NO SAMPLE RATE SELECTED'
-                    color_temp = "danger"
-                    filename_filepath_data = no_update
-                    # Return the same data if no files were uploaded
-                    file_data = no_update
-
-                # Check if no workspace was selected
-                elif Workspace_data is None:
-                    error_temp = 'NO WORKSPACE SELECTED'
-                    color_temp = "danger"
-                    filename_filepath_data = no_update
-                    # Return the same data if no files were uploaded
-                    file_data = no_update
-
-                else:
-                    # Get existing data from file_data
-                    Oldfilenames = file_data[0]
-                    old_dtype_shape = file_data[1]
-                    Old_calData = file_data[2]
-                    Old_SF = file_data[3]
-                    Old_filepath = file_data[4]
-                    Old_min = file_data[5]
-                    Old_max = file_data[6]
-
-                    # Make copies of existing data
-                    combined_filenames = Oldfilenames.copy()
-                    combined_dtype_shape = old_dtype_shape.copy()
-                    combined_CalData = Old_calData.copy()
-                    combined_SF = Old_SF.copy()
-                    combined_filepath = Old_filepath.copy()
-                    combined_min = Old_min.copy()
-                    combined_max = Old_max.copy()
-
-                    # Initialise lists for processing files
-                    new_value = []  # List of uploaded file names which aren't repeated
-                    repeated_value = []  # List of repeated file names
-                    error_file = []  # List of files with invalid formats
-
-                    # Define function to save array as memmap
-                    def save_array_memmap(array, filename, folder_path):
-                        filepath = os.path.join(folder_path, filename)
-                        dtype = str(array.dtype)
-                        shape = array.shape
-                        array_memmap = np.memmap(filepath, dtype=dtype, shape=shape, mode='w+')
-                        array_memmap[:] = array[:]
-                        del array_memmap
-                        return shape, dtype
-
-                    # Define function to get a unique path for each file
-                    def get_unique_path(base_path, name):
-                        counter = 1
-                        new_name = name
-
-                        while os.path.exists(os.path.join(base_path, new_name)):
-                            new_name = f"{name} ({counter})"
-                            counter += 1
-
-                        return os.path.normpath(os.path.join(base_path, new_name))
-
-                    # Loop through uploaded files and process them
-                    for i, value in enumerate(filenames):
-                        # Check if the file name is already in the combined list
-                        if value not in combined_filenames:
-                            try:
-                                # Process file data
-                                Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
-
-                                # Create workspace folder if it doesn't exist
-                                Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
-                                if not os.path.exists(Workspace_Path):
-                                    os.mkdir(Workspace_Path)
-
-                                # Get unique file path for saving data
-                                file_path = get_unique_path(Workspace_Path, value)
-                                os.makedirs(file_path, exist_ok=True)
-
-                                # Update data with new processed file data
-                                combined_max.append(np.amax(Barn_data['t']))
-                                combined_min.append(np.amin(Barn_data['t']))
-
-                                save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
-                                save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
-                                save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
-                                save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
-                                shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
-
-                                new_value.append(value)
-                                combined_filenames.append(value)
-                                combined_dtype_shape.append(shape_dtype)
-                                combined_CalData.append(cal_data[0][0])
-                                combined_SF.append(SF)
-                                combined_filepath.append(file_path)
-
-                            # If there's an error processing the file, add it to the error list
-                            except Exception as e:
-                                error_file.append(value)
-                        else:
-                            repeated_value.append(value)
-
-                    # Update file_data with combined data
-                    file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath,
-                                 combined_min, combined_max]
-
-                    # Update uploaded file data
-                    upload_filename = filename_filepath_data[0]
-                    upload_filepath = filename_filepath_data[1]
-
-                    # Delete selected data
-                    for value in filenames:
-                        i = upload_filename.index(value)
-                        upload_filename.remove(value)
-                        del upload_filepath[i]
-
-                    filename_filepath_data = [upload_filename, upload_filepath]
-
-                    # Display error messages if there are any errors
-                    if repeated_value != [] or error_file != []:
-                        error_list_complete = repeated_value + error_file
-
-                        if new_value == []:
-                            error_start = 'THERE WAS AN ERROR PROCESSING ALL FILES: \n ' \
-                                          '(' + ', '.join(error_list_complete) + ').'
-                        else:
-                            error_start = 'THERE WAS AN ERROR PROCESSING FILES: \n ' \
-                                          '(' + ', '.join(error_list_complete) + ').'
-
-                        error_repeat = ' PLEASE CHECK FILES: ' \
-                                       '(' + ', '.join(repeated_value) + ') ARE NOT REPEATED.'
-
-                        error_process = ' PLEASE CHECK: \n' \
-                                        '(' + ', '.join(error_file) + ') FOR ERRORS.'
-
-                        # If there are errors in files and repeated files
-                        if repeated_value != [] and error_file != []:
-                            error_temp = error_start + error_repeat + error_process
-                            color_temp = "danger"
-                        elif error_file != [] and repeated_value == []:
-                            error_temp = error_start + '\n' + error_process
-                            color_temp = "danger"
-                        elif error_file == [] and repeated_value != []:
-                            error_temp = error_start + '\n' + error_repeat
-                            color_temp = "danger"
-                    else:
-                        # If no errors display success message
-                        error_temp = ', '.join(new_value) + ' processed'
-                        color_temp = "success"
-
-                    # Set loading variable to 'done' when processing is complete
-                loading_variable = 'done'
+            # Check if no workspace was selected
+            if Workspace_data is None:
+                error_temp = 'NO WORKSPACE SELECTED'
+                color_temp = "danger"
+                open_perm = False
+                filename_filepath_data = no_update
+                # Return the same data if no files were uploaded
+                file_data = no_update
                 error_perm = no_update
                 color_perm = no_update
-                open_perm = False
-
-            # If workspace doesnt exist display error messages
-            else:
-                file_data = no_update
-                error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
-                color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
-                color_perm = 'danger'
-                open_perm = True
-                filename_filepath_data = no_update
                 loading_variable = no_update
 
-            # Return output values
-            return file_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, filename_filepath_data,\
-                loading_variable
+            else:
+
+                if os.path.exists(Workspace_data):
+
+                    # Initialise data dictionary if it is None
+                    if file_data is None:
+                        file_data = [[], [], [], [], [], [], []]
+
+                    # Check if no files were uploaded
+                    if filenames is None or filenames == []:
+                        error_temp = 'NO FILES SELECTED FOR UPLOAD'
+                        color_temp = "danger"
+                        filename_filepath_data = no_update
+                        # Return the same data if no files were uploaded
+                        file_data = no_update
+
+                    # Check if no sample rate was selected
+                    elif SF is None or SF == 0:
+                        error_temp = 'NO SAMPLE RATE SELECTED'
+                        color_temp = "danger"
+                        filename_filepath_data = no_update
+                        # Return the same data if no files were uploaded
+                        file_data = no_update
+
+                    else:
+                        # Get existing data from file_data
+                        Oldfilenames = file_data[0]
+                        old_dtype_shape = file_data[1]
+                        Old_calData = file_data[2]
+                        Old_SF = file_data[3]
+                        Old_filepath = file_data[4]
+                        Old_min = file_data[5]
+                        Old_max = file_data[6]
+
+                        # Make copies of existing data
+                        combined_filenames = Oldfilenames.copy()
+                        combined_dtype_shape = old_dtype_shape.copy()
+                        combined_CalData = Old_calData.copy()
+                        combined_SF = Old_SF.copy()
+                        combined_filepath = Old_filepath.copy()
+                        combined_min = Old_min.copy()
+                        combined_max = Old_max.copy()
+
+                        # Initialise lists for processing files
+                        new_value = []  # List of uploaded file names which aren't repeated
+                        repeated_value = []  # List of repeated file names
+                        error_file = []  # List of files with invalid formats
+
+                        # Define function to save array as memmap
+                        def save_array_memmap(array, filename, folder_path):
+                            filepath = os.path.join(folder_path, filename)
+                            dtype = str(array.dtype)
+                            shape = array.shape
+                            array_memmap = np.memmap(filepath, dtype=dtype, shape=shape, mode='w+')
+                            array_memmap[:] = array[:]
+                            del array_memmap
+                            return shape, dtype
+
+                        # Define function to get a unique path for each file
+                        def get_unique_path(base_path, name):
+                            counter = 1
+                            new_name = name
+
+                            while os.path.exists(os.path.join(base_path, new_name)):
+                                new_name = f"{name} ({counter})"
+                                counter += 1
+
+                            return os.path.normpath(os.path.join(base_path, new_name))
+
+                        # Loop through uploaded files and process them
+                        for i, value in enumerate(filenames):
+                            # Check if the file name is already in the combined list
+                            if value not in combined_filenames:
+                                try:
+                                    # Process file data
+                                    Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
+
+                                    # Create workspace folder if it doesn't exist
+                                    Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
+                                    if not os.path.exists(Workspace_Path):
+                                        os.mkdir(Workspace_Path)
+
+                                    # Get unique file path for saving data
+                                    file_path = get_unique_path(Workspace_Path, value)
+                                    os.makedirs(file_path, exist_ok=True)
+
+                                    # Update data with new processed file data
+                                    combined_max.append(np.amax(Barn_data['t']))
+                                    combined_min.append(np.amin(Barn_data['t']))
+
+                                    save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
+                                    save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
+                                    save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
+                                    save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
+                                    shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
+
+                                    new_value.append(value)
+                                    combined_filenames.append(value)
+                                    combined_dtype_shape.append(shape_dtype)
+                                    combined_CalData.append(cal_data[0][0])
+                                    combined_SF.append(SF)
+                                    combined_filepath.append(file_path)
+
+                                # If there's an error processing the file, add it to the error list
+                                except Exception as e:
+                                    error_file.append(value)
+                            else:
+                                repeated_value.append(value)
+
+                        # Update file_data with combined data
+                        file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath,
+                                     combined_min, combined_max]
+
+                        # Update uploaded file data
+                        upload_filename = filename_filepath_data[0]
+                        upload_filepath = filename_filepath_data[1]
+
+                        # Delete selected data
+                        for value in filenames:
+                            i = upload_filename.index(value)
+                            upload_filename.remove(value)
+                            del upload_filepath[i]
+
+                        filename_filepath_data = [upload_filename, upload_filepath]
+
+                        # Display error messages if there are any errors
+                        if repeated_value != [] or error_file != []:
+                            error_list_complete = repeated_value + error_file
+
+                            if new_value == []:
+                                error_start = 'THERE WAS AN ERROR PROCESSING ALL FILES: \n ' \
+                                              '(' + ', '.join(error_list_complete) + ').'
+                            else:
+                                error_start = 'THERE WAS AN ERROR PROCESSING FILES: \n ' \
+                                              '(' + ', '.join(error_list_complete) + ').'
+
+                            error_repeat = ' PLEASE CHECK FILES: ' \
+                                           '(' + ', '.join(repeated_value) + ') ARE NOT REPEATED.'
+
+                            error_process = ' PLEASE CHECK: \n' \
+                                            '(' + ', '.join(error_file) + ') FOR ERRORS.'
+
+                            # If there are errors in files and repeated files
+                            if repeated_value != [] and error_file != []:
+                                error_temp = error_start + error_repeat + error_process
+                                color_temp = "danger"
+                            elif error_file != [] and repeated_value == []:
+                                error_temp = error_start + '\n' + error_process
+                                color_temp = "danger"
+                            elif error_file == [] and repeated_value != []:
+                                error_temp = error_start + '\n' + error_repeat
+                                color_temp = "danger"
+                        else:
+                            # If no errors display success message
+                            error_temp = ', '.join(new_value) + ' PROCESSED'
+                            color_temp = "success"
+
+                        # Set loading variable to 'done' when processing is complete
+                    loading_variable = 'done'
+                    error_perm = no_update
+                    color_perm = no_update
+                    open_perm = False
+                    Workspace_store_clear = False
+                    filestorage_clear = False
+                    filename_filepath_clear = False
+
+                # If workspace doesnt exist display error messages
+                else:
+                    file_data = no_update
+                    error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
+                    color_temp = 'danger'
+                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    color_perm = 'danger'
+                    open_perm = True
+                    Workspace_store_clear = True
+                    filestorage_clear = True
+                    filename_filepath_clear = True
+                    filename_filepath_data = no_update
+                    loading_variable = no_update
+
+        # Return output values
+        return file_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, filename_filepath_data,\
+            upload_file_checklist, loading_variable, Workspace_store_clear, filestorage_clear, filename_filepath_clear
 
     except Exception as e:
         # If any error display message
@@ -1365,8 +1386,13 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
         color_temp = 'danger'
         error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
         color_perm = 'danger'
+        upload_file_checklist = []
+        Workspace_store_clear = True
+        filestorage_clear = True
+        filename_filepath_clear = True
 
-        return no_update, error_temp, color_temp, True, error_perm, color_perm, True, no_update, no_update
+    return no_update, error_temp, color_temp, True, error_perm, color_perm, True, no_update, upload_file_checklist,\
+        no_update, Workspace_store_clear, filestorage_clear, filename_filepath_clear
 
 # Callback 9
 # Callback to clear data
@@ -1374,100 +1400,86 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
         Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
         Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
         Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        Output(component_id='filename_filepath', component_property='clear_data'),
+        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
+        Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="clear_file_checklist", component_property='value'),
-        State(component_id="all_clear_file_checklist", component_property='value'),
         prevent_initial_call=True)
 
-def clear_files(n_clicks, maindata, whatclear, allclear):
+def clear_files(n_clicks, maindata, whatclear):
 
-    # If the clear files button is pressed, prevent update
-    if "clear_files" != ctx.triggered_id:
-        raise PreventUpdate
-
-    # Try/Except, used to catch any errors not considered
+    # # Try/Except, used to catch any errors not considered
     try:
 
-        # If no files selected display error message
-        if allclear == ['All'] and len(whatclear) == 0:
+        # If the clear files button is pressed, prevent update
+        if "clear_files" == ctx.triggered_id:
 
-            # display bad error message
-            error = 'NO FILES DELETED'
-            color = "danger"
+            # If no files selected display error message
+            if len(whatclear) == 0:
 
-            # No update to new main data
-            newmaindata = no_update
+                clear_file_checklist = no_update
 
-            clear_data_main = True
+                # display bad error message
+                error = 'NO FILES DELETED'
+                color = "danger"
 
-            clear_file_initial = True
-
-        else:
-
-            file_path = maindata[4]
-            deleted_files = []
-
-            try:
-
-                # Iterate through the selected files to be deleted
-                for what in whatclear:
-                    i = maindata[0].index(what)
-                    if os.path.isdir(file_path[i]):
-                        # delete the folder and its contents recursively
-                        shutil.rmtree(file_path[i])
-                        deleted_files.append(what)
-                        for j in range(len(maindata)):
-                            del maindata[j][i]
-                error_try = ''
-
-            except Exception as e:
-                error_try = e
-
-            # Assign new data
-            newmaindata = maindata
-
-            if allclear == ['All'] and len(whatclear) > 0:
-
-                clear_data_main = True
-
-                clear_file_initial = True
-
-                # display good error message
-                error = 'ALL FILES CLEARED' + str(error_try)
-
-                if error_try != '':
-                    color = "danger"
-                else:
-                    color = "success"
-
-            else:
-
-                # display good error message
-                error = 'FILES CLEARED: ' + ', '.join(deleted_files) + str(error_try)
-
-                if error_try != '':
-                    color = "danger"
-                else:
-                    color = "success"
+                # No update to new main data
+                newmaindata = no_update
 
                 clear_data_main = False
 
-                clear_file_initial = True
+                clear_file_initial = False
 
-        # Return required values
-        return error, color, True, newmaindata, clear_data_main, clear_file_initial,
+            elif len(whatclear) > 0:
+
+                file_path = maindata[4]
+                deleted_files = []
+
+                try:
+
+                    # Iterate through the selected files to be deleted
+                    for what in whatclear:
+                        i = maindata[0].index(what)
+                        if os.path.isdir(file_path[i]):
+                            # delete the folder and its contents recursively
+                            shutil.rmtree(file_path[i])
+                            deleted_files.append(what)
+                            for j in range(len(maindata)):
+                                del maindata[j][i]
+                    error_try = ''
+
+                except Exception as e:
+                    error_try = ' ' + str(e)
+
+                # Assign new data
+                newmaindata = maindata
+                clear_file_initial = True
+                clear_data_main = False
+
+                if error_try != '':
+                    color = "danger"
+                else:
+                    color = "success"
+
+                error = 'FILES CLEARED: ' + ','.join(deleted_files) + error_try
+
+                clear_file_checklist = []
+
+            # Return required values
+            return error, color, True, newmaindata, clear_data_main, clear_file_initial, clear_file_checklist
 
     except Exception as e:
 
         error = str(e)
         color = 'danger'
-
         # Return required values
-        return error, color, True, no_update, no_update, no_update,
+        return error, color, True, no_update, no_update, no_update, no_update
 
 # Callback 10
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
@@ -1617,15 +1629,18 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 
 def update_vals(small_val, large_val):
 
+    if large_val is None or small_val is None:
+        raise PreventUpdate
+
     # Try/Except, used to catch any errors not considered
     try:
+
         large_val, small_val = update_values(large_val, small_val)
 
         # Return the updated large and small input values
-        return large_val, small_val, no_update, no_update, False,
+        return large_val, small_val, no_update, no_update, no_update,
 
     except Exception as e:
-
         # If any error display message
         error = str(e)
         color = 'danger'
@@ -1638,6 +1653,9 @@ def update_vals(small_val, large_val):
         Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='Loading_variable_Download', component_property='data'),
         Input(component_id="btn_download", component_property='n_clicks'),
         State(component_id='Workspace_store', component_property='data'),
@@ -1650,178 +1668,194 @@ def update_vals(small_val, large_val):
         prevent_initial_call=True)
 
 def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value, file, file_data):
-    try:
 
+    try:
         # If download button is pressed
         if "btn_download" == ctx.triggered_id:
 
-            Download_Path = os.path.join(Workspace_data, 'Downloads')
 
-            # Check if the folder exists
-            if not os.path.exists(Download_Path):
-                # Create the folder
-                os.mkdir(Download_Path)
+            if not os.path.exists(Workspace_data):
 
-            # If no file selected display error message
-            if file is None:
-
-                error = 'NO FILE SELECTED'
-
-                color = 'danger'
-
-            # If quantity is not picked
-            elif vector_value == [] or vector_value is None:
-
-                error = 'NO QUANTITY SELECTED'
-
-                color = 'danger'
+                error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
+                color_temp = 'danger'
+                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                color_perm = 'danger'
+                open_perm = True
+                Loading_variable = 'done'
 
             else:
 
-                # Load requested data sets
-                i = file_data[0].index(file)
+                error_perm = no_update
+                color_perm = no_update
+                open_perm = no_update
 
-                numpy_vect_data = []
+                Download_Path = os.path.join(Workspace_data, 'Downloads')
 
-                def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                    filepath = os.path.join(folder_path, filename)
-                    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+                # Check if the folder exists
+                if not os.path.exists(Download_Path):
+                    # Create the folder
+                    os.mkdir(Download_Path)
 
-                    if row_numbers == 'all':
-                        loaded_data = mapped_data[:]
-                    else:
-                        loaded_data = mapped_data[row_numbers]
+                # If no file selected display error message
+                if file is None:
 
-                    return loaded_data
+                    error_temp = 'NO FILE SELECTED'
 
-                file_path = file_data[4][i]
+                    color_temp = 'danger'
 
-                shape_dtype = file_data[1][i]
+                # If quantity is not picked
+                elif vector_value == [] or vector_value is None:
 
-                shape, dtype = shape_dtype
+                    error_temp = 'NO QUANTITY SELECTED'
 
-                t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
-
-                min1 = file_data[5][i]
-                max1 = file_data[6][i]
-
-                # Error messages
-                smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                               ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
-
-                bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
-                             ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
-
-                both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
-                               ' THE AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                       '(' + min1 + ' TO ' + max1 +')'
-
-                both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
-
-                # Cut data based on conditions and assign error message
-                if smallt is None and bigt is None:
-                    bigt = max1
-                    smallt = min1
-                    error_cut = both_t_error
-
-                elif smallt is None and bigt is not None:
-                    smallt = min1
-                    error_cut = smallt_error
-
-                elif bigt is None and smallt is not None:
-                    bigt = max1
-                    error_cut = bigt_error
+                    color_temp = 'danger'
 
                 else:
 
-                    if smallt < min1 and bigt > max1:
-                        smallt = min1
+                    # Load requested data sets
+                    i = file_data[0].index(file)
+
+                    numpy_vect_data = []
+
+                    def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                        filepath = os.path.join(folder_path, filename)
+                        mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+
+                        if row_numbers == 'all':
+                            loaded_data = mapped_data[:]
+                        else:
+                            loaded_data = mapped_data[row_numbers]
+
+                        return loaded_data
+
+                    file_path = file_data[4][i]
+
+                    shape_dtype = file_data[1][i]
+
+                    shape, dtype = shape_dtype
+
+                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+
+                    min1 = file_data[5][i]
+                    max1 = file_data[6][i]
+
+                    # Error messages
+                    smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
+                                   ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
+
+                    bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
+                                 ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ min1 +' TO ' + max1 +')'
+
+                    both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
+                                   ' THE AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                           '(' + min1 + ' TO ' + max1 +')'
+
+                    both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
+
+                    # Cut data based on conditions and assign error message
+                    if smallt is None and bigt is None:
                         bigt = max1
+                        smallt = min1
                         error_cut = both_t_error
 
-                    elif smallt < min1:
-                        bigt = min1
+                    elif smallt is None and bigt is not None:
+                        smallt = min1
                         error_cut = smallt_error
 
-
-                    elif bigt > max1:
+                    elif bigt is None and smallt is not None:
                         bigt = max1
                         error_cut = bigt_error
 
                     else:
-                        error_cut = both_t_NO_error
 
-                # Assign mask based on condition
-                mask = (t >= smallt) & (t <= bigt)
-                # From mask calculated row numbers
-                row_numbers = np.where(mask)[0].tolist()
-                # Load requested data
-                for vector in vector_value:
-                    if vector == 't':
-                        numpy_vect_data.append(t[mask])
-                    elif vector != 't':
-                        numpy_vect_data.append(
-                            load_array_memmap(vector + '.dat', file_path, dtype=dtype, shape=shape[0],
-                                              row_numbers=row_numbers))
+                        if smallt < min1 and bigt > max1:
+                            smallt = min1
+                            bigt = max1
+                            error_cut = both_t_error
 
-                # Concatenate the arrays
-                concatenated_array = np.column_stack(numpy_vect_data)
-                concatenated_array1 = np.append([vector_value],concatenated_array,  axis=0)
+                        elif smallt < min1:
+                            bigt = min1
+                            error_cut = smallt_error
 
-                # Assigning filenames
-                if selected_name is None or selected_name == '':
-                    filename = file
-                    error_special = ''
-                else:
-                    # Remove special characters from filename
-                    filename = re.sub(r'[^\w\s\-_]+', '',selected_name)
-                    # Assign error message
-                    if filename != selected_name:
-                        error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
-                                    'THE FILE HAS BEEN SAVED AS:' + filename + '.'
-                        if filename == '':
-                            error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
-                                    'THE FILE HAS BEEN SAVED AS:' + filename + '.'
-                    else:
+
+                        elif bigt > max1:
+                            bigt = max1
+                            error_cut = bigt_error
+
+                        else:
+                            error_cut = both_t_NO_error
+
+                    # Assign mask based on condition
+                    mask = (t >= smallt) & (t <= bigt)
+                    # From mask calculated row numbers
+                    row_numbers = np.where(mask)[0].tolist()
+                    # Load requested data
+                    for vector in vector_value:
+                        if vector == 't':
+                            numpy_vect_data.append(t[mask])
+                        elif vector != 't':
+                            numpy_vect_data.append(
+                                load_array_memmap(vector + '.dat', file_path, dtype=dtype, shape=shape[0],
+                                                  row_numbers=row_numbers))
+
+                    # Concatenate the arrays
+                    concatenated_array = np.column_stack(numpy_vect_data)
+                    concatenated_array1 = np.append([vector_value],concatenated_array,  axis=0)
+
+                    # Assigning filenames
+                    if selected_name is None or selected_name == '':
+                        filename = file
                         error_special = ''
+                    else:
+                        # Remove special characters from filename
+                        filename = re.sub(r'[^\w\s\-_]+', '',selected_name)
+                        # Assign error message
+                        if filename != selected_name:
+                            error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
+                                        'THE FILE HAS BEEN SAVED AS:' + filename + '.'
+                            if filename == '':
+                                error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
+                                        'THE FILE HAS BEEN SAVED AS:' + filename + '.'
+                        else:
+                            error_special = ''
 
-                # Function to generate a unique filename based on existing files in the directory
-                def get_unique_filename(base_path, name):
-                    counter = 1
-                    new_name = name
+                    # Function to generate a unique filename based on existing files in the directory
+                    def get_unique_filename(base_path, name):
+                        counter = 1
+                        new_name = name
 
-                    while os.path.isfile(os.path.join(base_path, new_name + '.csv')):
-                        new_name = f"{name} ({counter})"
-                        counter += 1
+                        while os.path.isfile(os.path.join(base_path, new_name + '.csv')):
+                            new_name = f"{name} ({counter})"
+                            counter += 1
 
-                    return os.path.normpath(os.path.join(base_path, new_name))
+                        return os.path.normpath(os.path.join(base_path, new_name))
 
-                # Get a unique filename for the CSV file to be saved
-                new_filename_path = get_unique_filename(Download_Path, filename)
+                    # Get a unique filename for the CSV file to be saved
+                    new_filename_path = get_unique_filename(Download_Path, filename)
 
-                # Save the concatenated array as a CSV file
-                np.savetxt(new_filename_path + '.csv', concatenated_array1, delimiter=",", fmt="%s")
+                    # Save the concatenated array as a CSV file
+                    np.savetxt(new_filename_path + '.csv', concatenated_array1, delimiter=",", fmt="%s")
 
-                # Prepare a message indicating the file path of the saved data
-                error_filepath = ' Data saved in: ' + new_filename_path + '.csv'
+                    # Prepare a message indicating the file path of the saved data
+                    error_filepath = ' Data saved in: ' + new_filename_path + '.csv'
 
-                # Combine error messages and set the alert color to 'primary'
-                error = error_cut + error_special + error_filepath
-                color = 'primary'
+                    # Combine error messages and set the alert color to 'primary'
+                    error_temp = error_cut + error_special + error_filepath
+                    color = 'primary'
 
-            # Update the loading status to 'done'
-            Loading_variable = 'done'
+                # Update the loading status to 'done'
+                Loading_variable = 'done'
 
         # Return error message, alert color, whether the alert should be open, and loading status
-        return error, color, True, Loading_variable
+        return error_temp, color_temp, True, error_perm, color_perm, open_perm, Loading_variable
 
     except Exception as e:
         # If any error occurs, display the error message and set the alert color to 'danger'
-        error = str(e)
-        color = 'danger'
+        error_temp = str(e)
+        color_temp = 'danger'
 
-    # Return error message, alert color, whether the alert should be open, and no update for the loading status
-    return error, color, True, no_update
+        # Return error message, alert color, whether the alert should be open, and no update for the loading status
+        return error_temp, color_temp, True, no_update, no_update, no_update, no_update,
 
 # Callback 15
 # Call back which updates the TI table time range to prevent error
