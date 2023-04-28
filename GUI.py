@@ -272,11 +272,11 @@ app.layout = dbc.Container([
                 dbc.Row([
                     # Input field for minimum time
                     dbc.Col(
-                        dbc.Input(id="time_small", min=0, type="number", placeholder="Min Time", debounce=True)
+                        dbc.Input(id="time_small", min=0, type="number", placeholder="Min Time")
                     ),
                     # Input field for maximum time
                     dbc.Col(
-                        dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time", debounce=True)
+                        dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time")
                     ),
                 ], align='center', justify='center'),
 
@@ -319,7 +319,6 @@ app.layout = dbc.Container([
                                 id="New_name",
                                 type='text',
                                 placeholder="Enter text to update legend or title",
-                                debounce=True
                             ),
                         ]),
                     ], direction="horizontal"),
@@ -398,10 +397,10 @@ app.layout = dbc.Container([
                     ),
 
                     # Input field for minimum time
-                    dbc.Input(id="small_t_TI", type="number", placeholder="Min Time", debounce=True),
+                    dbc.Input(id="small_t_TI", type="number", placeholder="Min Time"),
 
                     # Input field for maximum time
-                    dbc.Input(id="big_t_TI", type="number", placeholder="Max Time", debounce=True),
+                    dbc.Input(id="big_t_TI", type="number", placeholder="Max Time"),
 
                 ], gap=3),
 
@@ -494,7 +493,6 @@ app.layout = dbc.Container([
                     id="Workspace",
                     type='text',
                     placeholder="Enter Workspace Filepath",
-                    debounce=True
                 ),
 
             ]),
@@ -552,7 +550,6 @@ app.layout = dbc.Container([
                     id="submit_files",
                     type='text',
                     placeholder="Enter BARNACLE Filepath",
-                    debounce=True
                 ),
             ]),
             width=11,
@@ -594,7 +591,6 @@ app.layout = dbc.Container([
                     min=0,
                     type="number",
                     placeholder="Enter Sample Frequency",
-                    debounce=True
                 ),
                 html.Label(
                     "SELECT FILES TO PROCESS",
@@ -712,12 +708,12 @@ dbc.Row([
             dbc.Row([
                 # Input field for minimum time
                 dbc.Col(
-                    dbc.Input(id="small_t", type="number", placeholder="Min Time", debounce=True)
+                    dbc.Input(id="small_t", type="number", placeholder="Min Time")
                 ),
 
                 # Input field for maximum time
                 dbc.Col(
-                    dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time", debounce=True)
+                    dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time")
                 ),
 
             ], justify="center"),
@@ -728,11 +724,6 @@ dbc.Row([
 
 
     ], align='center', justify='center',className = 'mb-5'),
-
-
-
-
-
 
     # # Components for storing and downloading data
     dbc.Spinner(children = [dcc.Store(id='Loading_variable_Process', storage_type='memory')],color="primary",
@@ -1859,7 +1850,6 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                         # Concatenate the arrays
                         concatenated_array = np.column_stack(numpy_vect_data)
-
                         concatenated_array1 = np.append([vector_value],concatenated_array,  axis=0)
 
                         # Assigning filenames
@@ -1934,16 +1924,18 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
 def update_vals2(small_val, large_val):
 
+    if large_val is None or small_val is None:
+        raise PreventUpdate
+
     # Try/Except, used to catch any errors not considered
     try:
 
         large_val, small_val = update_values(large_val, small_val)
 
         # Return the updated large and small input values
-        return large_val, small_val, no_update, no_update, False,
+        return large_val, small_val, no_update, no_update, no_update,
 
     except Exception as e:
-
         # If any error display message
         error = str(e)
         color = 'danger'
@@ -1957,6 +1949,12 @@ def update_vals2(small_val, large_val):
      Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
      Output(component_id='TI_alert', component_property='color', allow_duplicate=True),
      Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
+     Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
+     Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
+     Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
+     Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
+     Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
+     Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
      Output(component_id='Loading_variable_Table', component_property='data', allow_duplicate=True)],
     [Input(component_id='TI_btn_download', component_property='n_clicks'),
      State(component_id='filestorage', component_property='data'),
@@ -1964,159 +1962,200 @@ def update_vals2(small_val, large_val):
      State(component_id="small_t_TI", component_property='value'),
      State(component_id="big_t_TI", component_property='value'),
      State(component_id='TI_Table', component_property='data'),
-     State(component_id='TI_Table', component_property='columns')])
+     State(component_id='TI_Table', component_property='columns'),
+     State(component_id='Workspace_store', component_property='data'),
+     ])
 # Define a function to calculate turbulence intensity and update the table
-def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data, column_data):
+def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data, column_data, Workspace_data):
     # Use try-except to catch any unexpected errors
     try:
         # Check if the button with ID "TI_btn_download" was clicked
         if "TI_btn_download" == ctx.triggered_id:
-            # If no dataset is chosen, show an error message and don't update the table data
-            if chosen_file is None:
-                error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check you have selected a dataset'
-                color = 'danger'
-                table_data = no_update
+
+            if Workspace_data is None:
+                error_temp = 'UPDATE WORKSPACE'
+                color_temp = 'danger'
+                error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                color_perm = 'danger'
+                open_perm = True
+                Loading_variable = 'done'
+                Workspace_store_clear = True
+                filestorage_clear = True
+                filename_filepath_clear = True
             else:
-                # Check if the inputted time range is correct
-                if small_TI == big_TI and small_TI is not None and big_TI is not None:
-                    error = 'TURBULENCE INTENSITY NOT CALCULATED. Please check that the inputted time range is correct'
-                    color = 'danger'
-                    table_data = no_update
+
+                # If workspace doesn't exist clear files
+                if not os.path.exists(Workspace_data):
+
+                    error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
+                    color_temp = 'danger'
+                    error_perm = 'PLEASE UPLOAD NEW WORKSPACE'
+                    color_perm = 'danger'
+                    open_perm = True
+                    Loading_variable = 'done'
+                    Workspace_store_clear = True
+                    filestorage_clear = True
+                    filename_filepath_clear = True
+
                 else:
-                    # Define a function to load data from a memmap file
-                    def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                        filepath = os.path.join(folder_path, filename)
-                        mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
 
-                        if row_numbers == 'all':
-                            loaded_data = mapped_data[:]
-                        else:
-                            loaded_data = mapped_data[row_numbers]
+                    error_perm = no_update
+                    color_perm = no_update
+                    open_perm = no_update
+                    Workspace_store_clear = no_update
+                    filestorage_clear = no_update
+                    filename_filepath_clear = no_update
 
-                        return loaded_data
-
-                    # Find the index of the chosen file in file_data list
-                    i = file_data[0].index(chosen_file)
-
-                    # Get shape and dtype information for the chosen file
-                    shape_dtype = file_data[1][i]
-                    shape, dtype = shape_dtype
-
-                    # Get the file path, min and max time values for the chosen file
-                    file_path = file_data[4][i]
-                    min1 = file_data[5][i]
-                    max1 = file_data[6][i]
-
-                    # Error messages
-                    smallt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE' \
-                                   ' REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
-                                   'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
-
-                    bigt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE' \
-                                 ' REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
-                                 'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
-
-                    both_t_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM' \
-                                   ' TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
-                                   'AVAILABLE TIME RANGE FOR SELECTED DATA: (' + min1 + ' TO ' + max1 + ')'
-
-                    both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
-
-                    # Cut data based on conditions
-                    if small_TI is None and big_TI is None:
-                        big_TI = max1
-                        small_TI = min1
-                        color = 'danger'
-                        error = both_t_error
-
-                    elif small_TI is None and big_TI is not None:
-                        small_TI = min1
-                        color = 'danger'
-                        error = smallt_error
-
-                    elif big_TI is None and small_TI is not None:
-                        big_TI = max1
-                        color = 'danger'
-                        error = bigt_error
-
+                    # If no dataset is chosen, show an error message and don't update the table data
+                    if chosen_file is None:
+                        error_temp = 'TURBULENCE INTENSITY NOT CALCULATED. PLEASE CHECK YOU HAVE SELECTED A DATASET'
+                        color_temp = 'danger'
+                        table_data = no_update
                     else:
-
-                        if small_TI < min1 and big_TI > max1:
-                            small_TI = min1
-                            big_TI = max1
-                            color = 'danger'
-                            error = both_t_error
-
-                        elif small_TI < min1:
-                            small_TI = min1
-                            color = 'danger'
-                            error = smallt_error
-
-
-                        elif big_TI > max1:
-                            big_TI = max1
-                            color = 'danger'
-                            error = bigt_error
-
+                        # Check if the inputted time range is correct
+                        if small_TI == big_TI and small_TI is not None and big_TI is not None:
+                            error_temp = 'TURBULENCE INTENSITY NOT CALCULATED. PLEASE CHECK THAT THE INPUTTED TIME' \
+                                         ' RANGE IS CORRECT'
+                            color_temp = 'danger'
+                            table_data = no_update
                         else:
-                            error = both_t_NO_error
-                            color = 'success'
+                            # Define a function to load data from a memmap file
+                            def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+                                filepath = os.path.join(folder_path, filename)
+                                mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
 
-                    # Load time data using the memmap function
-                    t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+                                if row_numbers == 'all':
+                                    loaded_data = mapped_data[:]
+                                else:
+                                    loaded_data = mapped_data[row_numbers]
 
-                    # Apply a mask based on the specified time range
-                    mask = (t >= small_TI) & (t <= big_TI)
+                                return loaded_data
 
-                    # Update color and row numbers based on the mask
-                    row_numbers = np.where(mask)[0].tolist()
+                            # Find the index of the chosen file in file_data list
+                            i = file_data[0].index(chosen_file)
 
-                    # Load velocity components data using the memmap function
-                    ux = load_array_memmap('Ux.dat', file_path, dtype=dtype, shape=shape[0],
-                                           row_numbers=row_numbers)
-                    uy = load_array_memmap('Uy.dat', file_path, dtype=dtype, shape=shape[0],
-                                           row_numbers=row_numbers)
-                    uz = load_array_memmap('Uz.dat', file_path, dtype=dtype, shape=shape[0],
-                                           row_numbers=row_numbers)
+                            # Get shape and dtype information for the chosen file
+                            shape_dtype = file_data[1][i]
+                            shape, dtype = shape_dtype
 
-                    # Calculate turbulence intensity and mean velocity components
-                    TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
+                            # Get the file path, min and max time values for the chosen file
+                            file_path = file_data[4][i]
+                            min1 = file_data[5][i]
+                            max1 = file_data[6][i]
 
-                    # If table data is empty, initialize it as an empty list
-                    if table_data is None:
-                        table_data = []
+                            # Error messages
+                            smallt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MINIMUM TIME' \
+                                           ' AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.'+ \
+                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1)+' TO '+str(max1)+')'
 
-                    # Create new data entry with calculated values
-                    new_data = [
-                        {
-                            'FileName': chosen_file,
-                            'CalFile': file_data[2][i],
-                            'SF': file_data[3][i],
-                            'Time_1': round(small_TI, 2),
-                            'Time_2': round(big_TI, 2),
-                            'Ux': round(Ux, 6),
-                            'Uy': round(Uy, 6),
-                            'Uz': round(Uz, 6),
-                            'U1': round(U1, 6),
-                            'TI': round(TI, 6),
-                        }
-                    ]
+                            bigt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM TIME' \
+                                         ' AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
+                                         ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1) +' TO '+str(max1)+ ')'
 
-                    # Append new data to the table_data
-                    table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
+                            both_t_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM' \
+                                           ' AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
+                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1)+' TO '+str(max1)+ ')'
+
+                            both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE ' \
+                                              'SPECIFIED LIMITS'
+
+                            # Cut data based on conditions
+                            if small_TI is None and big_TI is None:
+                                big_TI = max1
+                                small_TI = min1
+                                color_temp = 'danger'
+                                error_temp = both_t_error
+
+                            elif small_TI is None and big_TI is not None:
+                                small_TI = min1
+                                color_temp = 'danger'
+                                error_temp = smallt_error
+
+                            elif big_TI is None and small_TI is not None:
+                                big_TI = max1
+                                color_temp = 'danger'
+                                error_temp = bigt_error
+
+                            else:
+
+                                if small_TI < min1 and big_TI > max1:
+                                    small_TI = min1
+                                    big_TI = max1
+                                    color_temp = 'danger'
+                                    error_temp = both_t_error
+
+                                elif small_TI < min1:
+                                    small_TI = min1
+                                    color_temp = 'danger'
+                                    error_temp = smallt_error
+
+
+                                elif big_TI > max1:
+                                    big_TI = max1
+                                    color_temp = 'danger'
+                                    error_temp = bigt_error
+
+                                else:
+                                    error_temp = both_t_NO_error
+                                    color_temp = 'success'
+
+                            # Load time data using the memmap function
+                            t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+
+                            # Apply a mask based on the specified time range
+                            mask = (t >= small_TI) & (t <= big_TI)
+
+                            # Update color and row numbers based on the mask
+                            row_numbers = np.where(mask)[0].tolist()
+
+                            # Load velocity components data using the memmap function
+                            ux = load_array_memmap('Ux.dat', file_path, dtype=dtype, shape=shape[0],
+                                                   row_numbers=row_numbers)
+                            uy = load_array_memmap('Uy.dat', file_path, dtype=dtype, shape=shape[0],
+                                                   row_numbers=row_numbers)
+                            uz = load_array_memmap('Uz.dat', file_path, dtype=dtype, shape=shape[0],
+                                                   row_numbers=row_numbers)
+
+                            # Calculate turbulence intensity and mean velocity components
+                            TI, U1, Ux, Uy, Uz = calculate_turbulence_intensity(ux, uy, uz)
+
+                            # If table data is empty, initialize it as an empty list
+                            if table_data is None:
+                                table_data = []
+
+                            # Create new data entry with calculated values
+                            new_data = [
+                                {
+                                    'FileName': chosen_file,
+                                    'CalFile': file_data[2][i],
+                                    'SF': file_data[3][i],
+                                    'Time_1': round(small_TI, 2),
+                                    'Time_2': round(big_TI, 2),
+                                    'Ux': round(Ux, 6),
+                                    'Uy': round(Uy, 6),
+                                    'Uz': round(Uz, 6),
+                                    'U1': round(U1, 6),
+                                    'TI': round(TI, 6),
+                                }
+                            ]
+
+                            # Append new data to the table_data
+                            table_data.append({c['id']: new_data[0].get(c['id'], None) for c in column_data})
 
                     # Set loading variable to 'done'
-                Loading_variable = 'done'
+                    Loading_variable = 'done'
 
-                # Return updated table data, error message, color, and loading variable
-                return table_data, error, color, True, Loading_variable
+        # Return updated table data, error message, color, and loading variable
+        return table_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, Workspace_store_clear,\
+            filestorage_clear, filename_filepath_clear, Loading_variable
 
     except Exception as e:
         # If any error occurs, display the error message
-        error = str(e)
-        color = 'danger'
+        error_temp = str(e)
+        color_temp = 'danger'
 
-        return no_update, error, color, True, no_update
+        return no_update, error_temp, color_temp, True, no_update, no_update, no_update, no_update, no_update,\
+            no_update, no_update
 
 # Callback 17
 # Callback to clear parameters table
