@@ -2507,18 +2507,18 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                     # Desired moving average duration (in time units)
                                     moving_average_duration = moving_val
 
+                                    # Set the time step to be a fraction of the moving average duration
+                                    time_step = moving_average_duration / 10
+
                                     # Resample the data at a constant time step
-                                    time_data_resampled = np.arange(numpy_vect_data[file]['t'][0] / t_val,
-                                                                    numpy_vect_data[file]['t'][-1] / t_val,
-                                                                     0.5/ t_val)  # Time step set to 0.5 of time unit, deemed suitable
-
+                                    time_data_resampled = np.arange(numpy_vect_data[file]['t'][0],
+                                                                    numpy_vect_data[file]['t'][-1],
+                                                                     time_step) / t_val # Time step set to 0.5 of time unit, deemed suitable
+                                    print(time_data_resampled)
                                     # # Calculate the window size (number of points) for the moving average
-                                    # window_size = int(
-                                    #     moving_average_duration / (time_data_resampled[1] - time_data_resampled[0]))
-                                    #
-                                    # print(window_size)
+                                    window_size = int(moving_average_duration / time_step)
 
-                                    window_size =
+                                    print(window_size)
 
 
                                     # Interpolate the velocity data to the new time array
