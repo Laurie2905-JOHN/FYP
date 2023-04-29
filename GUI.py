@@ -257,7 +257,11 @@ app.layout = dbc.Container([
         ),
 
         # Column for dropdown menus and input fields
-        dbc.Col(
+        dbc.Col([
+
+            # Label for optional inputs
+            html.Label('ESSENTIAL INPUTS:', className='mb-2 fw-bold text center'),
+
             dbc.Stack([
                 # Row for dropdown menus
                 dbc.Row([
@@ -283,23 +287,29 @@ app.layout = dbc.Container([
                     ),
                 ], align='center', justify='center'),
 
-                # Row for input fields for minimum and maximum times
+# Row for input fields for moving average and time unit
                 dbc.Row([
                     # Input field for minimum time
                     dbc.Col(
-                        dbc.Input(id="time_small", min=0, type="number", placeholder="Min Time")
-                    ),
-                    # Input field for maximum time
-                    dbc.Col(
-                        dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time")
-                    ),
-                ], align='center', justify='center'),
-
-                # Row for input fields for minimum and maximum times
-                dbc.Row([
-                    # Input field for minimum time
-                    dbc.Col(
-                        dbc.Input(id="moving_average", min=0, type='number', placeholder="Moving Average Time")
+                        dcc.Dropdown(
+                            id="Moving_average",
+                            options=[
+                                {'label': 'Raw Data', 'value': 'raw'},
+                                {'label': '1 Sec', 'value': 1},
+                                {'label': '5 Sec', 'value': 5},
+                                {'label': '1 Min', 'value': 60},
+                                {'label': '5 Min', 'value': 300},
+                                {'label': '10 Min', 'value': 600},
+                                {'label': '15 Min', 'value': 900},
+                                {'label': '30 Min', 'value': 1800},
+                                {'label': '1 hr', 'value': 3600},
+                                {'label': '12 hr', 'value': 43200},
+                                {'label': '1 day', 'value': 86400}
+                            ],
+                            multi=False,
+                            value=None,
+                            placeholder="Moving Average Time"
+                        )
                     ),
                     # Input field for graph time unit. Value corresponds to value in seconds.
                     dbc.Col(
@@ -307,6 +317,7 @@ app.layout = dbc.Container([
                             id="Time_unit_graph",
                             options=[
                                 {'label': 'Seconds', 'value': 1},
+                                {'label': 'Minutes', 'value': 60},
                                 {'label': 'Hours', 'value': 3600},
                                 {'label': 'Days', 'value': 86400},
                                 {'label': 'Weeks', 'value': 604800}
@@ -319,7 +330,26 @@ app.layout = dbc.Container([
                 ], align='center', justify='center'),
 
             ], gap=3),
-            width=4
+
+                html.Div(className = 'mb-3'),
+
+                # Label for optional inputs
+                html.Label('OPTIONAL INPUTS:', className='mb-2 fw-bold text center'),
+
+                # Row for input fields for minimum and maximum times
+                dbc.Row([
+
+                    # Input field for minimum time
+                    dbc.Col(
+                        dbc.Input(id="time_small", min=0, type="number", placeholder="Min Time")
+                    ),
+                    # Input field for maximum time
+                    dbc.Col(
+                        dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time")
+                    ),
+                ], align='center', justify='center'),
+
+           ], width=4
         ),
 
         # Column for radio buttons and input fields
@@ -421,18 +451,25 @@ app.layout = dbc.Container([
 
                 width=3),
 
+            dbc.Col([
+
+                html.Label('SELECT A DATASET FOR ANALYSIS:', className=' mb-2 fw-bold text center'),
+
+                # Dropdown menu for selecting dataset
+                dcc.Dropdown(
+                    id="DataSet_TI",
+                    options=[],
+                    multi=False,
+                    placeholder="Select a Dataset"
+                )
+            ], width = 3),
+
             # Column for dropdown menu and input fields
-            dbc.Col(
+            dbc.Col([
+
+                html.Label('OPTIONAL INPUTS:', className='mb-2 fw-bold text center'),
 
                 dbc.Stack([
-
-                    # Dropdown menu for selecting dataset
-                    dcc.Dropdown(
-                        id="DataSet_TI",
-                        options=[],
-                        multi=False,
-                        placeholder="Select a Dataset"
-                    ),
 
                     # Input field for minimum time
                     dbc.Input(id="small_t_TI", type="number", placeholder="Min Time"),
@@ -440,11 +477,11 @@ app.layout = dbc.Container([
                     # Input field for maximum time
                     dbc.Input(id="big_t_TI", type="number", placeholder="Max Time"),
 
-                ], gap=3),
+                ], gap=3)
 
-                width=3),
+               ], width=3),
 
-        ], align='center', justify='center'),
+        ], align='top', justify='center'),
 
     ], width=12),
 
@@ -621,7 +658,7 @@ app.layout = dbc.Container([
                     'PROCESS SELECTED FILES',
                     id='newfile',
                     color="primary",
-                    className="me-1, fw-bold",
+                    className="mb-3, fw-bold",
                     n_clicks=0,
                 ),
                 dbc.Input(
@@ -644,7 +681,7 @@ app.layout = dbc.Container([
                 dbc.Checklist(value=[], id="upload_file_checklist", inline=True),
             ],
 
-                gap=3),
+                gap=2),
             width=3),
 
         # Column for clearing files
@@ -654,7 +691,7 @@ app.layout = dbc.Container([
                     "CLEAR SELECTED FILES FROM WORKSPACE",
                     id='clear_files',
                     color="primary",
-                    className="me-1, fw-bold",
+                    className="mb-3, fw-bold",
                     n_clicks=0
                 ),
 
@@ -668,7 +705,7 @@ app.layout = dbc.Container([
                 # Checkbox for selecting individual files to clear
                 dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
             ],
-                gap=3),
+                gap=2),
             width=3
         ),
 
@@ -729,21 +766,28 @@ dbc.Row([
             # Checkbox to select specific data
             dbc.Checklist(value=[], options=[], id="vel_checklist", inline=True),
 
-        ], gap=3),
+        ], gap=2),
 
     width = 4),
 
-    dbc.Col(
+    dbc.Col([
 
         dbc.Stack([
-            # Button for downloading selected data
-            dbc.Button("DOWNLOAD", class_name = 'fw-bold', id="btn_download", size="lg",color="primary"),
 
-            # Input field for file name
-            dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
+            # Button for downloading selected data
+            dbc.Button("DOWNLOAD", class_name='fw-bold', id="btn_download", size="lg", color="primary"),
+
+            html.Label('OPTIONAL INPUTS:', className='fw-bold'),
+
 
             # Row for input fields for minimum and maximum times
             dbc.Row([
+
+                dbc.Col(
+                # Input field for file name
+                dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
+                className = 'mb-3', width = 12),
+
                 # Input field for minimum time
                 dbc.Col(
                     dbc.Input(id="small_t", type="number", placeholder="Min Time")
@@ -758,10 +802,10 @@ dbc.Row([
 
         ], gap=3),
 
-    width = 4),
+    ], width = 4),
 
 
-    ], align='center', justify='center',className = 'mb-5'),
+    ], align='top', justify='center',className = 'mb-5'),
 
     # # Components for storing and downloading data
     dbc.Spinner(children = [dcc.Store(id='Loading_variable_Process', storage_type='memory')],color="primary",
@@ -2259,9 +2303,12 @@ def clear_table(n_clicks):
         State(component_id='Workspace_store', component_property='data'),
         State(component_id='Time_unit_graph', component_property='value'),
         State(component_id='Time_unit_graph', component_property='options'),
+        State(component_id='Moving_average', component_property='value'),
+        State(component_id='Moving_average', component_property='options'),
         prevent_initial_call = True)
 
-def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title, Workspace_data, t_val, time_unit_options):
+def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title,
+                 Workspace_data, t_val, time_unit_options, moving_val, moving_options):
 
     # Try/Except, used to catch any errors not considered
     try:
@@ -2304,7 +2351,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                     filedata_Clear_data = no_update
 
                     # If no input do not plot graphs
-                    if file_inputs == [] or vector_inputs1 == [] or t_val == None:
+                    if file_inputs == [] or vector_inputs1 == [] or t_val is None or moving_val is None:
                         fig = no_update
                         error_temp = 'PLEASE CHECK INPUTS'
                         color_temp = 'danger'
@@ -2397,6 +2444,33 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                 color_temp = 'success'
                                 error_cut = ''
 
+                        # For selected moving average find label name
+                        for option in moving_options:
+                            if option['value'] == moving_val:
+                                Moving_label = option['label']
+
+                        # For selected time unit find label to update graph
+                        for option in time_unit_options:
+                            if option['value'] == t_val:
+                                t_label = option['label']
+
+                        # Update x and y axes labels
+                        fig.update_layout(
+                            xaxis_title="Time (" + t_label + ')',
+                            yaxis_title="Velocity (m/s)",
+                            legend=dict(
+                                y=1,
+                                x=0.5,
+                                orientation="h",
+                                yanchor="bottom",
+                                xanchor="center"),
+                        )
+
+                        # Define moving average function outside of loop
+                        def moving_average(data, window_size):
+                            kernel = np.ones(window_size) / window_size
+                            return np.convolve(data, kernel, mode='valid')
+
                         # Loop through the files and vectors to create the graph
                         for file in file_inputs:
                             i = file_data[0].index(file)
@@ -2404,97 +2478,115 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             shape_dtype = file_data[1][i]
                             shape, dtype = shape_dtype
 
-                            t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')/t_val
+                            # Load time data and convert to requested unit
+                            t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0],
+                                                  row_numbers='all') / t_val
                             mask = (t >= smallt) & (t <= bigt)
                             numpy_vect_data = {file: {'t': t[mask]}}
                             row_numbers = np.where(mask)[0].tolist()
 
+                            # Loop through the velocity arrays
                             for vector in vector_inputs1:
+                                # Load Velocity Data
                                 numpy_vect_data[file][vector] = load_array_memmap(vector + '.dat', file_path,
                                                                                   dtype=dtype,
                                                                                   shape=shape[0],
                                                                                   row_numbers=row_numbers)
 
+                                # Plotting raw data if no moving average is selected
+                                if moving_val == 'raw':
+                                    fig.add_trace(
+                                        go.Scattergl(
+                                            name=f"{file} {vector} {Moving_label}",
+                                            showlegend=True,
+                                            x=numpy_vect_data[file]['t'],
+                                            y=numpy_vect_data[file][vector])
+                                    )
+                                else:
+                                    # Desired moving average duration (in time units)
+                                    moving_average_duration = moving_val
+
+                                    # Resample the data at a constant time step
+                                    time_data_resampled = np.arange(numpy_vect_data[file]['t'][0],
+                                                                    numpy_vect_data[file]['t'][-1],
+                                                                    0.5)  # Time step set to 0.5, deemed suitable
+
+                                    # Calculate the window size (number of points) for the moving average
+                                    window_size = int(
+                                        moving_average_duration / (time_data_resampled[1] - time_data_resampled[0]))
+
+                                    # Interpolate the velocity data to the new time array
+                                    velocity_data_resampled = np.interp(time_data_resampled,
+                                                                        numpy_vect_data[file]['t'],
+                                                                        numpy_vect_data[file][vector])
+
+                                    # Calculate the moving average of the resampled velocity data
+                                    velocity_moving_avg = moving_average(velocity_data_resampled, window_size)
+
+                                    # Plotting data
+                                    fig.add_trace(
+                                        go.Scattergl(
+                                            name=f"{file} {vector} {Moving_label}",
+                                            showlegend=True,
+                                            x=time_data_resampled,
+                                            y=velocity_moving_avg)
+                                    )
+
                                 # Creating a list of current legend names
-                                current_names.append(f"{file}{' '}{vector}")
+                                current_names.append(f"{file} {vector} {Moving_label}")
 
-                                # Plotting data
-                                fig.add_trace(
-                                    go.Scattergl(
-                                        name=f"{file}{' '}{vector}",
-                                        showlegend=True,
-                                        x=numpy_vect_data[file]['t'],
-                                        y=numpy_vect_data[file][vector])
-                                )
 
-                            # For selected time unit find label to update graph
-                            for option in time_unit_options:
-                                if option['value'] == t_val:
-                                    t_label = option['label']
+                        # Update legend and title based on user input
+                        if legend_data is None:
+                            if leg == 'Off':
+                                fig.layout.update(showlegend=False)
+                                error_leg = ''
+                            elif leg == 'On':
+                                fig.layout.update(showlegend=True)
+                                error_leg = ''
+                        else:
+                            if leg == 'Off':
+                                fig.layout.update(showlegend=False)
+                                error_leg = ''
+                            elif leg == 'On':
+                                legend_name_list = legend_data.split(',')
+                                newname_result = {}
 
-                            # Update x and y axes labels
-                            fig.update_layout(
-                                xaxis_title="Time (" + t_label + ')',
-                                yaxis_title="Velocity (m/s)",
-                                legend=dict(
-                                    y=1,
-                                    x=0.5,
-                                    orientation="h",
-                                    yanchor="bottom",
-                                    xanchor="center"),
-                            )
+                                if len(current_names) == len(legend_name_list):
+                                    for i, current_name in enumerate(current_names):
+                                        newnames = {current_name: legend_name_list[i]}
+                                        newname_result.update(newnames)
 
-                            # Update legend and title based on user input
-                            if legend_data is None:
-                                if leg == 'Off':
-                                    fig.layout.update(showlegend=False)
-                                    error_leg = ''
-                                elif leg == 'On':
+                                    fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
+                                                                          legendgroup=newname_result[t.name],
+                                                                          hovertemplate=t.hovertemplate.replace(
+                                                                          t.name,
+                                                                          newname_result[
+                                                                          t.name]) if t.hovertemplate is not None else None)
+                                                       )
+
                                     fig.layout.update(showlegend=True)
-                                    error_leg = ''
-                            else:
-                                if leg == 'Off':
-                                    fig.layout.update(showlegend=False)
-                                    error_leg = ''
-                                elif leg == 'On':
-                                    legend_name_list = legend_data.split(',')
-                                    newname_result = {}
 
-                                    if len(current_names) == len(legend_name_list):
-                                        for i, current_name in enumerate(current_names):
-                                            newnames = {current_name: legend_name_list[i]}
-                                            newname_result.update(newnames)
+                                    error_leg  = ''
 
-                                        fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
-                                                                              legendgroup=newname_result[t.name],
-                                                                              hovertemplate=t.hovertemplate.replace(
-                                                                              t.name,
-                                                                              newname_result[
-                                                                              t.name]) if t.hovertemplate is not None else None)
-                                                           )
+                                else:
 
-                                        fig.layout.update(showlegend=True)
+                                    # If legend entries do not match display error message
+                                    error_leg = '. NUMBER OF LEGEND ENTRIES DO NOT MATCH'
 
-                                        error_leg  = ''
+                                    color = 'danger'
 
-                                    else:
-
-                                        # If legend entries do not match display error message
-                                        error_leg = '. NUMBER OF LEGEND ENTRIES DO NOT MATCH'
-
-                                        color = 'danger'
-
-                            # Update graph title based on user input
-                            if title_data is None:
-                                if title == 'Off':
-                                    fig.layout.update(title='')
-                                elif title == 'On':
-                                    fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
-                            else:
-                                if title == 'Off':
-                                    fig.layout.update(title='')
-                                elif title == 'On':
-                                    fig.layout.update(title=title_data)
+                        # Update graph title based on user input
+                        if title_data is None:
+                            if title == 'Off':
+                                fig.layout.update(title='')
+                            elif title == 'On':
+                                fig.layout.update(title='Plot of ' + ', '.join(file_inputs) + ' Data')
+                        else:
+                            if title == 'Off':
+                                fig.layout.update(title='')
+                            elif title == 'On':
+                                fig.layout.update(title=title_data)
 
                         error_temp = 'GRAPH PLOTTED. ' + error_cut + error_cut_good + error_leg
                         Loading_Variable = 'done'
