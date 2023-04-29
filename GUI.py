@@ -13,6 +13,8 @@ import os
 import math
 import re
 import shutil
+from scipy import interpolate
+import statistics as st
 
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -92,11 +94,6 @@ def cal_velocity(BarnFilePath, cal_data, SF):
     Returns:
         prb_final (dict): Dictionary containing calculated velocities U1, Ux, Uy, Uz, and time array t.
     """
-
-    # Required imports
-    import numpy as np
-    from scipy import interpolate
-    import statistics as st
 
     # Constants
     rho = 997
@@ -295,6 +292,29 @@ app.layout = dbc.Container([
                     # Input field for maximum time
                     dbc.Col(
                         dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time")
+                    ),
+                ], align='center', justify='center'),
+
+                # Row for input fields for minimum and maximum times
+                dbc.Row([
+                    # Input field for minimum time
+                    dbc.Col(
+                        dbc.Input(id="moving_average", min=0, type='number', placeholder="Moving Average Time")
+                    ),
+                    # Input field for graph time unit. Value corresponds to value in seconds.
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id="Time_unit_graph",
+                            options=[
+                                {'label': 'Seconds', 'value': 1},
+                                {'label': 'Hours', 'value': 3600},
+                                {'label': 'Days', 'value': 86400},
+                                {'label': 'Weeks', 'value': 604800}
+                            ],
+                            multi=False,
+                            value=None,
+                            placeholder="Select a Time Unit"
+                        )
                     ),
                 ], align='center', justify='center'),
 
@@ -762,10 +782,10 @@ dbc.Row([
     # Store Components
     dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
-    dcc.Store(id='filestorage', storage_type='session'),
+    dcc.Store(id='filestorage', storage_type='local'),
     dcc.Store(id='filename_filepath', storage_type='session'),
-    dcc.Store(id='Workspace_store', storage_type='session'),
-    dcc.Store(id='Cal_storage', storage_type='session'),
+    dcc.Store(id='Workspace_store', storage_type='local'),
+    dcc.Store(id='Cal_storage', storage_type='local'),
 ])
 
 # Callback 1
@@ -1856,7 +1876,6 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                             else:
                                 error_cut = both_t_NO_error
 
-
                         # Assign mask based on condition
                         mask = (t >= smallt) & (t <= bigt)
                         # From mask calculated row numbers
@@ -2238,9 +2257,11 @@ def clear_table(n_clicks):
         State(component_id='legend_onoff', component_property='value'),
         State(component_id='title_onoff', component_property='value'),
         State(component_id='Workspace_store', component_property='data'),
+        State(component_id='Time_unit_graph', component_property='value'),
+        State(component_id='Time_unit_graph', component_property='options'),
         prevent_initial_call = True)
 
-def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title, Workspace_data):
+def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title, Workspace_data, t_val, time_unit_options):
 
     # Try/Except, used to catch any errors not considered
     try:
@@ -2283,7 +2304,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                     filedata_Clear_data = no_update
 
                     # If no input do not plot graphs
-                    if file_inputs == [] or vector_inputs1 == []:
+                    if file_inputs == [] or vector_inputs1 == [] or t_val == None:
                         fig = no_update
                         error_temp = 'PLEASE CHECK INPUTS'
                         color_temp = 'danger'
@@ -2312,19 +2333,21 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             min2.append(file_data[5][i])
                             max2.append(file_data[6][i])
 
-                        min1 = min(min2)
-                        max1 = max(max2)
+                        min1 = min(min2)/t_val
+                        max1 = max(max2)/t_val
 
                         # Error messages
                         smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                                       ' AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +')'
+                                       ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                           '('+ str(min1) +' TO ' + str(max1) +')'
 
-                        bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
-                                     ' RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +')'
+                        bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE ' \
+                                     'THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                            '('+ str(min1) +' TO ' + str(max1) +')'
 
-                        both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
-                                       ' THE AVAILABLE RANGE.'+'AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                               '(' + str(min1) + ' TO ' + str(max1) +')'
+                        both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED ' \
+                                       'TIME IS OUTSIDE THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA:'\
+                                                      ' (' + str(min1) + ' TO ' + str(max1) +')'
 
                         both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
 
@@ -2383,8 +2406,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
                             t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
                             mask = (t >= smallt) & (t <= bigt)
-
-                            numpy_vect_data = {file: {'t': t[mask]}}
+                            numpy_vect_data = {file: {'t': t[mask]/t_val}}
                             row_numbers = np.where(mask)[0].tolist()
 
                             for vector in vector_inputs1:
@@ -2405,9 +2427,14 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                         y=numpy_vect_data[file][vector])
                                 )
 
+                            # For selected time unit find label to update graph
+                            for option in time_unit_options:
+                                if option['value'] == t_val:
+                                    t_label = option['label']
+
                             # Update x and y axes labels
                             fig.update_layout(
-                                xaxis_title="Time (s)",
+                                xaxis_title="Time (" + t_label + ')',
                                 yaxis_title="Velocity (m/s)",
                                 legend=dict(
                                     y=1,
