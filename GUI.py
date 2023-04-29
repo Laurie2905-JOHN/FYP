@@ -2404,9 +2404,9 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             shape_dtype = file_data[1][i]
                             shape, dtype = shape_dtype
 
-                            t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
+                            t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')/t_val
                             mask = (t >= smallt) & (t <= bigt)
-                            numpy_vect_data = {file: {'t': t[mask]/t_val}}
+                            numpy_vect_data = {file: {'t': t[mask]}}
                             row_numbers = np.where(mask)[0].tolist()
 
                             for vector in vector_inputs1:
