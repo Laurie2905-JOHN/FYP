@@ -919,6 +919,7 @@ def clear_Workspace(n_clicks, Workspace_data):
         if ctx.triggered_id == 'Workspace_clear':
             # If there's no workspace data to clear
             if Workspace_data is None:
+                table_data = []
                 error_temp = 'NO WORKSPACE TO CLEAR'
                 color_temp = 'danger'
                 error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
@@ -2480,7 +2481,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
                             # Load time data and convert to requested unit
                             t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0],
-                                                  row_numbers='all') / t_val
+                                                  row_numbers='all')
                             mask = (t >= smallt) & (t <= bigt)
                             numpy_vect_data = {file: {'t': t[mask]}}
                             row_numbers = np.where(mask)[0].tolist()
@@ -2499,7 +2500,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                         go.Scattergl(
                                             name=f"{file} {vector} {Moving_label}",
                                             showlegend=True,
-                                            x=numpy_vect_data[file]['t'],
+                                            x=numpy_vect_data[file]['t'] / t_val,
                                             y=numpy_vect_data[file][vector])
                                     )
                                 else:
@@ -2509,7 +2510,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                     # Resample the data at a constant time step
                                     time_data_resampled = np.arange(numpy_vect_data[file]['t'][0],
                                                                     numpy_vect_data[file]['t'][-1],
-                                                                    0.5)  # Time step set to 0.5, deemed suitable
+                                                                    0.5/t_val)  # Time step set to 0.5s, deemed suitable
 
                                     # Calculate the window size (number of points) for the moving average
                                     window_size = int(
@@ -2528,13 +2529,12 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                         go.Scattergl(
                                             name=f"{file} {vector} {Moving_label}",
                                             showlegend=True,
-                                            x=time_data_resampled,
+                                            x=time_data_resampled / t_val,
                                             y=velocity_moving_avg)
                                     )
 
                                 # Creating a list of current legend names
                                 current_names.append(f"{file} {vector} {Moving_label}")
-
 
                         # Update legend and title based on user input
                         if legend_data is None:
