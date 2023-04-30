@@ -903,7 +903,7 @@ def update_Workspace(n_clicks, Workspace_input):
 
                 # Check if the given path exists.
                 if not is_valid_folder_path(Workspace_input3):
-                    error_temp = 'PLEASE CHECK FILE PATH IS VALID AND IS A FOLDER'
+                    error_temp = 'PLEASE CHECK PATH IS VALID AND IS A FOLDER'
                     color_temp = 'danger'
                     error_perm = no_update
                     color_perm = no_update
