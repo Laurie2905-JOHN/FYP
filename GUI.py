@@ -46,6 +46,26 @@ def save_array_memmap(array, filename, folder_path):
     return shape, dtype
 
 
+# This function loads an array from a memmap file located at a specified folder path and filename.
+# It returns the loaded data as a NumPy array, allowing the user to specify the data type, shape, and the row numbers to load.
+def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
+    # Join the folder path and filename to create the full file path.
+    filepath = os.path.join(folder_path, filename)
+
+    # Create a memory-mapped array from the file, specifying the data type, read-only mode, and shape.
+    # Memory mapping allows you to efficiently access large files without loading the entire file into memory.
+    mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
+
+    # Load the requested row numbers from the memory-mapped array.
+    # If the user specifies 'all', the entire array is loaded.
+    if row_numbers == 'all':
+        loaded_data = mapped_data[:]
+    else:
+        loaded_data = mapped_data[row_numbers]
+
+    # Return the loaded data as a NumPy array.
+    return loaded_data
+
 # Define a function to get a unique file path for each file
 def get_unique_path(base_path, name):
     # Initialize a counter to keep track of the number of duplicate file names
@@ -77,7 +97,7 @@ def moving_average(data, window_size):
     # calculating the dot product between the kernel and the data in the
     # current window. The 'valid' mode ensures that the output array size
     # is reduced to only include positions where the kernel and data fully overlap.
-    return scipy.signal.fftconvolve(data, kernel, mode = 'valid')
+    return scipy.signal.convolve(data, kernel, mode = 'valid')
 
 def is_valid_folder_path(file_path):
     """
@@ -2535,18 +2555,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                         current_names = []
                         min2 = []
                         max2 = []
-
-                        # Function to load data from memmap file
-                        def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                            filepath = os.path.join(folder_path, filename)
-                            mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
-
-                            if row_numbers == 'all':
-                                loaded_data = mapped_data[:]
-                            else:
-                                loaded_data = mapped_data[row_numbers]
-
-                            return loaded_data
 
                         # Get min and max time values for each file
                         for file in file_inputs:
