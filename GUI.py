@@ -1529,9 +1529,11 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                         # Set the time step to be a fraction of the moving average duration
                                         # Set the time step based on SF so data is uniform
                                         time_step = (1 / SF) * moving_average_duration
-                                        print(moving_average_duration)
+
                                         # Calculate the window size (number of points) for the moving average
                                         window_size = int(moving_average_duration / time_step)
+
+                                        print(window_size)
 
                                         # Resample the data at a constant time step as nan values could cause problems
                                         time_data_resampled = np.arange(Barn_data['t'][0],
@@ -2515,7 +2517,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                     filedata_Clear_data = True
 
                 else:
-                    print(file_data)
                     error_perm = no_update
                     color_perm = no_update
                     open_perm = no_update
