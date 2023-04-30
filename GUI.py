@@ -358,6 +358,11 @@ app.layout = dbc.Container([
                             placeholder="Select a Dataset"
                         )
                     ),
+                ], align='center', justify='center'),
+
+                # Row for input fields for moving average and time unit
+                dbc.Row([
+
                     # Dropdown menu for selecting quantity
                     dbc.Col(
                         dcc.Dropdown(
@@ -368,15 +373,11 @@ app.layout = dbc.Container([
                             placeholder="Select a Quantity"
                         )
                     ),
-                ], align='center', justify='center'),
 
-# Row for input fields for moving average and time unit
-                dbc.Row([
                     # Input field for minimum time
                     dbc.Col(
 
                     # Input field for graph time unit. Value corresponds to value in seconds.
-
                         dcc.Dropdown(
                             id="Time_unit_graph",
                             options=[
@@ -518,7 +519,7 @@ app.layout = dbc.Container([
 
             dbc.Col([
 
-                html.Label('SELECT A DATASET FOR ANALYSIS:', className=' mb-2 fw-bold text center'),
+                html.Label('REQUIRED INPUTS:', className=' mb-2 fw-bold text center'),
 
                 # Dropdown menu for selecting dataset
                 dcc.Dropdown(
@@ -804,30 +805,42 @@ app.layout = dbc.Container([
                 className = 'mb-3'
             ),
 
+
         dcc.Dropdown(
             id="Moving_average",
             options=[
                 {'label': 'Raw Data', 'value': 'raw'},
-                {'label': '1 Sec', 'value': 1},
-                {'label': '5 Sec', 'value': 5},
-                {'label': '10 Sec', 'value': 10},
-                {'label': '15 Sec', 'value': 15},
-                {'label': '30 Sec', 'value': 30},
-                {'label': '1 Min', 'value': 60},
-                {'label': '5 Min', 'value': 300},
-                {'label': '10 Min', 'value': 600},
-                {'label': '15 Min', 'value': 900},
-                {'label': '30 Min', 'value': 1800},
+                {'label': 'Custom', 'value': 'Custom'},
+                {'label': '1 sec', 'value': 1},
+                {'label': '5 sec', 'value': 5},
+                {'label': '10 sec', 'value': 10},
+                {'label': '30 sec', 'value': 30},
+                {'label': '1 min', 'value': 60},
+                {'label': '5 min', 'value': 300},
+                {'label': '10 min', 'value': 600},
+                {'label': '30 min', 'value': 1800},
                 {'label': '1 hr', 'value': 3600},
-                {'label': '6 hr', 'value': 21600},
                 {'label': '12 hr', 'value': 43200},
                 {'label': '1 day', 'value': 86400}
             ],
             multi=False,
             value=None,
-            placeholder="Moving Average Time"
+            placeholder="Moving Average",
+            className='mb-3'
             ),
+
+            # Label for optional inputs
+            html.Label('OPTIONAL INPUTS:', className='mb-2 fw-bold text center'),
+
+            dbc.Input(
+                id="custom_rate",
+                min=0.01,
+                type="number",
+                placeholder="Custom Moving Average (s)",
+            ),
+
         ], width=3),
+
 
 
     ], align='start', justify='evenly', className = 'mb-4'),
@@ -1046,9 +1059,9 @@ def clear_Workspace(n_clicks, Workspace_data):
                 error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 Workspace_input = None
-                Workspace_Clear_data = False
-                Upload_Clear_data = False
-                filedata_Clear_data = False
+                Workspace_Clear_data = True
+                Upload_Clear_data = True
+                filedata_Clear_data = True
             else:
 
                 table_data = []
@@ -1358,7 +1371,6 @@ def clear_upload(n_clicks):
         Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='filename_filepath', component_property='data', allow_duplicate=True),
         Output(component_id="upload_file_checklist", component_property='value', allow_duplicate=True),
         Output(component_id='Loading_variable_Process', component_property='data', allow_duplicate=True),
         Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
@@ -1372,13 +1384,14 @@ def clear_upload(n_clicks):
         State(component_id='Sample_rate', component_property='value'),
         State(component_id='filestorage', component_property='data'),
         State(component_id="upload_file_checklist", component_property='value'),
-        State(component_id="Workspace_store", component_property='data')
+        State(component_id="Workspace_store", component_property='data'),
         State(component_id='Moving_average', component_property='value'),
         State(component_id='Moving_average', component_property='options'),
+        State(component_id='custom_rate', component_property='value'),
     ],
 )
 def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, filenames, Workspace_data, moving_val,
-                    moving_options):
+                    moving_options, custom_moving):
 
     # Handle errors and exceptions
     try:
@@ -1393,7 +1406,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                 error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 open_perm = True
-                filename_filepath_data = no_update
                 # Return the same data if no files were uploaded
                 file_data = no_update
                 error_perm = no_update
@@ -1432,7 +1444,14 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         filename_filepath_data = no_update
                         file_data = no_update
 
+                    elif moving_val == 'Custom' and custom_moving is None:
+                        error_temp = 'ENTER CUSTOM MOVING AVERAGE'
+                        color_temp = "danger"
+                        filename_filepath_data = no_update
+                        file_data = no_update
+
                     else:
+
                         # Get existing data from file_data
                         Oldfilenames = file_data[0]
                         old_dtype_shape = file_data[1]
@@ -1441,11 +1460,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         Old_filepath = file_data[4]
                         Old_min = file_data[5]
                         Old_max = file_data[6]
-
-                        # For selected moving average find label name
-                        for option in moving_options:
-                            if option['value'] == moving_val:
-                                Moving_label = option['label']
 
                         # Create workspace cached files folder if it doesn't exist
                         Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
@@ -1466,13 +1480,21 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         repeated_value = []  # List of repeated file names
                         error_file = []  # List of files with invalid formats
 
-
                         # Loop through uploaded files and process them
                         for i, value in enumerate(filenames):
+                            # Create new filename with moving average added if custom is selected
+                            if moving_val == 'Custom':
+                                value = value + ' (' + str(custom_moving) + ' sec' ')'
+                            else:
+                                # For selected moving average find label name
+                                for option in moving_options:
+                                    if option['value'] == moving_val:
+                                        Moving_label = option['label']
+                                value = value + ' (' + Moving_label + ')'
+
                             # Check if the file name is already in the combined list
                             if value not in combined_filenames:
                                 try:
-                                    value = value + ' (' + Moving_label + ')'
                                     # Process file data
                                     Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
 
@@ -1500,6 +1522,8 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                         save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
                                         shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
 
+                                        # Update data with new shape_dtype data
+                                        combined_dtype_shape.append(shape_dtype)
 
                                     else:
 
@@ -1525,8 +1549,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                         # Update data with new shape_dtype data
                                         combined_dtype_shape.append(shape_dtype)
 
-                                        print(shape_dtype)
-
                                         # Iterate over the velocity data labels
                                         for value in ['Ux', 'Uy', 'Uz', 'U1']:
 
@@ -1539,62 +1561,55 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                             velocity_moving_avg = moving_average(velocity_data_resampled, window_size)
 
                                             # Saving data as a memmap file
-                                            shape_dtype = save_array_memmap(velocity_moving_avg, value + '.dat', file_path)
-                                            print(shape_dtype)
+                                            save_array_memmap(velocity_moving_avg, value + '.dat', file_path)
 
                                 # If there's an error processing the file, add it to the error list
                                 except Exception as e:
-                                    error_file.append(value)
+                                    error_file.append(value + ': '+ str(e))
                             else:
                                 repeated_value.append(value)
 
-                        # Update file_data with combined data
-                        file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath,
-                                     combined_min, combined_max]
+                        error_list_complete = repeated_value + error_file
 
-                        # Create a copy of uploaded file data
-                        upload_filename = filename_filepath_data[0]
-                        upload_filepath = filename_filepath_data[1]
+                        if new_value == []:
+                            error_temp = 'THERE WAS AN ERROR PROCESSING ALL FILES: \n ' \
+                                          '(' + ', '.join(error_list_complete) + ').'
+                            color_temp = 'danger'
 
-                        # Delete selected data
-                        for value in filenames:
-                            i = upload_filename.index(value)
-                            upload_filename.remove(value)
-                            del upload_filepath[i]
+                            file_data = no_update
 
-                        filename_filepath_data = [upload_filename, upload_filepath]
-
-                        # Display error messages if there are any errors
-                        if repeated_value != [] or error_file != []:
-                            error_list_complete = repeated_value + error_file
-
-                            if new_value == []:
-                                error_start = 'THERE WAS AN ERROR PROCESSING ALL FILES: \n ' \
-                                              '(' + ', '.join(error_list_complete) + ').'
-                            else:
-                                error_start = 'THERE WAS AN ERROR PROCESSING FILES: \n ' \
-                                              '(' + ', '.join(error_list_complete) + ').'
-
-                            error_repeat = ' PLEASE CHECK FILES: ' \
-                                           '(' + ', '.join(repeated_value) + ') ARE NOT REPEATED.'
-
-                            error_process = ' PLEASE CHECK: \n' \
-                                            '(' + ', '.join(error_file) + ') FOR ERRORS.'
-
-                            # If there are errors in files and repeated files
-                            if repeated_value != [] and error_file != []:
-                                error_temp = error_start + error_repeat + error_process
-                                color_temp = "danger"
-                            elif error_file != [] and repeated_value == []:
-                                error_temp = error_start + '\n' + error_process
-                                color_temp = "danger"
-                            elif error_file == [] and repeated_value != []:
-                                error_temp = error_start + '\n' + error_repeat
-                                color_temp = "danger"
                         else:
-                            # If no errors display success message
-                            error_temp = ', '.join(new_value) + ' PROCESSED'
-                            color_temp = "success"
+
+                            # Update file_data with combined data
+                            file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF,
+                                         combined_filepath, combined_min, combined_max]
+
+                            # Display error messages if there are any errors
+                            if repeated_value != [] or error_file != []:
+
+                                error_start = 'THERE WAS AN ERROR PROCESSING FILES: \n ' \
+                                                  '(' + ', '.join(error_list_complete) + ').'
+
+                                error_repeat = ' PLEASE CHECK FILES: ' \
+                                               '(' + ', '.join(repeated_value) + ') ARE NOT REPEATED.'
+
+                                error_process = ' PLEASE CHECK: \n' \
+                                                '(' + ', '.join(error_file) + ') FOR ERRORS.'
+
+                                # If there are errors in files and repeated files
+                                if repeated_value != [] and error_file != []:
+                                    error_temp = error_start + error_repeat + error_process
+                                    color_temp = "danger"
+                                elif error_file != [] and repeated_value == []:
+                                    error_temp = error_start + '\n' + error_process
+                                    color_temp = "danger"
+                                elif error_file == [] and repeated_value != []:
+                                    error_temp = error_start + '\n' + error_repeat
+                                    color_temp = "danger"
+                            else:
+                                # If no errors display success message
+                                error_temp = ', '.join(new_value) + ' PROCESSED'
+                                color_temp = "success"
 
                         # Set loading variable to 'done' when processing is complete
                     loading_variable = 'done'
@@ -1616,26 +1631,21 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                     Workspace_store_clear = True
                     filestorage_clear = True
                     filename_filepath_clear = True
-                    filename_filepath_data = no_update
                     loading_variable = no_update
 
         # Return output values
-        return file_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, filename_filepath_data,\
-            upload_file_checklist, loading_variable, Workspace_store_clear, filestorage_clear, filename_filepath_clear
+        return file_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, upload_file_checklist,\
+            loading_variable, Workspace_store_clear, filestorage_clear, filename_filepath_clear
 
     except Exception as e:
         # If any error display message
         error_temp = str(e)
         color_temp = 'danger'
-        error_perm = 'NO WORKSPACE SELECTED'
-        color_perm = 'danger'
         upload_file_checklist = []
-        Workspace_store_clear = True
-        filestorage_clear = True
-        filename_filepath_clear = True
 
-    return no_update, error_temp, color_temp, True, error_perm, color_perm, True, no_update, upload_file_checklist,\
-        no_update, Workspace_store_clear, filestorage_clear, filename_filepath_clear
+
+    return no_update, error_temp, color_temp, True, no_update, no_update, True, upload_file_checklist,\
+        no_update, no_update, no_update, no_update
 
 # Callback 9
 # Callback to clear data
@@ -1648,7 +1658,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
         Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
         Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
         Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
         Input(component_id='clear_files', component_property='n_clicks'),
         State(component_id='filestorage', component_property='data'),
@@ -1685,7 +1694,6 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
                     open_perm = True
                     newmaindata = no_update
                     clear_data_main = True
-                    clear_file_initial = True
                     clear_file_checklist = []
 
                 else:
@@ -1706,9 +1714,8 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
                         # No update to new main data
                         newmaindata = no_update
 
+                        # Clear main data
                         clear_data_main = False
-
-                        clear_file_initial = False
 
                     elif len(whatclear) > 0:
 
@@ -1733,7 +1740,6 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
 
                         # Assign new data
                         newmaindata = maindata
-                        clear_file_initial = True
                         clear_data_main = False
 
                         if error_try != '':
@@ -1741,12 +1747,12 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
                         else:
                             color_temp = "success"
 
-                        error_temp = 'FILES CLEARED: ' + ','.join(deleted_files) + error_try
+                        error_temp = 'FILES CLEARED: ' + ', '.join(deleted_files) + error_try
 
                         clear_file_checklist = []
 
             # Return required values
-            return error_temp, color_temp, True, error_perm, color_perm, open_perm, newmaindata, clear_data_main, clear_file_initial, clear_file_checklist
+            return error_temp, color_temp, True, error_perm, color_perm, open_perm, newmaindata, clear_data_main, clear_file_checklist
 
     except Exception as e:
 
@@ -2502,6 +2508,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                     filedata_Clear_data = True
 
                 else:
+                    print(file_data)
                     error_perm = no_update
                     color_perm = no_update
                     open_perm = no_update
@@ -2625,7 +2632,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             i = file_data[0].index(file)
                             file_path = file_data[4][i]
                             shape_dtype = file_data[1][i]
-                            SF = file_data[3][i]
                             shape, dtype = shape_dtype
 
                             # Load time data and convert to requested unit
@@ -2642,20 +2648,18 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                                                                   dtype=dtype,
                                                                                   shape=shape[0],
                                                                                   row_numbers=row_numbers)
-
-
-
-                                    # Plotting data
-                                    fig.add_trace(
-                                        go.Scattergl(
-                                            name=f"{file} {vector} {Moving_label}",
-                                            showlegend=True,
-                                            x=time_data_resampled/t_val,
-                                            y=velocity_moving_avg)
+                                # Plotting data
+                                fig.add_trace(
+                                    go.Scattergl(
+                                        name=f"{file} {vector}",
+                                        showlegend=True,
+                                        x=numpy_vect_data[file]['t'] / t_val,
+                                        y=numpy_vect_data[file][vector]
                                     )
+                                )
 
                                 # Creating a list of current legend names
-                                current_names.append(f"{file} {vector} {Moving_label}")
+                                current_names.append(f"{file} {vector}")
 
                         # Update legend and title based on user input
                         if legend_data is None:
@@ -2742,6 +2746,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
         Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Time_unit_graph', component_property='value'),
         Input(component_id='plot_clear_bttn', component_property='n_clicks'),
     prevent_initial_call=True)
 
@@ -2755,14 +2760,15 @@ def clear_graph(n_clicks):
             Vect = None
             tsmall = None
             tbig = None
-            return fig, file, Vect, tsmall, tbig, no_update, no_update, False,
+            t_val = None
+            return fig, file, Vect, tsmall, tbig, no_update, no_update, no_update, t_val
 
     except Exception as e:
         # If any error display message
         error = str(e)
         color = 'danger'
 
-        return no_update, no_update, no_update, no_update, no_update, error, color, True,
+        return no_update, no_update, no_update, no_update, no_update, error, color, True, no_update
 
 # Callback 20
 # Callback to update legend or title data
