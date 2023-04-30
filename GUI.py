@@ -286,7 +286,7 @@ app.layout = dbc.Container([
         dbc.Col([
 
             # Label for optional inputs
-            html.Label('ESSENTIAL INPUTS:', className='mb-2 fw-bold text center'),
+            html.Label('REQUIRED INPUTS:', className='mb-2 fw-bold text center'),
 
             dbc.Stack([
                 # Row for dropdown menus
@@ -317,32 +317,9 @@ app.layout = dbc.Container([
                 dbc.Row([
                     # Input field for minimum time
                     dbc.Col(
-                        dcc.Dropdown(
-                            id="Moving_average",
-                            options=[
-                                {'label': 'Raw Data', 'value': 'raw'},
-                                {'label': '1 Sec', 'value': 1},
-                                {'label': '5 Sec', 'value': 5},
-                                {'label': '10 Sec', 'value': 10},
-                                {'label': '15 Sec', 'value': 15},
-                                {'label': '30 Sec', 'value': 30},
-                                {'label': '1 Min', 'value': 60},
-                                {'label': '5 Min', 'value': 300},
-                                {'label': '10 Min', 'value': 600},
-                                {'label': '15 Min', 'value': 900},
-                                {'label': '30 Min', 'value': 1800},
-                                {'label': '1 hr', 'value': 3600},
-                                {'label': '6 hr', 'value': 21600},
-                                {'label': '12 hr', 'value': 43200},
-                                {'label': '1 day', 'value': 86400}
-                            ],
-                            multi=False,
-                            value=None,
-                            placeholder="Moving Average Time"
-                        )
-                    ),
+
                     # Input field for graph time unit. Value corresponds to value in seconds.
-                    dbc.Col(
+
                         dcc.Dropdown(
                             id="Time_unit_graph",
                             options=[
@@ -356,7 +333,8 @@ app.layout = dbc.Container([
                             value=None,
                             placeholder="Select a Time Unit"
                         )
-                    ),
+                    )
+
                 ], align='center', justify='center'),
 
             ], gap=3),
@@ -550,7 +528,7 @@ app.layout = dbc.Container([
 
     dbc.Row([
 
-        # Column for "Upload/Clear Files" title
+        # Column for "Workspace" title
         dbc.Col(
             html.H5('WORKSPACE', className='center-text, fw-bold'),
             width=12,
@@ -564,10 +542,6 @@ app.layout = dbc.Container([
             ),  # Horizontal rule to separate content
         ),
 
-        dbc.Col(
-            html.Label('CURRENT WORKSPACE:', className='mb-2 fw-bold text center'),
-        width = 12),
-
         dbc.Col([
             dbc.Alert(
                 id="Workspace_alert_temp",
@@ -578,17 +552,11 @@ app.layout = dbc.Container([
             ),
         ], class_name='mb-3', width=10),
 
-        # Column containing alert message for workspace (hidden by default)
-        dbc.Col([
-            dbc.Alert(
-                id="Workspace_alert",
-                is_open=False,
-                class_name='text-center'
-            ),
-        ], class_name='mb-3', width=10),
-
         # Column containing input group for workspace update/clear
-        dbc.Col(
+        dbc.Col([
+            dbc.Col(
+                html.Label('UPDATE WORKSPACE:', className='mb-2 fw-bold text center'),
+                width=12),
             dbc.InputGroup([
                 # Dropdown menu for selecting the update action
                 dbc.DropdownMenu([
@@ -605,9 +573,50 @@ app.layout = dbc.Container([
                 ),
 
             ]),
-            width=11,
+            ], width=11,
             class_name='mb-3'
         ),
+
+    dbc.Row([
+
+            dbc.Col(
+                    html.Label('CURRENT WORKSPACE:', className='mb-2 fw-bold text center'),
+            width=12),
+
+            dbc.Col(
+            dbc.Alert(
+                id="Workspace_alert",
+                is_open=False,
+                class_name='text-center'
+            ),
+            width = 8),
+
+            # Column for clearing files
+            dbc.Col(
+                dbc.Stack([
+                    dbc.Button(
+                        "CLEAR SELECTED FILES FROM WORKSPACE",
+                        id='clear_files',
+                        color="primary",
+                        className="mb-3, fw-bold",
+                        n_clicks=0
+                    ),
+
+                    html.Label("SELECT FILES TO CLEAR", className='center-text, fw-bold'),
+
+                    # Checkbox for clearing all files
+                    dbc.Checklist(
+                        ["All"], [], id="all_clear_file_checklist", inline=True
+                    ),
+
+                    # Checkbox for selecting individual files to clear
+                    dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
+                ],
+                    gap=2),
+                width=4),
+
+        ], align='start', justify='evenly', className = 'mb-3'),
+
 
         # Horizontal rule to separate content
         dbc.Row([
@@ -617,7 +626,7 @@ app.layout = dbc.Container([
             ),
         ], className='mb-2'),
 
-        # Column for "Upload/Clear Files" title
+        # Column for "Upload" title
         dbc.Col(
             html.H5('FILE UPLOAD', className='center-text, fw-bold'),
             width=12,
@@ -627,7 +636,7 @@ app.layout = dbc.Container([
         # Column for alert message (hidden by default)
         dbc.Col([
             dbc.Alert(
-                id="ClearFiles_alert",
+                id="UploadFiles_alert",
                 is_open=False,
                 dismissable=True,
                 duration=30000,
@@ -644,6 +653,10 @@ app.layout = dbc.Container([
             className='mb-4'
         ),
 
+        dbc.Col(
+            html.Label('UPLOAD FILE:', className='mb-2 fw-bold text center'),
+            width=11),
+
         # Column for BARNACLE file selection/upload
         dbc.Col(
             dbc.InputGroup([
@@ -654,6 +667,8 @@ app.layout = dbc.Container([
                     dbc.DropdownMenuItem("Clear Uploads", id="dropdown_BARN_clear"),
                 ],
                     label="UPDATE"),
+
+
                 # Input element for entering the new title or legend
                 dbc.Input(
                     id="submit_files",
@@ -695,12 +710,7 @@ app.layout = dbc.Container([
                     className="mb-3, fw-bold",
                     n_clicks=0,
                 ),
-                dbc.Input(
-                    id="Sample_rate",
-                    min=0,
-                    type="number",
-                    placeholder="Enter Sample Frequency",
-                ),
+
                 html.Label(
                     "SELECT FILES TO PROCESS",
                     className='center-text, fw-bold'
@@ -718,30 +728,45 @@ app.layout = dbc.Container([
                 gap=2),
             width=3),
 
-        # Column for clearing files
-        dbc.Col(
-            dbc.Stack([
-                dbc.Button(
-                    "CLEAR SELECTED FILES FROM WORKSPACE",
-                    id='clear_files',
-                    color="primary",
-                    className="mb-3, fw-bold",
-                    n_clicks=0
-                ),
+        # Column for Sample Frequency and Moving Average
+        dbc.Col([
 
-                html.Label("SELECT FILES TO CLEAR", className='center-text, fw-bold'),
+            # Label for optional inputs
+            html.Label('REQUIRED INPUTS:', className='mb-2 fw-bold text center'),
 
-                # Checkbox for clearing all files
-                dbc.Checklist(
-                    ["All"], [], id="all_clear_file_checklist", inline=True
-                ),
+            dbc.Input(
+                id="Sample_rate",
+                min=0,
+                type="number",
+                placeholder="Enter Sample Frequency",
+                className = 'mb-3'
+            ),
 
-                # Checkbox for selecting individual files to clear
-                dbc.Checklist(value=[], id="clear_file_checklist", inline=True),
+        dcc.Dropdown(
+            id="Moving_average",
+            options=[
+                {'label': 'Raw Data', 'value': 'raw'},
+                {'label': '1 Sec', 'value': 1},
+                {'label': '5 Sec', 'value': 5},
+                {'label': '10 Sec', 'value': 10},
+                {'label': '15 Sec', 'value': 15},
+                {'label': '30 Sec', 'value': 30},
+                {'label': '1 Min', 'value': 60},
+                {'label': '5 Min', 'value': 300},
+                {'label': '10 Min', 'value': 600},
+                {'label': '15 Min', 'value': 900},
+                {'label': '30 Min', 'value': 1800},
+                {'label': '1 hr', 'value': 3600},
+                {'label': '6 hr', 'value': 21600},
+                {'label': '12 hr', 'value': 43200},
+                {'label': '1 day', 'value': 86400}
             ],
-                gap=2),
-            width=3
-        ),
+            multi=False,
+            value=None,
+            placeholder="Moving Average Time"
+            ),
+        ], width=3),
+
 
     ], align='start', justify='evenly', className = 'mb-4'),
 
@@ -1090,9 +1115,9 @@ def update_cal_text(Cal_data):
 # Define callback function for processing the uploaded calibration file
 @ app.callback(
     Output(component_id="Cal_storage", component_property='data', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='submit_Cal_file', component_property='filename'),
     Input(component_id='submit_Cal_file', component_property='contents'),
         prevent_initial_call=True)
@@ -1157,9 +1182,9 @@ def cal_analysis(filename, contents):
 @app.callback(
         Output(component_id='submit_files', component_property='value'),
         Output(component_id='filename_filepath', component_property='data'),
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
         Input(component_id = 'dropdown_BARN_update', component_property ='n_clicks'),
         State(component_id='submit_files', component_property='value'),
         State(component_id='filename_filepath', component_property='data'),
@@ -1235,9 +1260,9 @@ def update_file_to_upload_checklist(n_clicks, filepath1, filename_filepath_data)
 @app.callback(
     Output(component_id='submit_files', component_property='value', allow_duplicate=True),
     Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-    Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='dropdown_BARN_clear', component_property='n_clicks'),
     prevent_initial_call=True
 )
@@ -1265,9 +1290,9 @@ def clear_upload(n_clicks):
 @app.callback(
     [
         Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
@@ -1514,9 +1539,9 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 # Callback 9
 # Callback to clear data
 @app.callback(
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='is_open', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
         Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
@@ -1635,9 +1660,9 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
 @app.callback(
         Output(component_id="upload_file_checklist", component_property='value'),
         Output(component_id='all_upload_file_checklist', component_property='value'),
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
         Input(component_id="upload_file_checklist", component_property='value'),
         Input(component_id='all_upload_file_checklist', component_property='value'),
         State(component_id='filename_filepath', component_property='data'),
@@ -1680,9 +1705,9 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filenam
 @app.callback(
         Output(component_id="clear_file_checklist", component_property='value'),
         Output(component_id='all_clear_file_checklist', component_property='value'),
-        Output(component_id='ClearFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='ClearFiles_alert', component_property='is_open', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
+        Output(component_id='Workspace_alert_temp', component_property='is_open', allow_duplicate=True),
         Input(component_id="clear_file_checklist", component_property='value'),
         Input(component_id='all_clear_file_checklist', component_property='value'),
         Input(component_id='filestorage', component_property='data'),
