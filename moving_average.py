@@ -15,9 +15,14 @@ def moving_average(data, window_size):
     # is reduced to only include positions where the kernel and data fully overlap.
     return scipy.signal.fftconvolve(data, kernel, mode = 'valid')
 
+time_data = [2, 3, 4, 6, 9,10]
+velocity_data = [1, 3, 5, 6, 7, 2]
+
+
 # Resample the data at a constant time step
-time_data_resampled = np.arange(time_data[0], time_data[-1], 0.5)  # Choose a desired constant time step
+time_data_resampled = np.arange(time_data[0], time_data[-1], 1)  # Choose a desired constant time step
 velocity_data_resampled = np.interp(time_data_resampled, time_data, velocity_data)
+moving_average_duration = 1
 
 # Calculate the window size (number of points) for the moving average
 window_size = int(moving_average_duration / (time_data_resampled[1] - time_data_resampled[0]))

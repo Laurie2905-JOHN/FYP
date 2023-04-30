@@ -91,7 +91,6 @@ def moving_average(data, window_size):
     # and normalize it by dividing each element by the window_size.
     # This kernel will be used to compute the moving average.
     kernel = np.ones(window_size) / window_size
-
     # Apply the kernel to the input data using convolution. This operation
     # computes the moving average by sliding the kernel over the data and
     # calculating the dot product between the kernel and the data in the
@@ -1543,17 +1542,22 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
                                     else:
 
-                                        # Desired moving average duration (in time units)
                                         moving_average_duration = moving_val
 
                                         # Set the time step to be a fraction of the moving average duration
                                         # Set the time step based on SF so data is uniform
                                         time_step = (1 / SF) * moving_average_duration
+                                        print(moving_average_duration)
 
                                         # Calculate the window size (number of points) for the moving average
                                         window_size = int(moving_average_duration / time_step)
 
                                         print(window_size)
+
+                                        # Resample the data at a constant time step as nan values could cause problems
+                                        time_data_resampled = np.arange(Barn_data['t'][0],
+                                                                        Barn_data['t'][-1],
+                                                                        time_step)
 
                                         # Resample the data at a constant time step as nan values could cause problems
                                         time_data_resampled = np.arange(Barn_data['t'][0],
@@ -2562,8 +2566,8 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             min2.append(file_data[5][i])
                             max2.append(file_data[6][i])
 
-                        min1 = min(min2)/t_val
-                        max1 = max(max2)/t_val
+                        min1 = min(min2)
+                        max1 = max(max2)
 
                         # Error messages
                         smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
