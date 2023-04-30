@@ -22,6 +22,63 @@ warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
 # Define functions
 
+# Define a function to save an array as a memory-mapped file (memmap)
+def save_array_memmap(array, filename, folder_path):
+    # Construct the full file path by joining the folder path and the filename
+    filepath = os.path.join(folder_path, filename)
+
+    # Obtain the data type of the input array
+    dtype = str(array.dtype)
+
+    # Obtain the shape of the input array
+    shape = array.shape
+
+    # Create a memory-mapped array with the same data type, shape, and write mode
+    array_memmap = np.memmap(filepath, dtype=dtype, shape=shape, mode='w+')
+
+    # Copy the contents of the input array into the memory-mapped array
+    array_memmap[:] = array[:]
+
+    # Delete the memory-mapped array to flush the changes to the file
+    del array_memmap
+
+    # Return the shape and data type of the saved array
+    return shape, dtype
+
+
+# Define a function to get a unique file path for each file
+def get_unique_path(base_path, name):
+    # Initialize a counter to keep track of the number of duplicate file names
+    counter = 1
+
+    # Set the initial new_name to the input name
+    new_name = name
+
+    # Check if a file with the given name already exists in the specified path
+    while os.path.exists(os.path.join(base_path, new_name)):
+        # If it does, update the new_name by appending the counter value in parentheses
+        new_name = f"{name} ({counter})"
+
+        # Increment the counter for the next iteration
+        counter += 1
+
+    # Return the unique file path by joining the base_path and the new_name
+    return os.path.normpath(os.path.join(base_path, new_name))
+
+# Define the moving average function
+def moving_average(data, window_size):
+    # Create an array (kernel) of ones with the shape of window_size
+    # and normalize it by dividing each element by the window_size.
+    # This kernel will be used to compute the moving average.
+    kernel = np.ones(window_size) / window_size
+
+    # Apply the kernel to the input data using convolution. This operation
+    # computes the moving average by sliding the kernel over the data and
+    # calculating the dot product between the kernel and the data in the
+    # current window. The 'valid' mode ensures that the output array size
+    # is reduced to only include positions where the kernel and data fully overlap.
+    return scipy.signal.fftconvolve(data, kernel, mode = 'valid')
+
 def is_valid_folder_path(file_path):
     """
     Check if the given file path points to a folder and not a file.
@@ -579,17 +636,16 @@ app.layout = dbc.Container([
 
     dbc.Row([
 
-            dbc.Col(
+            dbc.Col([
+                dbc.Col(
                     html.Label('CURRENT WORKSPACE:', className='mb-2 fw-bold text center'),
-            width=12),
-
-            dbc.Col(
+                    width=12),
             dbc.Alert(
                 id="Workspace_alert",
                 is_open=False,
                 class_name='text-center'
             ),
-            width = 8),
+            ], width = 8),
 
             # Column for clearing files
             dbc.Col(
@@ -615,7 +671,7 @@ app.layout = dbc.Container([
                     gap=2),
                 width=4),
 
-        ], align='start', justify='evenly', className = 'mb-3'),
+        ], align='center', justify='evenly', className = 'mb-3'),
 
 
         # Horizontal rule to separate content
@@ -692,11 +748,17 @@ app.layout = dbc.Container([
                     # Allow multiple files to be uploaded
                     multiple=False,
                 ),
-                dbc.Alert(
-                    id='calAlert',
-                    dismissable=False,
-                    class_name='text-center'
-                ),
+
+                dbc.Col([
+                    dbc.Col(
+                        html.Label('CURRENT CALIBRATION FILE:', className='mb-2 fw-bold text center'),
+                        width=12),
+                    dbc.Alert(
+                        id='calAlert',
+                        dismissable=False,
+                        class_name='text-center'
+                    ),
+                ])
             ], gap=3),
         ], width=3),
 
@@ -1311,9 +1373,12 @@ def clear_upload(n_clicks):
         State(component_id='filestorage', component_property='data'),
         State(component_id="upload_file_checklist", component_property='value'),
         State(component_id="Workspace_store", component_property='data')
+        State(component_id='Moving_average', component_property='value'),
+        State(component_id='Moving_average', component_property='options'),
     ],
 )
-def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, filenames, Workspace_data):
+def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, filenames, Workspace_data, moving_val,
+                    moving_options):
 
     # Handle errors and exceptions
     try:
@@ -1351,7 +1416,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         error_temp = 'NO FILES SELECTED FOR UPLOAD'
                         color_temp = "danger"
                         filename_filepath_data = no_update
-                        # Return the same data if no files were uploaded
                         file_data = no_update
 
                     # Check if no sample rate was selected
@@ -1359,7 +1423,13 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         error_temp = 'NO SAMPLE RATE SELECTED'
                         color_temp = "danger"
                         filename_filepath_data = no_update
-                        # Return the same data if no files were uploaded
+                        file_data = no_update
+
+                    # Check if no sample rate was selected
+                    elif moving_val is None:
+                        error_temp = 'NO MOVING AVERAGE SELECTED'
+                        color_temp = "danger"
+                        filename_filepath_data = no_update
                         file_data = no_update
 
                     else:
@@ -1371,6 +1441,16 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         Old_filepath = file_data[4]
                         Old_min = file_data[5]
                         Old_max = file_data[6]
+
+                        # For selected moving average find label name
+                        for option in moving_options:
+                            if option['value'] == moving_val:
+                                Moving_label = option['label']
+
+                        # Create workspace cached files folder if it doesn't exist
+                        Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
+                        if not os.path.exists(Workspace_Path):
+                            os.mkdir(Workspace_Path)
 
                         # Make copies of existing data
                         combined_filenames = Oldfilenames.copy()
@@ -1386,60 +1466,81 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         repeated_value = []  # List of repeated file names
                         error_file = []  # List of files with invalid formats
 
-                        # Define function to save array as memmap
-                        def save_array_memmap(array, filename, folder_path):
-                            filepath = os.path.join(folder_path, filename)
-                            dtype = str(array.dtype)
-                            shape = array.shape
-                            array_memmap = np.memmap(filepath, dtype=dtype, shape=shape, mode='w+')
-                            array_memmap[:] = array[:]
-                            del array_memmap
-                            return shape, dtype
-
-                        # Define function to get a unique path for each file
-                        def get_unique_path(base_path, name):
-                            counter = 1
-                            new_name = name
-
-                            while os.path.exists(os.path.join(base_path, new_name)):
-                                new_name = f"{name} ({counter})"
-                                counter += 1
-
-                            return os.path.normpath(os.path.join(base_path, new_name))
 
                         # Loop through uploaded files and process them
                         for i, value in enumerate(filenames):
                             # Check if the file name is already in the combined list
                             if value not in combined_filenames:
                                 try:
+                                    value = value + ' (' + Moving_label + ')'
                                     # Process file data
                                     Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
-
-                                    # Create workspace cached files folder if it doesn't exist
-                                    Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
-                                    if not os.path.exists(Workspace_Path):
-                                        os.mkdir(Workspace_Path)
 
                                     # Get unique file path for saving data
                                     file_path = get_unique_path(Workspace_Path, value)
                                     os.makedirs(file_path, exist_ok=True)
 
                                     # Update data with new processed file data
-                                    combined_max.append(np.amax(Barn_data['t']))
-                                    combined_min.append(np.amin(Barn_data['t']))
-
-                                    save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
-                                    save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
-                                    save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
-                                    save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
-                                    shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
-
+                                    combined_max.append(Barn_data['t'][-1])
+                                    combined_min.append(Barn_data['t'][0])
                                     new_value.append(value)
                                     combined_filenames.append(value)
-                                    combined_dtype_shape.append(shape_dtype)
-                                    combined_CalData.append(cal_data[0])
                                     combined_SF.append(SF)
+                                    combined_CalData.append(cal_data[0])
                                     combined_filepath.append(file_path)
+
+                                    # Plotting raw data if no moving average is selected
+                                    if moving_val == 'raw':
+
+                                        # Saving data and getting the shape and dtype from t array
+                                        # The shape and dtype is the same in all arrays
+                                        save_array_memmap(Barn_data['Ux'], 'Ux.dat', file_path)
+                                        save_array_memmap(Barn_data['Uy'], 'Uy.dat', file_path)
+                                        save_array_memmap(Barn_data['Uz'], 'Uz.dat', file_path)
+                                        save_array_memmap(Barn_data['U1'], 'U1.dat', file_path)
+                                        shape_dtype = save_array_memmap(Barn_data['t'], 't.dat', file_path)
+
+
+                                    else:
+
+                                        # Desired moving average duration (in time units)
+                                        moving_average_duration = moving_val
+
+                                        # Set the time step to be a fraction of the moving average duration
+                                        # Set the time step based on SF so data is uniform
+                                        time_step = (1 / SF) * moving_average_duration
+
+                                        # Calculate the window size (number of points) for the moving average
+                                        window_size = int(moving_average_duration / time_step)
+
+                                        # Resample the data at a constant time step as nan values could cause problems
+                                        time_data_resampled = np.arange(Barn_data['t'][0],
+                                                                        Barn_data['t'][-1],
+                                                                        time_step)
+
+                                        # Getting shape and dtype from resampled t array
+                                        # The shape and dtype is the same in all arrays
+                                        shape_dtype = save_array_memmap(time_data_resampled, 't.dat', file_path)
+
+                                        # Update data with new shape_dtype data
+                                        combined_dtype_shape.append(shape_dtype)
+
+                                        print(shape_dtype)
+
+                                        # Iterate over the velocity data labels
+                                        for value in ['Ux', 'Uy', 'Uz', 'U1']:
+
+                                            # Interpolate the velocity data to the new time array
+                                            velocity_data_resampled = np.interp(time_data_resampled,
+                                                                                Barn_data['t'],
+                                                                                Barn_data[value])
+
+                                            # Calculate the moving average of the resampled velocity data
+                                            velocity_moving_avg = moving_average(velocity_data_resampled, window_size)
+
+                                            # Saving data as a memmap file
+                                            shape_dtype = save_array_memmap(velocity_moving_avg, value + '.dat', file_path)
+                                            print(shape_dtype)
 
                                 # If there's an error processing the file, add it to the error list
                                 except Exception as e:
@@ -1451,7 +1552,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF, combined_filepath,
                                      combined_min, combined_max]
 
-                        # Update uploaded file data
+                        # Create a copy of uploaded file data
                         upload_filename = filename_filepath_data[0]
                         upload_filepath = filename_filepath_data[1]
 
@@ -2363,12 +2464,10 @@ def clear_table(n_clicks):
         State(component_id='Workspace_store', component_property='data'),
         State(component_id='Time_unit_graph', component_property='value'),
         State(component_id='Time_unit_graph', component_property='options'),
-        State(component_id='Moving_average', component_property='value'),
-        State(component_id='Moving_average', component_property='options'),
         prevent_initial_call = True)
 
 def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title,
-                 Workspace_data, t_val, time_unit_options, moving_val, moving_options):
+                 Workspace_data, t_val, time_unit_options):
 
     # Try/Except, used to catch any errors not considered
     try:
@@ -2411,7 +2510,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                     filedata_Clear_data = no_update
 
                     # If no input do not plot graphs
-                    if file_inputs == [] or vector_inputs1 == [] or t_val is None or moving_val is None:
+                    if file_inputs == [] or vector_inputs1 == [] or t_val is None:
                         fig = no_update
                         error_temp = 'PLEASE CHECK INPUTS'
                         color_temp = 'danger'
@@ -2440,8 +2539,8 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             min2.append(file_data[5][i])
                             max2.append(file_data[6][i])
 
-                        min1 = min(min2)
-                        max1 = max(max2)
+                        min1 = min(min2)/t_val
+                        max1 = max(max2)/t_val
 
                         # Error messages
                         smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
@@ -2504,11 +2603,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                 color_temp = 'success'
                                 error_cut = ''
 
-                        # For selected moving average find label name
-                        for option in moving_options:
-                            if option['value'] == moving_val:
-                                Moving_label = option['label']
-
                         # For selected time unit find label to update graph
                         for option in time_unit_options:
                             if option['value'] == t_val:
@@ -2525,20 +2619,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                 yanchor="bottom",
                                 xanchor="center"),
                         )
-
-                        # Define the moving average function
-                        def moving_average(data, window_size):
-                            # Create an array (kernel) of ones with the shape of window_size
-                            # and normalize it by dividing each element by the window_size.
-                            # This kernel will be used to compute the moving average.
-                            kernel = np.ones(window_size) / window_size
-
-                            # Apply the kernel to the input data using convolution. This operation
-                            # computes the moving average by sliding the kernel over the data and
-                            # calculating the dot product between the kernel and the data in the
-                            # current window. The 'valid' mode ensures that the output array size
-                            # is reduced to only include positions where the kernel and data fully overlap.
-                            return scipy.signal.fftconvolve(data, kernel, mode = 'valid')
 
                         # Loop through the files and vectors to create the graph
                         for file in file_inputs:
@@ -2563,40 +2643,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                                                                   shape=shape[0],
                                                                                   row_numbers=row_numbers)
 
-                                # Plotting raw data if no moving average is selected
-                                if moving_val == 'raw':
-                                    fig.add_trace(
-                                        go.Scattergl(
-                                            name=f"{file} {vector} {Moving_label}",
-                                            showlegend=True,
-                                            x=numpy_vect_data[file]['t'] / t_val,
-                                            y=numpy_vect_data[file][vector])
-                                    )
-                                else:
 
-                                    # Desired moving average duration (in time units)
-                                    moving_average_duration = moving_val
-
-                                    # Set the time step to be a fraction of the moving average duration
-                                    time_step = (1 / SF) * moving_average_duration  # set the time step based on SF so data is uniform
-
-
-                                    # Resample the data at a constant time step as nan values could cause problems
-                                    time_data_resampled = np.arange(numpy_vect_data[file]['t'][0],
-                                                                    numpy_vect_data[file]['t'][-1],
-                                                                     time_step)
-
-
-                                    # Interpolate the velocity data to the new time array
-                                    velocity_data_resampled = np.interp(time_data_resampled,
-                                                                        numpy_vect_data[file]['t'],
-                                                                        numpy_vect_data[file][vector])
-
-                                    # # Calculate the window size (number of points) for the moving average
-                                    window_size = int(moving_average_duration / time_step)
-
-                                    # Calculate the moving average of the resampled velocity data
-                                    velocity_moving_avg = moving_average(velocity_data_resampled, window_size)
 
                                     # Plotting data
                                     fig.add_trace(
