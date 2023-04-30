@@ -94,9 +94,8 @@ def moving_average(data, window_size):
     # Apply the kernel to the input data using convolution. This operation
     # computes the moving average by sliding the kernel over the data and
     # calculating the dot product between the kernel and the data in the
-    # current window. The 'valid' mode ensures that the output array size
-    # is reduced to only include positions where the kernel and data fully overlap.
-    return scipy.signal.convolve(data, kernel, mode = 'valid')
+    # current window.
+    return scipy.signal.convolve(data, kernel, mode = 'same')
 
 def is_valid_folder_path(file_path):
     """
@@ -1542,22 +1541,15 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
                                     else:
 
+                                        # Desired moving average duration (in time units)
                                         moving_average_duration = moving_val
 
                                         # Set the time step to be a fraction of the moving average duration
                                         # Set the time step based on SF so data is uniform
-                                        time_step = (1 / SF) * moving_average_duration
-                                        print(moving_average_duration)
+                                        time_step = 1 / SF
 
                                         # Calculate the window size (number of points) for the moving average
-                                        window_size = int(moving_average_duration / time_step)
-
-                                        print(window_size)
-
-                                        # Resample the data at a constant time step as nan values could cause problems
-                                        time_data_resampled = np.arange(Barn_data['t'][0],
-                                                                        Barn_data['t'][-1],
-                                                                        time_step)
+                                        window_size = int(moving_average_duration * SF)
 
                                         # Resample the data at a constant time step as nan values could cause problems
                                         time_data_resampled = np.arange(Barn_data['t'][0],
@@ -2566,8 +2558,10 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             min2.append(file_data[5][i])
                             max2.append(file_data[6][i])
 
-                        min1 = min(min2)
-                        max1 = max(max2)
+                        min1 = min(min2) * t_val
+                        max1 = max(max2) * t_val
+
+                        print(max1)
 
                         # Error messages
                         smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
@@ -2656,7 +2650,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
                             # Load time data and convert to requested unit
                             t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0],
-                                                  row_numbers='all')
+                                                  row_numbers='all') /t_val
                             mask = (t >= smallt) & (t <= bigt)
                             numpy_vect_data = {file: {'t': t[mask]}}
                             row_numbers = np.where(mask)[0].tolist()
@@ -2673,7 +2667,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                     go.Scattergl(
                                         name=f"{file} {vector}",
                                         showlegend=True,
-                                        x=numpy_vect_data[file]['t'] / t_val,
+                                        x=numpy_vect_data[file]['t'],
                                         y=numpy_vect_data[file][vector]
                                     )
                                 )

@@ -6,7 +6,7 @@ import numpy as np
 file_path = r"C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\BARNACLE DATA"
 
 # Read the input file and create a NumPy array
-with open(os.path.join(file_path, "Example 1.txt"), "r") as file:
+with open(os.path.join(file_path, "Anna_LongFile.txt"), "r") as file:
     data_array = np.loadtxt(file, delimiter=',')
 
 # Set your sample rate (fs) and the time threshold here
@@ -30,6 +30,6 @@ repeat_count = int(np.ceil(desired_time / total_time))
 extended_data = np.tile(data_array, (repeat_count, 1))
 
 # Save the extended data as a new text file
-with open(os.path.join(file_path, "output.txt"), "w") as file:
+with open(os.path.join(file_path, "outputLONG_SF16.txt"), "w") as file:
     np.savetxt(file, extended_data, delimiter=',', fmt='%s')
 

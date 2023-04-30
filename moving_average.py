@@ -1,33 +1,27 @@
 import numpy as np
-import scipy
 
-# Define the moving average function
-def moving_average(data, window_size):
-    # Create an array (kernel) of ones with the shape of window_size
-    # and normalize it by dividing each element by the window_size.
-    # This kernel will be used to compute the moving average.
-    kernel = np.ones(window_size) / window_size
+# Your time series data (unequally spaced)
+timestamps = np.array([0, 1.2, 2.1, 3.2, 4.5, 5.6, 6.7, 7.8, 8.9, 10])
+data = np.array([1, 2, 3, 2, 3, 4, 5, 4, 5, 6])
 
-    # Apply the kernel to the input data using convolution. This operation
-    # computes the moving average by sliding the kernel over the data and
-    # calculating the dot product between the kernel and the data in the
-    # current window. The 'valid' mode ensures that the output array size
-    # is reduced to only include positions where the kernel and data fully overlap.
-    return scipy.signal.fftconvolve(data, kernel, mode = 'valid')
+# Desired moving average duration (in seconds)
+duration = 3
 
-time_data = [2, 3, 4, 6, 9,10]
-velocity_data = [1, 3, 5, 6, 7, 2]
+# Sample frequency (SF) - data points per second
+SF = 1
 
+# Calculate the window size based on the desired duration and sample frequency
+window_size = int(duration * SF)
 
-# Resample the data at a constant time step
-time_data_resampled = np.arange(time_data[0], time_data[-1], 1)  # Choose a desired constant time step
-velocity_data_resampled = np.interp(time_data_resampled, time_data, velocity_data)
-moving_average_duration = 1
+# Resample the data to equally spaced time series using linear interpolation
+new_timestamps = np.arange(timestamps[0], timestamps[-1], 1 / SF)
+resampled_data = np.interp(new_timestamps, timestamps, data)
 
-# Calculate the window size (number of points) for the moving average
-window_size = int(moving_average_duration / (time_data_resampled[1] - time_data_resampled[0]))
+# Create a window for the moving average calculation
+window = np.ones(window_size) / window_size
 
-# Calculate the moving average of the resampled velocity data
-velocity_moving_avg = moving_average(velocity_data_resampled, window_size)
+# Calculate the moving average using numpy's convolve function
+moving_average = np.convolve(resampled_data, window, mode='valid')
 
-print(velocity_moving_avg)
+# Print the moving average
+print(moving_average)
