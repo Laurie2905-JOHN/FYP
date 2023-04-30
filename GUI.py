@@ -1415,7 +1415,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
             else:
 
                 if is_valid_folder_path(Workspace_data):
-                    print(type(custom_moving))
 
                     # Initialise data dictionary if it is None
                     if file_data is None:
@@ -1450,7 +1449,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         file_data = no_update
 
                     else:
-
                         # Get existing data from file_data
                         Oldfilenames = file_data[0]
                         old_dtype_shape = file_data[1]
@@ -1483,6 +1481,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         for i, value in enumerate(filenames):
                             # Create new filename with moving average added if custom is selected
                             if moving_val == 'Custom':
+                                moving_val = custom_moving
                                 value = value + ' (' + str(custom_moving) + ' sec' ')'
                             else:
                                 # For selected moving average find label name
@@ -1490,13 +1489,11 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                     if option['value'] == moving_val:
                                         Moving_label = option['label']
                                 value = value + ' (' + Moving_label + ')'
-
                             # Check if the file name is already in the combined list
                             if value not in combined_filenames:
                                 try:
                                     # Process file data
                                     Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
-
                                     # Get unique file path for saving data
                                     file_path = get_unique_path(Workspace_Path, value)
                                     os.makedirs(file_path, exist_ok=True)
@@ -1532,7 +1529,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                         # Set the time step to be a fraction of the moving average duration
                                         # Set the time step based on SF so data is uniform
                                         time_step = (1 / SF) * moving_average_duration
-
+                                        print(moving_average_duration)
                                         # Calculate the window size (number of points) for the moving average
                                         window_size = int(moving_average_duration / time_step)
 
