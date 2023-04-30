@@ -1094,7 +1094,7 @@ def clear_Workspace(n_clicks, Workspace_data):
                                 shutil.rmtree(path)
                                 deleted_files.append(file_name)
                         except Exception as e:
-                            error_files.append(file_name)
+                            error_files.append(file_name + ': ' + str(e))
 
                     # Update output values
                     Workspace_Clear_data = True
@@ -1127,11 +1127,10 @@ def clear_Workspace(n_clicks, Workspace_data):
     except Exception as e:
         error_temp = str(e)
         color_temp = 'danger'
-        error_perm = 'NO WORKSPACE SELECTED'
-        color_perm = 'danger'
+
         # Return no_update for output components when an exception occurs
-        return no_update, no_update, no_update, no_update, error_temp, color_temp, True, error_perm, color_perm,\
-            True, table_data
+        return no_update, no_update, no_update, no_update, error_temp, color_temp, True, no_update, no_update,\
+            True, no_update
 
 # Callback 3
 # Callback to update workspace alert based on data
@@ -1397,10 +1396,10 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
     try:
         # Check if the "newfile" button was clicked
         if "newfile" == ctx.triggered_id:
-            upload_file_checklist = []
 
             # Check if no workspace was selected
             if Workspace_data is None:
+                upload_file_checklist = []
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
                 error_perm = 'NO WORKSPACE SELECTED'
@@ -1408,8 +1407,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                 open_perm = True
                 # Return the same data if no files were uploaded
                 file_data = no_update
-                error_perm = no_update
-                color_perm = no_update
                 loading_variable = no_update
                 Workspace_store_clear = True
                 filestorage_clear = True
@@ -1418,6 +1415,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
             else:
 
                 if is_valid_folder_path(Workspace_data):
+                    print(type(custom_moving))
 
                     # Initialise data dictionary if it is None
                     if file_data is None:
@@ -1427,27 +1425,28 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                     if filenames is None or filenames == []:
                         error_temp = 'NO FILES SELECTED FOR UPLOAD'
                         color_temp = "danger"
-                        filename_filepath_data = no_update
                         file_data = no_update
 
                     # Check if no sample rate was selected
                     elif SF is None or SF == 0:
                         error_temp = 'NO SAMPLE RATE SELECTED'
                         color_temp = "danger"
-                        filename_filepath_data = no_update
                         file_data = no_update
 
                     # Check if no sample rate was selected
                     elif moving_val is None:
-                        error_temp = 'NO MOVING AVERAGE SELECTED'
+                        error_temp = 'CHECK SELECTED MOVING AVERAGE'
                         color_temp = "danger"
-                        filename_filepath_data = no_update
                         file_data = no_update
 
                     elif moving_val == 'Custom' and custom_moving is None:
                         error_temp = 'ENTER CUSTOM MOVING AVERAGE'
                         color_temp = "danger"
-                        filename_filepath_data = no_update
+                        file_data = no_update
+                        
+                    elif moving_val == 'Custom' and not isinstance(custom_moving, int):
+                        error_temp = 'ENTER INTEGER VALUES FOR CUSTOM MOVING AVERAGE'
+                        color_temp = "danger"
                         file_data = no_update
 
                     else:
@@ -1569,47 +1568,56 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                             else:
                                 repeated_value.append(value)
 
-                        error_list_complete = repeated_value + error_file
+                        # Display error messages if there are any errors
+                        if repeated_value != [] or error_file != []:
 
-                        if new_value == []:
-                            error_temp = 'THERE WAS AN ERROR PROCESSING ALL FILES: \n ' \
+                            error_list_complete = repeated_value + error_file
+
+                            error_start = 'THERE WAS AN ERROR PROCESSING FILES: \n ' \
                                           '(' + ', '.join(error_list_complete) + ').'
+
+                            error_repeat = ' PLEASE CHECK FILES: ' \
+                                           '(' + ', '.join(repeated_value) + ') ARE NOT REPEATED.'
+
+                            error_process = ' PLEASE CHECK ERROR: \n' \
+                                            '(' + ', '.join(error_file) + ').'
+
                             color_temp = 'danger'
 
-                            file_data = no_update
+                            # If there are errors in files and repeated files
+                            if repeated_value != [] and error_file != []:
+                                error_1 = error_repeat + error_process
+                            elif error_file != [] and repeated_value == []:
+                                error_1 = error_process
+                            elif error_file == [] and repeated_value != []:
+                                error_1 = error_repeat
+
+                            if len(new_value) == len(error_file):
+
+                                error_temp = 'THERE WAS AN ERROR PROCESSING ALL FILES: \n ' \
+                                             '(' + ', '.join(error_list_complete) + ').' + error_1
+                                color_temp = 'danger'
+
+                                file_data = no_update
+
+                            else:
+
+                                error_temp = error_start + error_1
+
+                                # Update file_data with combined data
+                                file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF,
+                                             combined_filepath, combined_min, combined_max]
+
 
                         else:
+                            # If no errors display success message
+                            error_temp = ', '.join(new_value) + ' PROCESSED'
+                            color_temp = "success"
 
                             # Update file_data with combined data
                             file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF,
                                          combined_filepath, combined_min, combined_max]
 
-                            # Display error messages if there are any errors
-                            if repeated_value != [] or error_file != []:
-
-                                error_start = 'THERE WAS AN ERROR PROCESSING FILES: \n ' \
-                                                  '(' + ', '.join(error_list_complete) + ').'
-
-                                error_repeat = ' PLEASE CHECK FILES: ' \
-                                               '(' + ', '.join(repeated_value) + ') ARE NOT REPEATED.'
-
-                                error_process = ' PLEASE CHECK: \n' \
-                                                '(' + ', '.join(error_file) + ') FOR ERRORS.'
-
-                                # If there are errors in files and repeated files
-                                if repeated_value != [] and error_file != []:
-                                    error_temp = error_start + error_repeat + error_process
-                                    color_temp = "danger"
-                                elif error_file != [] and repeated_value == []:
-                                    error_temp = error_start + '\n' + error_process
-                                    color_temp = "danger"
-                                elif error_file == [] and repeated_value != []:
-                                    error_temp = error_start + '\n' + error_repeat
-                                    color_temp = "danger"
-                            else:
-                                # If no errors display success message
-                                error_temp = ', '.join(new_value) + ' PROCESSED'
-                                color_temp = "success"
 
                         # Set loading variable to 'done' when processing is complete
                     loading_variable = 'done'
@@ -1619,9 +1627,11 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                     Workspace_store_clear = False
                     filestorage_clear = False
                     filename_filepath_clear = False
+                    upload_file_checklist = no_update
 
                 # If workspace doesnt exist display error messages
                 else:
+                    upload_file_checklist = []
                     file_data = no_update
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
