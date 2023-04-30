@@ -13,6 +13,7 @@ import os
 import math
 import re
 import shutil
+import scipy
 from scipy import interpolate
 import statistics as st
 
@@ -20,6 +21,28 @@ import statistics as st
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
 # Define functions
+
+def is_valid_folder_path(file_path):
+    """
+    Check if the given file path points to a folder and not a file.
+
+    Args:
+    file_path (str): The file path to check.
+
+    Returns:
+    bool: True if the file path points to a folder, False otherwise.
+    """
+
+    # Check if the file path exists
+    if not os.path.exists(file_path):
+        return False
+
+    # Check if the file path is a directory (folder) and not a file
+    if not os.path.isdir(file_path):
+        return False
+
+    # If all checks passed, the file path points to a folder
+    return True
 
 # Function to return min and max values based on inpuuted conditions
 def update_values(large_val, small_val):
@@ -32,6 +55,8 @@ def update_values(large_val, small_val):
         large_val = small_val
 
     return large_val, small_val
+
+
 
 # Function to calculate the turbulence intensity
 def calculate_turbulence_intensity(u, v, w):
@@ -178,6 +203,7 @@ def cal_velocity(BarnFilePath, cal_data, SF):
         'Uz': Uz,
         't': t,
     }
+
     return prb_final
 
 
@@ -297,12 +323,16 @@ app.layout = dbc.Container([
                                 {'label': 'Raw Data', 'value': 'raw'},
                                 {'label': '1 Sec', 'value': 1},
                                 {'label': '5 Sec', 'value': 5},
+                                {'label': '10 Sec', 'value': 10},
+                                {'label': '15 Sec', 'value': 15},
+                                {'label': '30 Sec', 'value': 30},
                                 {'label': '1 Min', 'value': 60},
                                 {'label': '5 Min', 'value': 300},
                                 {'label': '10 Min', 'value': 600},
                                 {'label': '15 Min', 'value': 900},
                                 {'label': '30 Min', 'value': 1800},
                                 {'label': '1 hr', 'value': 3600},
+                                {'label': '6 hr', 'value': 21600},
                                 {'label': '12 hr', 'value': 43200},
                                 {'label': '1 day', 'value': 86400}
                             ],
@@ -533,6 +563,10 @@ app.layout = dbc.Container([
                 width=12
             ),  # Horizontal rule to separate content
         ),
+
+        dbc.Col(
+            html.Label('CURRENT WORKSPACE:', className='mb-2 fw-bold text center'),
+        width = 12),
 
         dbc.Col([
             dbc.Alert(
@@ -858,7 +892,7 @@ def update_Workspace(n_clicks, Workspace_input):
             if Workspace_input is None or Workspace_input == '':
                 error_temp = 'NO FILE PATH INPUTTED'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 Workspace_data = no_update
 
@@ -868,17 +902,17 @@ def update_Workspace(n_clicks, Workspace_input):
                 Workspace_input3 = os.path.normpath(Workspace_input2)
 
                 # Check if the given path exists.
-                if not os.path.exists(Workspace_input3):
+                if not is_valid_folder_path(Workspace_input3):
                     error_temp = 'PLEASE CHECK FILE PATH IS VALID'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                    error_perm = 'NO WORKSPACE SELECTED'
                     color_perm = 'danger'
                     Workspace_data = no_update
                 else:
                     # If the path exists, update the workspace.
                     error_temp = 'WORKSPACE UPDATED'
                     color_temp = 'success'
-                    error_perm = 'CURRENT WORKSPACE: ' + Workspace_input3
+                    error_perm = Workspace_input3
                     color_perm = 'primary'
                     Workspace_data = Workspace_input3
 
@@ -889,7 +923,7 @@ def update_Workspace(n_clicks, Workspace_input):
         # If error there is an error print it.
         error_temp = str(e)
         color_temp = 'danger'
-        error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+        error_perm = 'NO WORKSPACE SELECTED'
         color_perm = 'danger'
 
     return no_update, error_temp, color_temp, True, error_perm, color_perm, True
@@ -922,7 +956,7 @@ def clear_Workspace(n_clicks, Workspace_data):
                 table_data = []
                 error_temp = 'NO WORKSPACE TO CLEAR'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 Workspace_input = None
                 Workspace_Clear_data = False
@@ -935,10 +969,10 @@ def clear_Workspace(n_clicks, Workspace_data):
                 deleted_files = []
                 error_files = []
 
-                if not os.path.exists(Workspace_data):
+                if not is_valid_folder_path(Workspace_data):
                     error_temp = 'WORKSPACE NO LONGER EXISTS'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                    error_perm = 'NO WORKSPACE SELECTED'
                     color_perm = 'danger'
                     Workspace_input = None
                     Workspace_Clear_data = True
@@ -993,7 +1027,7 @@ def clear_Workspace(n_clicks, Workspace_data):
     except Exception as e:
         error_temp = str(e)
         color_temp = 'danger'
-        error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+        error_perm = 'NO WORKSPACE SELECTED'
         color_perm = 'danger'
         # Return no_update for output components when an exception occurs
         return no_update, no_update, no_update, no_update, error_temp, color_temp, True, error_perm, color_perm,\
@@ -1015,7 +1049,7 @@ def update_Workspace_Alert(Workspace_data):
             alert_work = 'NO WORKSPACE SELECTED'
             color1 = 'danger'
         else:
-            alert_work = 'WORKSPACE: ' + Workspace_data
+            alert_work = Workspace_data
             color1 = 'primary'
 
         return alert_work, color1, True
@@ -1266,7 +1300,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
             if Workspace_data is None:
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 open_perm = True
                 filename_filepath_data = no_update
@@ -1281,7 +1315,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
             else:
 
-                if os.path.exists(Workspace_data):
+                if is_valid_folder_path(Workspace_data):
 
                     # Initialise data dictionary if it is None
                     if file_data is None:
@@ -1356,7 +1390,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                                     # Process file data
                                     Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
 
-                                    # Create workspace folder if it doesn't exist
+                                    # Create workspace cached files folder if it doesn't exist
                                     Workspace_Path = os.path.join(Workspace_data, 'Cached_Files')
                                     if not os.path.exists(Workspace_Path):
                                         os.mkdir(Workspace_Path)
@@ -1450,7 +1484,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                     file_data = no_update
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                    error_perm = 'NO WORKSPACE SELECTED'
                     color_perm = 'danger'
                     open_perm = True
                     Workspace_store_clear = True
@@ -1467,7 +1501,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
         # If any error display message
         error_temp = str(e)
         color_temp = 'danger'
-        error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+        error_perm = 'NO WORKSPACE SELECTED'
         color_perm = 'danger'
         upload_file_checklist = []
         Workspace_store_clear = True
@@ -1507,7 +1541,7 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
             if Workspace_data is None:
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 open_perm = True
                 newmaindata = no_update
@@ -1516,11 +1550,11 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
                 clear_file_checklist = []
             else:
 
-                if not os.path.exists(Workspace_data):
+                if not is_valid_folder_path(Workspace_data):
 
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                    error_perm = 'NO WORKSPACE SELECTED'
                     color_perm = 'danger'
                     open_perm = True
                     newmaindata = no_update
@@ -1793,7 +1827,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
             if Workspace_data is None:
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 open_perm = True
                 Loading_variable = 'done'
@@ -1803,11 +1837,11 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
             else:
 
                 # If workspace doesn't exist clear files
-                if not os.path.exists(Workspace_data):
+                if not is_valid_folder_path(Workspace_data):
 
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                    error_perm = 'NO WORKSPACE SELECTED'
                     color_perm = 'danger'
                     open_perm = True
                     Loading_variable = 'done'
@@ -2061,7 +2095,7 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
             if Workspace_data is None:
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 open_perm = True
                 Loading_variable = 'done'
@@ -2071,11 +2105,11 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
             else:
 
                 # If workspace doesn't exist clear files
-                if not os.path.exists(Workspace_data):
+                if not is_valid_folder_path(Workspace_data):
 
                     error_temp = 'ERROR IN FINDING WORKSPACE FOLDER'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                    error_perm = 'NO WORKSPACE SELECTED'
                     color_perm = 'danger'
                     open_perm = True
                     Loading_variable = 'done'
@@ -2320,7 +2354,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                 fig = {}
                 error_temp = 'UPDATE WORKSPACE'
                 color_temp = 'danger'
-                error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                error_perm = 'NO WORKSPACE SELECTED'
                 color_perm = 'danger'
                 open_perm = True
                 Loading_Variable = no_update
@@ -2331,12 +2365,12 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
             else:
 
                 # If file path doesn't exist clear data
-                if not os.path.exists(Workspace_data):
+                if not is_valid_folder_path(Workspace_data):
                     fig = {}
                     Loading_Variable = no_update
                     error_temp = 'WORKSPACE NO LONGER EXISTS'
                     color_temp = 'danger'
-                    error_perm = 'PLEASE UPLOAD A NEW WORKSPACE'
+                    error_perm = 'NO WORKSPACE SELECTED'
                     color_perm = 'danger'
                     open_perm = True
                     Workspace_Clear_data = True
@@ -2467,16 +2501,26 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                 xanchor="center"),
                         )
 
-                        # Define moving average function outside of loop
+                        # Define the moving average function
                         def moving_average(data, window_size):
+                            # Create an array (kernel) of ones with the shape of window_size
+                            # and normalize it by dividing each element by the window_size.
+                            # This kernel will be used to compute the moving average.
                             kernel = np.ones(window_size) / window_size
-                            return np.convolve(data, kernel, mode='valid')
+
+                            # Apply the kernel to the input data using convolution. This operation
+                            # computes the moving average by sliding the kernel over the data and
+                            # calculating the dot product between the kernel and the data in the
+                            # current window. The 'valid' mode ensures that the output array size
+                            # is reduced to only include positions where the kernel and data fully overlap.
+                            return scipy.signal.fftconvolve(data, kernel, mode = 'valid')
 
                         # Loop through the files and vectors to create the graph
                         for file in file_inputs:
                             i = file_data[0].index(file)
                             file_path = file_data[4][i]
                             shape_dtype = file_data[1][i]
+                            SF = file_data[3][i]
                             shape, dtype = shape_dtype
 
                             # Load time data and convert to requested unit
@@ -2504,27 +2548,27 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                             y=numpy_vect_data[file][vector])
                                     )
                                 else:
+
                                     # Desired moving average duration (in time units)
                                     moving_average_duration = moving_val
 
                                     # Set the time step to be a fraction of the moving average duration
-                                    time_step = moving_average_duration / 10
+                                    time_step = (1 / SF) * moving_average_duration  # set the time step based on SF so data is uniform
 
-                                    # Resample the data at a constant time step
+
+                                    # Resample the data at a constant time step as nan values could cause problems
                                     time_data_resampled = np.arange(numpy_vect_data[file]['t'][0],
                                                                     numpy_vect_data[file]['t'][-1],
-                                                                     time_step) / t_val # Time step set to 0.5 of time unit, deemed suitable
-                                    print(time_data_resampled)
-                                    # # Calculate the window size (number of points) for the moving average
-                                    window_size = int(moving_average_duration / time_step)
-
-                                    print(window_size)
+                                                                     time_step)
 
 
                                     # Interpolate the velocity data to the new time array
                                     velocity_data_resampled = np.interp(time_data_resampled,
                                                                         numpy_vect_data[file]['t'],
                                                                         numpy_vect_data[file][vector])
+
+                                    # # Calculate the window size (number of points) for the moving average
+                                    window_size = int(moving_average_duration / time_step)
 
                                     # Calculate the moving average of the resampled velocity data
                                     velocity_moving_avg = moving_average(velocity_data_resampled, window_size)
@@ -2534,7 +2578,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                         go.Scattergl(
                                             name=f"{file} {vector} {Moving_label}",
                                             showlegend=True,
-                                            x=time_data_resampled / t_val,
+                                            x=time_data_resampled/t_val,
                                             y=velocity_moving_avg)
                                     )
 
