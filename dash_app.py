@@ -2963,7 +2963,6 @@ def update_unit(t_val, time_unit_options):
         return no_update, no_update, error, color, True,
 
 
-# Run app
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(host='0.0.0.0', port=8049)
 
