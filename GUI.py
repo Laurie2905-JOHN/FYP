@@ -22,7 +22,6 @@ from plotly_resampler import FigureResampler
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
 # Define functions
-
 # Define a function to save an array as a memory-mapped file (memmap)
 def save_array_memmap(array, filename, folder_path):
     # Construct the full file path by joining the folder path and the filename
@@ -557,10 +556,10 @@ app.layout = dbc.Container([
                 dbc.Stack([
 
                     # Input field for minimum time
-                    dbc.Input(id="small_t_TI", type="number", placeholder="Min Time"),
+                    dbc.Input(id="small_t_TI", type="number", placeholder="Min Time (s)"),
 
                     # Input field for maximum time
-                    dbc.Input(id="big_t_TI", type="number", placeholder="Max Time"),
+                    dbc.Input(id="big_t_TI", type="number", placeholder="Max Time (s)"),
 
                 ], gap=3)
 
@@ -579,12 +578,12 @@ app.layout = dbc.Container([
                 {"id": 'FileName', "name": 'File Name'},
                 {'id': 'CalFile', 'name': 'Cal File'},
                 {'id': 'SF', 'name': 'SF'},
-                {"id": 'Time_1', "name": 'Time 1'},
-                {"id": 'Time_2', "name": 'Time 2'},
-                {"id": 'Ux', "name": 'Average Ux'},
-                {"id": 'Uy', "name": 'Average Uy'},
-                {"id": 'Uz', "name": 'Average Uz'},
-                {"id": 'U1', "name": 'Average U'},
+                {"id": 'Time_1', "name": 'Time 1 (s)'},
+                {"id": 'Time_2', "name": 'Time 2 (s)'},
+                {"id": 'Ux', "name": 'Average Ux (m/s)'},
+                {"id": 'Uy', "name": 'Average Uy (m/s)'},
+                {"id": 'Uz', "name": 'Average Uz (m/s)'},
+                {"id": 'U1', "name": 'Average U (m/s)'},
                 {"id": 'TI', 'name': 'Turbulence Intensity'},
             ],
             export_format='xlsx',
@@ -820,7 +819,7 @@ app.layout = dbc.Container([
                 id="Sample_rate",
                 min=0,
                 type="number",
-                placeholder="Enter Sample Frequency",
+                placeholder="Enter Sample Frequency (Hz)",
                 className = 'mb-3'
             ),
 
@@ -844,7 +843,7 @@ app.layout = dbc.Container([
             ],
             multi=False,
             value=None,
-            placeholder="Moving Average",
+            placeholder="Enter Moving Average",
             className='mb-3'
             ),
 
@@ -853,7 +852,7 @@ app.layout = dbc.Container([
 
             dbc.Input(
                 id="custom_rate",
-                min=0.01,
+                min=0,
                 type="number",
                 placeholder="Custom Moving Average (s)",
             ),
@@ -943,12 +942,12 @@ dbc.Row([
 
                 # Input field for minimum time
                 dbc.Col(
-                    dbc.Input(id="small_t", type="number", placeholder="Min Time")
+                    dbc.Input(id="small_t", type="number", placeholder="Min Time (s)")
                 ),
 
                 # Input field for maximum time
                 dbc.Col(
-                    dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time")
+                    dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time (s)")
                 ),
 
             ], justify="center"),
@@ -2069,16 +2068,14 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                         # Error messages
                         smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                                       ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +'). '
+                                       ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' to ' + str(max1) +' (s)). '
 
                         bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
-                                     ' RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' TO ' + str(max1) +').'
+                                     ' RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' to ' + str(max1) +' (s)). '
 
                         both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
                                        ' THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                               '(' + str(min1) + ' TO ' + str(max1) +').'
-
-                        both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
+                                                               '(' + str(min1) + ' to ' + str(max1) +' (s)). '
 
                         # Cut data based on conditions and assign error message
                         if smallt is None and bigt is None:
@@ -2111,6 +2108,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                                 error_cut = bigt_error
 
                             else:
+                                both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS: ('+ str(smallt) +' to ' + str(bigt) +' (s)). '
                                 error_cut = both_t_NO_error
 
                         # Assign mask based on condition
@@ -2324,18 +2322,15 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                             # Error messages
                             smallt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MINIMUM TIME' \
                                            ' AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.'+ \
-                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1)+' TO '+str(max1)+')'
+                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1)+' to '+str(max1) +' (s)). '
 
                             bigt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM TIME' \
                                          ' AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
-                                         ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1) +' TO '+str(max1)+ ')'
+                                         ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1) +' to '+str(max1) +' (s)). '
 
                             both_t_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM' \
                                            ' AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
-                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1)+' TO '+str(max1)+ ')'
-
-                            both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE ' \
-                                              'SPECIFIED LIMITS'
+                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1)+' to '+str(max1) +' (s)). '
 
                             # Cut data based on conditions
                             if small_TI is None and big_TI is None:
@@ -2374,6 +2369,8 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                                     error_temp = bigt_error
 
                                 else:
+                                    both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE ' \
+                                                      'SPECIFIED LIMITS: (' + str(small_TI)+' to '+str(big_TI) +' (s)). '
                                     error_temp = both_t_NO_error
                                     color_temp = 'primary'
 
@@ -2548,6 +2545,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                         color_temp = 'danger'
                         Loading_Variable = 'done'
                     else:
+
                         fig = FigureResampler(go.Figure())
                         current_names = []
                         min2 = []
@@ -2559,74 +2557,75 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             min2.append(file_data[5][i])
                             max2.append(file_data[6][i])
 
-                        min1 = min(min2) * t_val
-                        max1 = max(max2) * t_val
-
-                        # Error messages
-                        smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                                       ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                           '('+ str(min1) +' TO ' + str(max1) +')'
-
-                        bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE ' \
-                                     'THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                            '('+ str(min1) +' TO ' + str(max1) +')'
-
-                        both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED ' \
-                                       'TIME IS OUTSIDE THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA:'\
-                                                      ' (' + str(min1) + ' TO ' + str(max1) +')'
-
-                        both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS'
-
-                        # Cut data based on conditions
-                        if smallt is None and bigt is None:
-                            bigt = max1
-                            smallt = min1
-                            error_cut = both_t_error
-                            color_temp = 'primary'
-                            error_cut_good = ''
-
-                        elif smallt is None and bigt is not None:
-                            smallt = min1
-                            error_cut = smallt_error
-                            color_temp = 'primary'
-                            error_cut_good = ''
-
-                        elif bigt is None and smallt is not None:
-                            bigt = max1
-                            error_cut = bigt_error
-                            color_temp = 'primary'
-                            error_cut_good = ''
-
-                        else:
-
-                            if smallt < min1 and bigt > max1:
-                                smallt = min1
-                                bigt = max1
-                                color_temp = 'primary'
-                                error_cut = both_t_error
-                                error_cut_good = ''
-
-                            elif smallt < min1:
-                                bigt = min1
-                                color_temp = 'primary'
-                                error_cut = smallt_error
-                                error_cut_good = ''
-
-
-                            elif bigt > max1:
-                                bigt = max1
-                                color_temp = 'primary'
-                                error_cut = bigt_error
-                                error_cut_good = ''
-                            else:
-                                error_cut_good = both_t_NO_error
-                                color_temp = 'success'
-                                error_cut = ''
+                        min1 = min(min2) / t_val
+                        max1 = max(max2) / t_val
 
                         # For selected time unit find label to update graph
                         for option in time_unit_options:
                             if option['value'] == t_val:
                                 t_label = option['label']
+
+
+                        # Error messages
+                        smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
+                                       ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                           '('+ str(min1) +' to ' + str(max1) + ' ' + t_label+ ')'
+
+                        bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE ' \
+                                     'THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                            '('+ str(min1) +' to ' + str(max1) + ' ' + t_label+ ')'
+
+                        both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED ' \
+                                       'TIME IS OUTSIDE THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA:'\
+                                                      ' (' + str(min1) + ' to ' + str(max1) + ' ' + t_label+ ')'
+
+                        both_t_NO_error = 'THE DATA HAS BEEN CUT TO: '
+
+
+                        # Assign values to bigt and smallt if not inputted
+                        if smallt is None and bigt is None:
+                            bigt = max1
+                            smallt = min1
+                            error_none = 'TIME NOT INPUTTED. '
+
+                        elif smallt is None and bigt is not None:
+                            smallt = min1
+                            error_none = 'TIME NOT INPUTTED. '
+
+                        elif bigt is None and smallt is not None:
+                            bigt = max1
+                            error_none = 'TIME NOT INPUTTED. '
+                        else:
+                            error_none = ''
+
+                        # If values are inputted but are over availble range display error
+                        if smallt < min1 and bigt > max1:
+                            smallt = min1
+                            bigt = max1
+                            color_temp = 'primary'
+                            error_cut = both_t_error
+                            error_cut_good = ''
+
+                        elif smallt < min1:
+                            bigt = min1
+                            color_temp = 'primary'
+                            error_cut = smallt_error
+                            error_cut_good = ''
+
+                        elif bigt > max1:
+                            bigt = max1
+                            color_temp = 'primary'
+                            error_cut = bigt_error
+                            error_cut_good = ''
+                        else:
+                            if error_none != '':
+                                error_cut_good = error_none + 'DATA PLOTTED: ' + '(' + str(smallt) + ' to ' + str(
+                                    bigt) + ' ' + t_label + ')'
+                                color_temp = 'primary'
+                            else:
+                                error_cut_good = both_t_NO_error + '(' + str(smallt) + ' to ' + str(bigt) + ' ' + t_label+ ')'
+                                color_temp = 'success'
+                            error_cut = ''
 
                         # Update x and y axes labels
                         fig.update_layout(
@@ -2650,8 +2649,11 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             # Load time data and convert to requested unit
                             t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0],
                                                   row_numbers='all') / t_val
+
+                            # Cut data with requested time values
                             mask = (t >= smallt) & (t <= bigt)
                             numpy_vect_data = {file: {'t': t[mask]}}
+                            # Find row numbers for loading velocity data
                             row_numbers = np.where(mask)[0].tolist()
 
                             # Loop through the velocity arrays
@@ -2661,7 +2663,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                                                                   dtype=dtype,
                                                                                   shape=shape[0],
                                                                                   row_numbers=row_numbers)
-                                print(len(numpy_vect_data[file][vector]))
                                 # Plotting data
                                 fig.add_trace(
                                     go.Scattergl(
@@ -2670,7 +2671,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                         hf_x=numpy_vect_data[file]['t'],
                                         hf_y=numpy_vect_data[file][vector]
                                     )
-
 
                                 # Creating a list of current legend names
                                 current_names.append(f"{file} {vector}")
@@ -2709,11 +2709,8 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                     error_leg  = ''
 
                                 else:
-
                                     # If legend entries do not match display error message
                                     error_leg = '. NUMBER OF LEGEND ENTRIES DO NOT MATCH'
-
-                                    color = 'danger'
 
                         # Update graph title based on user input
                         if title_data is None:
@@ -2908,6 +2905,73 @@ def update_dropdowns1(data, filename_filepath_upload_data):
 
         # Return the updated dropdown options and checklists
         return no_update, no_update, no_update, no_update, no_update,no_update, no_update, error, color, no_update,
+
+# Callback 22
+# Call back which updates the graph cut time to prevent error
+@app.callback(
+        Output(component_id="time_large", component_property='value', allow_duplicate=True),
+        Output(component_id="time_small", component_property='value', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id='time_small', component_property='value'),
+        Input(component_id='time_large', component_property='value'),
+        prevent_initial_call=True)
+
+def update_vals3(small_val, large_val):
+
+    if large_val is None or small_val is None:
+        raise PreventUpdate
+
+    # Try/Except, used to catch any errors not considered
+    try:
+
+        large_val, small_val = update_values(large_val, small_val)
+
+        # Return the updated large and small input values
+        return large_val, small_val, no_update, no_update, no_update,
+
+    except Exception as e:
+        # If any error display message
+        error = str(e)
+        color = 'danger'
+
+        return no_update, no_update, error, color, True,
+
+# Callback 23
+# Call back which updates the graph time units
+@app.callback(
+        Output(component_id="time_large", component_property='placeholder', allow_duplicate=True),
+        Output(component_id="time_small", component_property='placeholder', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+        Input(component_id='Time_unit_graph', component_property='value'),
+        State(component_id='Time_unit_graph', component_property='options'),
+        prevent_initial_call=True)
+
+def update_unit(t_val, time_unit_options):
+
+    for option in time_unit_options:
+        if option['value'] == t_val:
+            t_label = option['label']
+    # No update if no value selected
+    if t_val is None:
+        raise PreventUpdate
+
+    # Try/Except, used to catch any errors not considered
+    try:
+        # Update placeholder based on selected unit
+        time_large_placeholder = 'Max Time (' + t_label + ')'
+        time_small_placeholder = 'Min Time (' + t_label + ')'
+        return time_large_placeholder, time_small_placeholder, no_update, no_update, no_update
+
+    except Exception as e:
+        # If any error display message
+        error = str(e)
+        color = 'danger'
+
+        return no_update, no_update, error, color, True,
 
 # Run app
 if __name__== '__main__':
