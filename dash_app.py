@@ -17,7 +17,8 @@ import scipy
 from scipy import interpolate
 import statistics as st
 from plotly_resampler import FigureResampler
-
+import webbrowser
+from threading import Timer
 
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -2962,7 +2963,10 @@ def update_unit(t_val, time_unit_options):
 
         return no_update, no_update, error, color, True,
 
+def open_browser():
+	webbrowser.open_new("http://localhost:{}".format(8050))
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', port=8049)
+    Timer(1, open_browser).start();
+    app.run_server(debug=False, port=8050)
 
