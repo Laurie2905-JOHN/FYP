@@ -1,5 +1,6 @@
+# Function which gets a list of open files in a specific directory.
+# Made if there were issues with open files causing errors in the dash app
 # Import the required libraries
-import os
 import psutil
 
 # Define a function to get the list of open files in a specified directory
