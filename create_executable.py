@@ -3,8 +3,8 @@ import subprocess
 
 
 def main():
-    requirements_file = 'requirements.txt'
-    main_script = 'dash_app.py'
+    requirements_file = r'requirements.txt'
+    main_script = r'dash_app.py'
 
     # Read packages from requirements.txt
     with open(requirements_file, 'r') as f:
