@@ -16,6 +16,7 @@ import shutil
 import scipy
 from scipy import interpolate
 import statistics as st
+from plotly_resampler import FigureResampler
 
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -1546,7 +1547,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
                                         # Set the time step to be a fraction of the moving average duration
                                         # Set the time step based on SF so data is uniform
-                                        time_step = 1 / SF
+                                        time_step = (1 / SF)
 
                                         # Calculate the window size (number of points) for the moving average
                                         window_size = int(moving_average_duration * SF)
@@ -2547,7 +2548,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                         color_temp = 'danger'
                         Loading_Variable = 'done'
                     else:
-                        fig = go.Figure()
+                        fig = FigureResampler(go.Figure())
                         current_names = []
                         min2 = []
                         max2 = []
@@ -2560,8 +2561,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
                         min1 = min(min2) * t_val
                         max1 = max(max2) * t_val
-
-                        print(max1)
 
                         # Error messages
                         smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
@@ -2650,7 +2649,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
                             # Load time data and convert to requested unit
                             t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0],
-                                                  row_numbers='all') /t_val
+                                                  row_numbers='all') / t_val
                             mask = (t >= smallt) & (t <= bigt)
                             numpy_vect_data = {file: {'t': t[mask]}}
                             row_numbers = np.where(mask)[0].tolist()
@@ -2662,15 +2661,16 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                                                                   dtype=dtype,
                                                                                   shape=shape[0],
                                                                                   row_numbers=row_numbers)
+                                print(len(numpy_vect_data[file][vector]))
                                 # Plotting data
                                 fig.add_trace(
                                     go.Scattergl(
                                         name=f"{file} {vector}",
-                                        showlegend=True,
-                                        x=numpy_vect_data[file]['t'],
-                                        y=numpy_vect_data[file][vector]
+                                        showlegend=True),
+                                        hf_x=numpy_vect_data[file]['t'],
+                                        hf_y=numpy_vect_data[file][vector]
                                     )
-                                )
+
 
                                 # Creating a list of current legend names
                                 current_names.append(f"{file} {vector}")

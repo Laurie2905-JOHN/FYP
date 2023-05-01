@@ -1,27 +1,34 @@
 import numpy as np
+import scipy.signal
+from scipy.interpolate import interp1d
 
-# Your time series data (unequally spaced)
-timestamps = np.array([0, 1.2, 2.1, 3.2, 4.5, 5.6, 6.7, 7.8, 8.9, 10])
-data = np.array([1, 2, 3, 2, 3, 4, 5, 4, 5, 6])
+def moving_average_downsample(data, window_size, downsample_factor):
+    # Calculate the moving average using a convolution operation
+    kernel = np.ones(window_size) / window_size
+    moving_avg = scipy.signal.convolve(data, kernel, mode='valid')
 
-# Desired moving average duration (in seconds)
-duration = 3
+    # Generate the downsampled time indices
+    downsampled_indices = np.arange(0, len(moving_avg), downsample_factor)
 
-# Sample frequency (SF) - data points per second
-SF = 1
+    # Create an interpolation function based on the moving average data
+    interpolation_func = interp1d(np.arange(len(moving_avg)), moving_avg, kind='linear')
 
-# Calculate the window size based on the desired duration and sample frequency
-window_size = int(duration * SF)
+    # Use the interpolation function to downsample the moving average data
+    downsampled_moving_avg = interpolation_func(downsampled_indices)
 
-# Resample the data to equally spaced time series using linear interpolation
-new_timestamps = np.arange(timestamps[0], timestamps[-1], 1 / SF)
-resampled_data = np.interp(new_timestamps, timestamps, data)
+    return downsampled_moving_avg
 
-# Create a window for the moving average calculation
-window = np.ones(window_size) / window_size
+# Generate a signal with 20Hz sampling frequency
+sampling_frequency = 20
+duration = 10  # seconds
+t = np.linspace(0, duration, duration * sampling_frequency)
+signal = np.sin(2 * np.pi * 1 * t) + 0.5 * np.sin(2 * np.pi * 5 * t) + 0.1 * np.random.randn(len(t))
 
-# Calculate the moving average using numpy's convolve function
-moving_average = np.convolve(resampled_data, window, mode='valid')
+# Apply the moving average filter and downsample the signal
+window_size = 20
+downsample_factor = 10
+downsampled_signal = moving_average_downsample(signal, window_size, downsample_factor)
 
-# Print the moving average
-print(moving_average)
+# Print the results
+print("Original signal length:", len(signal))
+print("Downsampled signal length:", len(downsampled_signal))
