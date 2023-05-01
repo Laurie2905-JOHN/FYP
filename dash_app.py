@@ -34,7 +34,7 @@ def save_array_memmap(array, filename, folder_path):
     dtype = str(array.dtype)
 
     # Obtain the shape of the input array
-    shape = array.shape
+    shape = tuple(array.shape)
 
     # Create a memory-mapped array with the same data type, shape, and write mode
     array_memmap = np.memmap(filepath, dtype=dtype, shape=shape, mode='w+')
@@ -469,15 +469,14 @@ app.layout = dbc.Container([
                             # Dropdown menu to choose what to update
                             dbc.DropdownMenu([
                                 dbc.DropdownMenuItem("Update Title", id="dropdown_title_update"),
-                                dbc.DropdownMenuItem("Update Legend", id="dropdown_legend_update"),
                                 dbc.DropdownMenuItem(divider=True),
-                                dbc.DropdownMenuItem("Clear", id="dropdown_clear"),
+                                dbc.DropdownMenuItem("Clear Data", id="dropdown_clear"),
                             ], label="Update"),
                             # Input field for new title/legend
                             dbc.Input(
                                 id="New_name",
                                 type='text',
-                                placeholder="Enter text to update legend or title",
+                                placeholder="Enter text to update title",
                             ),
                         ]),
                     ], direction="horizontal"),
@@ -648,7 +647,7 @@ app.layout = dbc.Container([
                     dbc.DropdownMenuItem("Clear Workspace", id="Workspace_clear"),
                 ],
                     label="UPDATE"),
-                # Input element for entering the new title or legend
+                # Input element for entering the workspace
                 dbc.Input(
                     id="Workspace",
                     type='text',
@@ -749,7 +748,7 @@ app.layout = dbc.Container([
                 ],
                     label="UPDATE"),
 
-                # Input element for entering the new title or legend
+                # Input element for entering the new file
                 dbc.Input(
                     id="submit_files",
                     type='text',
@@ -832,7 +831,7 @@ app.layout = dbc.Container([
                 id="Moving_average",
                 options=[
                     {'label': 'Raw Data', 'value': 'raw'},
-                    {'label': 'Custom', 'value': 'Custom'},
+                    {'label': 'Custom', 'value': 'custom'},
                     {'label': '1 sec', 'value': 1},
                     {'label': '5 sec', 'value': 5},
                     {'label': '10 sec', 'value': 10},
@@ -856,7 +855,7 @@ app.layout = dbc.Container([
 
             dbc.Input(
                 id="custom_rate",
-                min=0,
+                min=1,
                 type="number",
                 placeholder="Custom Moving Average (s)",
             ),
@@ -976,7 +975,6 @@ app.layout = dbc.Container([
                 fullscreen=True, size='lg', show_initially=False, delay_hide=80, delay_show=80),
 
     # Store Components
-    dcc.Store(id='legend_Data', storage_type='memory'),
     dcc.Store(id='title_Data', storage_type='memory'),
     dcc.Store(id='filestorage', storage_type='local'),
     dcc.Store(id='filename_filepath', storage_type='session'),
@@ -1259,7 +1257,7 @@ def cal_analysis(filename, contents):
                     cal_data = no_update
                     # Prepare the success message
                     error = 'PLEASE TRY AGAIN AND CHECK THE FILE HAS THE CORRECT FORMAT'
-                    color = 'success'
+                    color = 'danger'
 
         # Return updated values for UI components
         return cal_data, error, color, True
@@ -1457,12 +1455,12 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         color_temp = "danger"
                         file_data = no_update
 
-                    elif moving_val == 'Custom' and custom_moving is None:
+                    elif moving_val == 'custom' and custom_moving is None:
                         error_temp = 'ENTER CUSTOM MOVING AVERAGE'
                         color_temp = "danger"
                         file_data = no_update
 
-                    elif moving_val == 'Custom' and not isinstance(custom_moving, int):
+                    elif moving_val == 'custom' and not isinstance(custom_moving, int):
                         error_temp = 'ENTER INTEGER VALUES FOR CUSTOM MOVING AVERAGE'
                         color_temp = "danger"
                         file_data = no_update
@@ -1484,7 +1482,13 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
                         # Make copies of existing data
                         combined_filenames = Oldfilenames.copy()
+
+                        # JSON Serialization cause tuples to be converted to a list. For loop to reconvert to tuple
                         combined_dtype_shape = old_dtype_shape.copy()
+
+                        for i, value in enumerate(combined_dtype_shape):
+                            combined_dtype_shape[i] = [tuple(value[0]), value[1]]
+
                         combined_CalData = Old_calData.copy()
                         combined_SF = Old_SF.copy()
                         combined_filepath = Old_filepath.copy()
@@ -1497,22 +1501,23 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         error_file = []  # List of files with invalid formats
 
                         # Loop through uploaded files and process them
-                        for i, value in enumerate(filenames):
+                        for i, value1 in enumerate(filenames):
                             # Create new filename with moving average added if custom is selected
-                            if moving_val == 'Custom':
-                                moving_val = custom_moving
-                                value = value + ' (' + str(custom_moving) + ' sec' ')'
+                            if moving_val == 'custom':
+                                value = value1 + ' (' + str(custom_moving) + ' sec' ')'
                             else:
                                 # For selected moving average find label name
                                 for option in moving_options:
                                     if option['value'] == moving_val:
                                         Moving_label = option['label']
-                                value = value + ' (' + Moving_label + ')'
+                                value = value1 + ' (' + Moving_label + ')'
                             # Check if the file name is already in the combined list
                             if value not in combined_filenames:
                                 try:
+                                    # Find where filename is located
+                                    k = filename_filepath_data[0].index(value1)
                                     # Process file data
-                                    Barn_data = cal_velocity(filename_filepath_data[1][i], cal_data[1], SF)
+                                    Barn_data = cal_velocity(filename_filepath_data[1][k], cal_data[1], SF)
                                     # Get unique file path for saving data
                                     file_path = get_unique_path(Workspace_Path, value)
                                     os.makedirs(file_path, exist_ok=True)
@@ -1542,8 +1547,11 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
                                     else:
 
-                                        # Desired moving average duration (in time units)
-                                        moving_average_duration = moving_val
+                                        # Desired moving average duration (in s)
+                                        if moving_val == 'custom':
+                                            moving_average_duration = custom_moving
+                                        else:
+                                            moving_average_duration = moving_val
 
                                         # Set the time step to be a fraction of the moving average duration
                                         # Set the time step based on SF so data is uniform
@@ -1656,7 +1664,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                     filestorage_clear = True
                     filename_filepath_clear = True
                     loading_variable = no_update
-
         # Return output values
         return file_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, upload_file_checklist, \
             loading_variable, Workspace_store_clear, filestorage_clear, filename_filepath_clear
@@ -1927,13 +1934,16 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
     Input(component_id="big_t", component_property='value'),
     prevent_initial_call=True)
 def update_vals(small_val, large_val):
-    if large_val is None or small_val is None:
+    if large_val is None and small_val is None:
         raise PreventUpdate
 
     # Try/Except, used to catch any errors not considered
     try:
+        if large_val is None:
+            large_val = small_val
 
-        large_val, small_val = update_values(large_val, small_val)
+        elif small_val is not None:
+            large_val, small_val = update_values(large_val, small_val)
 
         # Return the updated large and small input values
         return large_val, small_val, no_update, no_update, no_update,
@@ -2194,13 +2204,16 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
     Input(component_id="big_t_TI", component_property='value'),
     prevent_initial_call=True)
 def update_vals2(small_val, large_val):
-    if large_val is None or small_val is None:
+    if large_val is None and small_val is None:
         raise PreventUpdate
 
     # Try/Except, used to catch any errors not considered
     try:
+        if large_val is None:
+            large_val = small_val
 
-        large_val, small_val = update_values(large_val, small_val)
+        elif small_val is not None:
+            large_val, small_val = update_values(large_val, small_val)
 
         # Return the updated large and small input values
         return large_val, small_val, no_update, no_update, no_update,
@@ -2484,7 +2497,6 @@ def clear_table(n_clicks):
     State(component_id='Vect', component_property='value'),
     State(component_id='time_small', component_property='value'),
     State(component_id='time_large', component_property='value'),
-    State(component_id='legend_Data', component_property='data'),
     State(component_id='title_Data', component_property='data'),
     State(component_id='legend_onoff', component_property='value'),
     State(component_id='title_onoff', component_property='value'),
@@ -2492,7 +2504,7 @@ def clear_table(n_clicks):
     State(component_id='Time_unit_graph', component_property='value'),
     State(component_id='Time_unit_graph', component_property='options'),
     prevent_initial_call=True)
-def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title,
+def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, title_data, leg, title,
                  Workspace_data, t_val, time_unit_options):
     # Try/Except, used to catch any errors not considered
     try:
@@ -2543,7 +2555,6 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                     else:
 
                         fig = FigureResampler(go.Figure())
-                        current_names = []
                         min2 = []
                         max2 = []
 
@@ -2665,48 +2676,16 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                         name=f"{file} {vector}",
                                         showlegend=True),
                                     hf_x=numpy_vect_data[file]['t'],
-                                    hf_y=numpy_vect_data[file][vector]
+                                    hf_y=numpy_vect_data[file][vector],
                                 )
 
-                                # Creating a list of current legend names
-                                current_names.append(f"{file} {vector}")
-
                         # Update legend and title based on user input
-                        if legend_data is None:
-                            if leg == 'Off':
-                                fig.layout.update(showlegend=False)
-                                error_leg = ''
-                            elif leg == 'On':
-                                fig.layout.update(showlegend=True)
-                                error_leg = ''
-                        else:
-                            if leg == 'Off':
-                                fig.layout.update(showlegend=False)
-                                error_leg = ''
-                            elif leg == 'On':
-                                legend_name_list = legend_data.split(',')
-                                newname_result = {}
-
-                                if len(current_names) == len(legend_name_list):
-                                    for i, current_name in enumerate(current_names):
-                                        newnames = {current_name: legend_name_list[i]}
-                                        newname_result.update(newnames)
-
-                                    fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
-                                                                          legendgroup=newname_result[t.name],
-                                                                          hovertemplate=t.hovertemplate.replace(
-                                                                              t.name,
-                                                                              newname_result[
-                                                                                  t.name]) if t.hovertemplate is not None else None)
-                                                       )
-
-                                    fig.layout.update(showlegend=True)
-
-                                    error_leg = ''
-
-                                else:
-                                    # If legend entries do not match display error message
-                                    error_leg = '. NUMBER OF LEGEND ENTRIES DO NOT MATCH'
+                        if leg == 'Off':
+                            fig.layout.update(showlegend=False)
+                            error_leg = ''
+                        elif leg == 'On':
+                            fig.layout.update(showlegend=True)
+                            error_leg = ''
 
                         # Update graph title based on user input
                         if title_data is None:
@@ -2720,7 +2699,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             elif title == 'On':
                                 fig.layout.update(title=title_data)
 
-                        error_temp = 'GRAPH PLOTTED. ' + error_cut + error_cut_good + error_leg
+                        error_temp = 'GRAPH PLOTTED. ' + error_cut + error_cut_good
                         Loading_Variable = 'done'
 
         # Return figure, error message, alert color, and loading status
@@ -2777,71 +2756,55 @@ def clear_graph(n_clicks):
 
 
 # Callback 20
-# Callback to update legend or title data
+# Callback to update title data
 @app.callback(
     Output(component_id='New_name', component_property='value'),
-    Output(component_id='legend_Data', component_property='data'),
     Output(component_id='title_Data', component_property='data'),
     Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
     Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
     Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-    Input(component_id="dropdown_legend_update", component_property='n_clicks'),
     Input(component_id="dropdown_title_update", component_property='n_clicks'),
     Input(component_id="dropdown_clear", component_property='n_clicks'),
     State(component_id='New_name', component_property='value'),
     prevent_initial_call=True)
-def update_leg_title_data(n_click, n_clicks1, n_clicks2, name_input):
+def update_leg_title_data(n_click, n_clicks1, name_input):
     # Try/Except, used to catch any errors not considered
     try:
-        # If legend update button is pressed
-        if ctx.triggered_id == 'dropdown_legend_update':
-            error = 'LEGEND DATA UPDATE'
-            color = 'success'
-            # Update legend data
-            legend_data = name_input
-            # No update to title data or name input
-            title_data = no_update
-            name_input = no_update
-            open1 = True
         # If title update button is pressed
-        elif ctx.triggered_id == 'dropdown_title_update':
-            error = 'LEGEND DATA UPDATE'
-            color = 'success'
+        if ctx.triggered_id == 'dropdown_title_update':
             # Update title data
             title_data = name_input
-            # No update to legend data or name input
+            # No update to name input
             name_input = no_update
-            legend_data = no_update
             open1 = True
             error = 'TITLE DATA UPDATED'
+            color = 'success'
 
         # If clear dropdown pressed clear input box
         elif ctx.triggered_id == 'dropdown_clear':
-            # Clear title and legend data
+            # Clear title
             title_data = None
-            legend_data = None
             # Clear input box
             name_input = ''
             open1 = True
             color = 'success'
-            error = 'LEGEND AND TITLE DATA CLEARED'
+            error = 'TITLE DATA CLEARED'
         else:
             # Else no update to any values
             title_data = no_update
             name_input = no_update
-            legend_data = no_update
             error = no_update
             color = no_update
             open1 = False
-        # Return name, legend and title data
-        return name_input, legend_data, title_data, error, color, open1
+        # Return name and title data
+        return name_input, title_data, error, color, open1
 
     except Exception as e:
 
         # If any error display message
         error = str(e)
         color = 'danger'
-        return no_update, no_update, no_update, error, color, True
+        return no_update, no_update, error, color, True
 
 
 # Callback 21
@@ -2911,13 +2874,17 @@ def update_dropdowns1(data, filename_filepath_upload_data):
     Input(component_id='time_large', component_property='value'),
     prevent_initial_call=True)
 def update_vals3(small_val, large_val):
-    if large_val is None or small_val is None:
+
+    if large_val is None and small_val is None:
         raise PreventUpdate
 
     # Try/Except, used to catch any errors not considered
     try:
+        if large_val is None:
+            large_val = small_val
 
-        large_val, small_val = update_values(large_val, small_val)
+        elif small_val is not None:
+            large_val, small_val = update_values(large_val, small_val)
 
         # Return the updated large and small input values
         return large_val, small_val, no_update, no_update, no_update,
