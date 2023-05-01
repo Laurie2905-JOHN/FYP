@@ -11,7 +11,7 @@ def main():
 
     hidden_imports = ' '.join([f'--hidden-import={package}' for package in packages])
 
-    pyinstaller_command = f'pyinstaller --onefile {hidden_imports} app.py'
+    pyinstaller_command = f'pyinstaller --onefile {hidden_imports} dash_app.py'
 
     print(f'Running: {pyinstaller_command}')
     subprocess.run(pyinstaller_command, shell=True)
