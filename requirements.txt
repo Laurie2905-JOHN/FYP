@@ -57,7 +57,7 @@ Pillow==9.4.0
 platformdirs==3.2.0
 plotly==5.13.1
 plotly-express==0.4.1
-plotly-resampler==0.8.3.2
+plotly-resampler==0.9.0rc0
 prompt-toolkit==3.0.38
 psutil==5.9.5
 pure-eval==0.2.2
@@ -78,6 +78,7 @@ tenacity==8.2.2
 tornado==6.3
 trace-updater==0.0.9.1
 traitlets==5.9.0
+tsdownsample==0.1.2
 urllib3==1.26.15
 wcwidth==0.2.6
 Werkzeug==2.2.3

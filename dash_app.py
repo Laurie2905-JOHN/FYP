@@ -21,6 +21,7 @@ from plotly_resampler import FigureResampler
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
 
+
 # Define functions
 # Define a function to save an array as a memory-mapped file (memmap)
 def save_array_memmap(array, filename, folder_path):
@@ -66,6 +67,7 @@ def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
     # Return the loaded data as a NumPy array.
     return loaded_data
 
+
 # Define a function to get a unique file path for each file
 def get_unique_path(base_path, name):
     # Initialize a counter to keep track of the number of duplicate file names
@@ -85,6 +87,7 @@ def get_unique_path(base_path, name):
     # Return the unique file path by joining the base_path and the new_name
     return os.path.normpath(os.path.join(base_path, new_name))
 
+
 # Define the moving average function
 def moving_average(data, window_size):
     # Create an array (kernel) of ones with the shape of window_size
@@ -95,7 +98,8 @@ def moving_average(data, window_size):
     # computes the moving average by sliding the kernel over the data and
     # calculating the dot product between the kernel and the data in the
     # current window.
-    return scipy.signal.convolve(data, kernel, mode = 'same')
+    return scipy.signal.convolve(data, kernel, mode='same')
+
 
 def is_valid_folder_path(file_path):
     """
@@ -119,6 +123,7 @@ def is_valid_folder_path(file_path):
     # If all checks passed, the file path points to a folder
     return True
 
+
 # Function to return min and max values based on inpuuted conditions
 def update_values(large_val, small_val):
     """
@@ -130,7 +135,6 @@ def update_values(large_val, small_val):
         large_val = small_val
 
     return large_val, small_val
-
 
 
 # Function to calculate the turbulence intensity
@@ -174,12 +178,13 @@ def calculate_turbulence_intensity(u, v, w):
     w_prime_RMS = np.sqrt(mean_w_prime_sq)
 
     # Calculate magnitude of mean flow velocity
-    U_mag = np.sqrt(U**2 + V**2 + W**2)
+    U_mag = np.sqrt(U ** 2 + V ** 2 + W ** 2)
 
     # Calculate turbulence intensity
-    TI = (np.sqrt(u_prime_RMS**2 + v_prime_RMS**2 + w_prime_RMS**2)) / U_mag
+    TI = (np.sqrt(u_prime_RMS ** 2 + v_prime_RMS ** 2 + w_prime_RMS ** 2)) / U_mag
 
     return TI, U_mag, U, V, W
+
 
 # Function to calculate velocity data
 def cal_velocity(BarnFilePath, cal_data, SF):
@@ -395,7 +400,7 @@ app.layout = dbc.Container([
                     # Input field for minimum time
                     dbc.Col(
 
-                    # Input field for graph time unit. Value corresponds to value in seconds.
+                        # Input field for graph time unit. Value corresponds to value in seconds.
                         dcc.Dropdown(
                             id="Time_unit_graph",
                             options=[
@@ -415,25 +420,25 @@ app.layout = dbc.Container([
 
             ], gap=3),
 
-                html.Div(className = 'mb-3'),
+            html.Div(className='mb-3'),
 
-                # Label for optional inputs
-                html.Label('OPTIONAL INPUTS:', className='mb-2 fw-bold text center'),
+            # Label for optional inputs
+            html.Label('OPTIONAL INPUTS:', className='mb-2 fw-bold text center'),
 
-                # Row for input fields for minimum and maximum times
-                dbc.Row([
+            # Row for input fields for minimum and maximum times
+            dbc.Row([
 
-                    # Input field for minimum time
-                    dbc.Col(
-                        dbc.Input(id="time_small", min=0, type="number", placeholder="Min Time")
-                    ),
-                    # Input field for maximum time
-                    dbc.Col(
-                        dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time")
-                    ),
-                ], align='center', justify='center'),
+                # Input field for minimum time
+                dbc.Col(
+                    dbc.Input(id="time_small", min=0, type="number", placeholder="Min Time")
+                ),
+                # Input field for maximum time
+                dbc.Col(
+                    dbc.Input(id="time_large", min=0, type="number", placeholder="Max Time")
+                ),
+            ], align='center', justify='center'),
 
-           ], width=4
+        ], width=4
         ),
 
         # Column for radio buttons and input fields
@@ -546,7 +551,7 @@ app.layout = dbc.Container([
                     multi=False,
                     placeholder="Select a Dataset"
                 )
-            ], width = 3),
+            ], width=3),
 
             # Column for dropdown menu and input fields
             dbc.Col([
@@ -563,7 +568,7 @@ app.layout = dbc.Container([
 
                 ], gap=3)
 
-               ], width=3),
+            ], width=3),
 
         ], align='top', justify='center'),
 
@@ -649,22 +654,22 @@ app.layout = dbc.Container([
                 ),
 
             ]),
-            ], width=11,
+        ], width=11,
             class_name='mb-3'
         ),
 
-    dbc.Row([
+        dbc.Row([
 
             dbc.Col([
                 dbc.Col(
                     html.Label('CURRENT WORKSPACE:', className='mb-2 fw-bold text center'),
                     width=12),
-            dbc.Alert(
-                id="Workspace_alert",
-                is_open=False,
-                class_name='text-center'
-            ),
-            ], width = 8),
+                dbc.Alert(
+                    id="Workspace_alert",
+                    is_open=False,
+                    class_name='text-center'
+                ),
+            ], width=8),
 
             # Column for clearing files
             dbc.Col(
@@ -690,8 +695,7 @@ app.layout = dbc.Container([
                     gap=2),
                 width=4),
 
-        ], align='center', justify='evenly', className = 'mb-3'),
-
+        ], align='center', justify='evenly', className='mb-3'),
 
         # Horizontal rule to separate content
         dbc.Row([
@@ -742,7 +746,6 @@ app.layout = dbc.Container([
                     dbc.DropdownMenuItem("Clear Uploads", id="dropdown_BARN_clear"),
                 ],
                     label="UPDATE"),
-
 
                 # Input element for entering the new title or legend
                 dbc.Input(
@@ -820,31 +823,30 @@ app.layout = dbc.Container([
                 min=0,
                 type="number",
                 placeholder="Enter Sample Frequency (Hz)",
-                className = 'mb-3'
+                className='mb-3'
             ),
 
-
-        dcc.Dropdown(
-            id="Moving_average",
-            options=[
-                {'label': 'Raw Data', 'value': 'raw'},
-                {'label': 'Custom', 'value': 'Custom'},
-                {'label': '1 sec', 'value': 1},
-                {'label': '5 sec', 'value': 5},
-                {'label': '10 sec', 'value': 10},
-                {'label': '30 sec', 'value': 30},
-                {'label': '1 min', 'value': 60},
-                {'label': '5 min', 'value': 300},
-                {'label': '10 min', 'value': 600},
-                {'label': '30 min', 'value': 1800},
-                {'label': '1 hr', 'value': 3600},
-                {'label': '12 hr', 'value': 43200},
-                {'label': '1 day', 'value': 86400}
-            ],
-            multi=False,
-            value=None,
-            placeholder="Enter Moving Average",
-            className='mb-3'
+            dcc.Dropdown(
+                id="Moving_average",
+                options=[
+                    {'label': 'Raw Data', 'value': 'raw'},
+                    {'label': 'Custom', 'value': 'Custom'},
+                    {'label': '1 sec', 'value': 1},
+                    {'label': '5 sec', 'value': 5},
+                    {'label': '10 sec', 'value': 10},
+                    {'label': '30 sec', 'value': 30},
+                    {'label': '1 min', 'value': 60},
+                    {'label': '5 min', 'value': 300},
+                    {'label': '10 min', 'value': 600},
+                    {'label': '30 min', 'value': 1800},
+                    {'label': '1 hr', 'value': 3600},
+                    {'label': '12 hr', 'value': 43200},
+                    {'label': '1 day', 'value': 86400}
+                ],
+                multi=False,
+                value=None,
+                placeholder="Enter Moving Average",
+                className='mb-3'
             ),
 
             # Label for optional inputs
@@ -859,9 +861,7 @@ app.layout = dbc.Container([
 
         ], width=3),
 
-
-
-    ], align='start', justify='evenly', className = 'mb-4'),
+    ], align='start', justify='evenly', className='mb-4'),
 
     dbc.Row([
         dbc.Col(
@@ -898,70 +898,68 @@ app.layout = dbc.Container([
         ], width=12),
     ),
 
-dbc.Row([
+    dbc.Row([
 
-    dbc.Col(
+        dbc.Col(
 
-        dbc.Stack([
-            # Label for selecting data file
-            html.Label("CHOOSE DATASET", className ='fw-bold'),
+            dbc.Stack([
+                # Label for selecting data file
+                html.Label("CHOOSE DATASET", className='fw-bold'),
 
-            # Radio buttons for selecting data file
-            dbc.RadioItems(id="file_checklist", inline=True),
+                # Radio buttons for selecting data file
+                dbc.RadioItems(id="file_checklist", inline=True),
 
-            # Label for selecting quantity of data to download
-            html.Label("CHOOSE QUANTITY", className ='fw-bold'),
+                # Label for selecting quantity of data to download
+                html.Label("CHOOSE QUANTITY", className='fw-bold'),
 
-            # Checkbox to select all data
-            dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
+                # Checkbox to select all data
+                dbc.Checklist(["All"], [], id="all_vel_checklist", inline=True),
 
-            # Checkbox to select specific data
-            dbc.Checklist(value=[], options=[], id="vel_checklist", inline=True),
+                # Checkbox to select specific data
+                dbc.Checklist(value=[], options=[], id="vel_checklist", inline=True),
 
-        ], gap=2),
+            ], gap=2),
 
-    width = 4),
+            width=4),
 
-    dbc.Col([
+        dbc.Col([
 
-        dbc.Stack([
+            dbc.Stack([
 
-            # Button for downloading selected data
-            dbc.Button("DOWNLOAD", class_name='fw-bold', id="btn_download", size="lg", color="primary"),
+                # Button for downloading selected data
+                dbc.Button("DOWNLOAD", class_name='fw-bold', id="btn_download", size="lg", color="primary"),
 
-            html.Label('OPTIONAL INPUTS:', className='fw-bold'),
+                html.Label('OPTIONAL INPUTS:', className='fw-bold'),
 
+                # Row for input fields for minimum and maximum times
+                dbc.Row([
 
-            # Row for input fields for minimum and maximum times
-            dbc.Row([
+                    dbc.Col(
+                        # Input field for file name
+                        dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
+                        className='mb-3', width=12),
 
-                dbc.Col(
-                # Input field for file name
-                dbc.Input(id="file_name_input", type="text", placeholder="Enter Filename"),
-                className = 'mb-3', width = 12),
+                    # Input field for minimum time
+                    dbc.Col(
+                        dbc.Input(id="small_t", type="number", placeholder="Min Time (s)")
+                    ),
 
-                # Input field for minimum time
-                dbc.Col(
-                    dbc.Input(id="small_t", type="number", placeholder="Min Time (s)")
-                ),
+                    # Input field for maximum time
+                    dbc.Col(
+                        dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time (s)")
+                    ),
 
-                # Input field for maximum time
-                dbc.Col(
-                    dbc.Input(id="big_t", min=0, type="number", placeholder="Max Time (s)")
-                ),
+                ], justify="center"),
 
-            ], justify="center"),
+            ], gap=3),
 
-        ], gap=3),
+        ], width=4),
 
-    ], width = 4),
-
-
-    ], align='top', justify='center',className = 'mb-5'),
+    ], align='top', justify='center', className='mb-5'),
 
     # # Components for storing and downloading data
-    dbc.Spinner(children = [dcc.Store(id='Loading_variable_Process', storage_type='memory')],color="primary",
-                fullscreen = True, size = 'lg', show_initially = False, delay_hide = 80, delay_show = 80),
+    dbc.Spinner(children=[dcc.Store(id='Loading_variable_Process', storage_type='memory')], color="primary",
+                fullscreen=True, size='lg', show_initially=False, delay_hide=80, delay_show=80),
 
     # # Components for storing and downloading data
     dbc.Spinner(children=[dcc.Store(id='Loading_variable_Table', storage_type='memory')], color="primary",
@@ -984,6 +982,7 @@ dbc.Row([
     dcc.Store(id='Cal_storage', storage_type='local'),
 ])
 
+
 # Callback 1
 # Call back to update the workspace filepath.
 # This callback function is triggered by a click event on the 'Workspace_update' button.
@@ -999,7 +998,6 @@ dbc.Row([
     State(component_id='Workspace', component_property='value'),
 )
 def update_Workspace(n_clicks, Workspace_input):
-
     # Try/Except, used to catch any errors not considered
     try:
 
@@ -1046,6 +1044,7 @@ def update_Workspace(n_clicks, Workspace_input):
 
     return no_update, error_temp, color_temp, True, error_perm, color_perm, True
 
+
 # Callback 2
 # Callback function for clearing the workspace store.
 @app.callback(
@@ -1065,7 +1064,6 @@ def update_Workspace(n_clicks, Workspace_input):
     prevent_initial_call=True
 )
 def clear_Workspace(n_clicks, Workspace_data):
-
     try:
         # If the callback was triggered by the 'Workspace_clear' button
         if ctx.triggered_id == 'Workspace_clear':
@@ -1122,14 +1120,16 @@ def clear_Workspace(n_clicks, Workspace_data):
 
                     # Prepare the success/error message
                     if deleted_files != [] and error_files == []:
-                        error_temp = 'WORKSPACE DATA CLEARED. '  + ', '.join(deleted_files) + ' REMOVED.'
+                        error_temp = 'WORKSPACE DATA CLEARED. ' + ', '.join(deleted_files) + ' REMOVED.'
                         color_temp = 'success'
                     elif deleted_files == [] and error_files != []:
-                        error_temp = 'WORKSPACE CLEARED. ' + 'NO FILES REMOVED. ' + 'ERROR DELETING: ' + ', '.join(error_files)
+                        error_temp = 'WORKSPACE CLEARED. ' + 'NO FILES REMOVED. ' + 'ERROR DELETING: ' + ', '.join(
+                            error_files)
                         color_temp = 'primary'
                     elif error_files != [] and deleted_files != []:
-                        error_temp = 'WORKSPACE CLEARED. ' + ', '.join(deleted_files) + ' REMOVED. ' + 'ERROR DELETING: ' +\
-                                ', '.join(error_files)
+                        error_temp = 'WORKSPACE CLEARED. ' + ', '.join(
+                            deleted_files) + ' REMOVED. ' + 'ERROR DELETING: ' + \
+                                     ', '.join(error_files)
                         color_temp = 'primary'
                     elif error_files == [] and deleted_files == []:
                         error_temp = 'WORKSPACE CLEARED. ' + 'NO FILES REMOVED.'
@@ -1139,7 +1139,7 @@ def clear_Workspace(n_clicks, Workspace_data):
                     color_perm = 'danger'
 
             # Return updated values for UI components
-            return Workspace_input, Workspace_Clear_data, Upload_Clear_data, filedata_Clear_data, error_temp,\
+            return Workspace_input, Workspace_Clear_data, Upload_Clear_data, filedata_Clear_data, error_temp, \
                 color_temp, True, error_perm, color_perm, True, table_data
 
     except Exception as e:
@@ -1147,8 +1147,9 @@ def clear_Workspace(n_clicks, Workspace_data):
         color_temp = 'danger'
 
         # Return no_update for output components when an exception occurs
-        return no_update, no_update, no_update, no_update, error_temp, color_temp, True, no_update, no_update,\
+        return no_update, no_update, no_update, no_update, error_temp, color_temp, True, no_update, no_update, \
             True, no_update
+
 
 # Callback 3
 # Callback to update workspace alert based on data
@@ -1159,7 +1160,6 @@ def clear_Workspace(n_clicks, Workspace_data):
     Input(component_id="Workspace_store", component_property='data'),
 )
 def update_Workspace_Alert(Workspace_data):
-
     try:
 
         if Workspace_data is None:
@@ -1173,6 +1173,7 @@ def update_Workspace_Alert(Workspace_data):
     except Exception as e:
         return str(e), 'danger', True
 
+
 # Callback 4
 # Define callback function for updating alert text based on calibration file data.
 @app.callback(
@@ -1182,7 +1183,6 @@ def update_Workspace_Alert(Workspace_data):
     Input(component_id="Cal_storage", component_property='data'),
 )
 def update_cal_text(Cal_data):
-
     try:
         # If there's no calibration data provided
         if Cal_data is None:
@@ -1203,19 +1203,18 @@ def update_cal_text(Cal_data):
         color = 'danger'
         return alert_cal, color, True
 
+
 # Callback 5
 # Define callback function for processing the uploaded calibration file
-@ app.callback(
+@app.callback(
     Output(component_id="Cal_storage", component_property='data', allow_duplicate=True),
     Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
     Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
     Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='submit_Cal_file', component_property='filename'),
     Input(component_id='submit_Cal_file', component_property='contents'),
-        prevent_initial_call=True)
-
+    prevent_initial_call=True)
 def cal_analysis(filename, contents):
-
     try:
 
         if filename == '' or contents == '':
@@ -1243,11 +1242,11 @@ def cal_analysis(filename, contents):
                 # Convert the DataFrame to a dictionary and remove NaN values
                 cal_data = cal_data.to_dict('list')
 
-                if list(cal_data.keys()) == ['Dynfit', 'Yawfit', 'Ldyn1', 'Ldyn2', 'Lyaw1', 'Lyaw2','Ldyn0','Zero',
+                if list(cal_data.keys()) == ['Dynfit', 'Yawfit', 'Ldyn1', 'Ldyn2', 'Lyaw1', 'Lyaw2', 'Ldyn0', 'Zero',
                                              'Zero1', 'Zero2', 'Zero3', 'Zero4']:
 
                     cal_data = [filename, {key: [val for val in values if not math.isnan(val)] for key, values in
-                                       cal_data.items()}]
+                                           cal_data.items()}]
 
                     # Prepare the success message
                     error = filename + ' UPLOADED SUCCESSFULLY'
@@ -1269,23 +1268,22 @@ def cal_analysis(filename, contents):
         color = 'danger'
         return no_update, error, color, True
 
+
 # Callback 6
 # Define callback function for updating the file upload checklist data and verifying file format
 @app.callback(
-        Output(component_id='submit_files', component_property='value'),
-        Output(component_id='filename_filepath', component_property='data'),
-        Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id = 'dropdown_BARN_update', component_property ='n_clicks'),
-        State(component_id='submit_files', component_property='value'),
-        State(component_id='filename_filepath', component_property='data'),
-        prevent_initial_call = True)
-
+    Output(component_id='submit_files', component_property='value'),
+    Output(component_id='filename_filepath', component_property='data'),
+    Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id='dropdown_BARN_update', component_property='n_clicks'),
+    State(component_id='submit_files', component_property='value'),
+    State(component_id='filename_filepath', component_property='data'),
+    prevent_initial_call=True)
 def update_file_to_upload_checklist(n_clicks, filepath1, filename_filepath_data):
-
     try:
-    # Check if the file upload update button is clicked
+        # Check if the file upload update button is clicked
         if ctx.triggered_id == 'dropdown_BARN_update':
             # Verify if the file path input is empty or not
             if filepath1 is None or filepath1 == '':
@@ -1347,6 +1345,7 @@ def update_file_to_upload_checklist(n_clicks, filepath1, filename_filepath_data)
         color = 'danger'
         return no_update, no_update, error, color, True
 
+
 # Callback 7
 # Define callback function for clearing the file upload checklist data
 @app.callback(
@@ -1376,6 +1375,7 @@ def clear_upload(n_clicks):
         error = str(e)
         color = 'danger'
         return no_update, no_update, error, color, True
+
 
 # Callback 7
 # Callback to analyse data from uploaded files
@@ -1409,7 +1409,6 @@ def clear_upload(n_clicks):
 )
 def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, filenames, Workspace_data, moving_val,
                     moving_options, custom_moving):
-
     # Handle errors and exceptions
     try:
         # Check if the "newfile" button was clicked
@@ -1460,7 +1459,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         error_temp = 'ENTER CUSTOM MOVING AVERAGE'
                         color_temp = "danger"
                         file_data = no_update
-                        
+
                     elif moving_val == 'Custom' and not isinstance(custom_moving, int):
                         error_temp = 'ENTER INTEGER VALUES FOR CUSTOM MOVING AVERAGE'
                         color_temp = "danger"
@@ -1565,7 +1564,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
                                         # Iterate over the velocity data labels
                                         for value in ['Ux', 'Uy', 'Uz', 'U1']:
-
                                             # Interpolate the velocity data to the new time array
                                             velocity_data_resampled = np.interp(time_data_resampled,
                                                                                 Barn_data['t'],
@@ -1579,7 +1577,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
 
                                 # If there's an error processing the file, add it to the error list
                                 except Exception as e:
-                                    error_file.append(value + ': '+ str(e))
+                                    error_file.append(value + ': ' + str(e))
                             else:
                                 repeated_value.append(value)
 
@@ -1633,7 +1631,6 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                             file_data = [combined_filenames, combined_dtype_shape, combined_CalData, combined_SF,
                                          combined_filepath, combined_min, combined_max]
 
-
                         # Set loading variable to 'done' when processing is complete
                     loading_variable = 'done'
                     error_perm = no_update
@@ -1659,7 +1656,7 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                     loading_variable = no_update
 
         # Return output values
-        return file_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, upload_file_checklist,\
+        return file_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, upload_file_checklist, \
             loading_variable, Workspace_store_clear, filestorage_clear, filename_filepath_clear
 
     except Exception as e:
@@ -1668,30 +1665,28 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
         color_temp = 'danger'
         upload_file_checklist = []
 
-
-    return no_update, error_temp, color_temp, True, no_update, no_update, True, upload_file_checklist,\
+    return no_update, error_temp, color_temp, True, no_update, no_update, True, upload_file_checklist, \
         no_update, no_update, no_update, no_update
+
 
 # Callback 9
 # Callback to clear data
 @app.callback(
-        Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
-        Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
-        Output(component_id='Workspace_alert_temp', component_property='is_open', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='filestorage', component_property='data', allow_duplicate=True),
-        Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
-        Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
-        Input(component_id='clear_files', component_property='n_clicks'),
-        State(component_id='filestorage', component_property='data'),
-        State(component_id="clear_file_checklist", component_property='value'),
-        State(component_id='Workspace_store', component_property='data'),
-        prevent_initial_call=True)
-
+    Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
+    Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
+    Output(component_id='Workspace_alert_temp', component_property='is_open', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='filestorage', component_property='data', allow_duplicate=True),
+    Output(component_id="filestorage", component_property='clear_data', allow_duplicate=True),
+    Output(component_id="clear_file_checklist", component_property='value', allow_duplicate=True),
+    Input(component_id='clear_files', component_property='n_clicks'),
+    State(component_id='filestorage', component_property='data'),
+    State(component_id="clear_file_checklist", component_property='value'),
+    State(component_id='Workspace_store', component_property='data'),
+    prevent_initial_call=True)
 def clear_files(n_clicks, maindata, whatclear, Workspace_data):
-
     # # Try/Except, used to catch any errors not considered
     try:
 
@@ -1786,23 +1781,22 @@ def clear_files(n_clicks, maindata, whatclear, Workspace_data):
         # Return required values
         return error_temp, color_temp, True, no_update, no_update, no_update, no_update, no_update, no_update, no_update
 
+
 # Callback 10
 # Callback which syncs the all button of the upload checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
 @app.callback(
-        Output(component_id="upload_file_checklist", component_property='value'),
-        Output(component_id='all_upload_file_checklist', component_property='value'),
-        Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id="upload_file_checklist", component_property='value'),
-        Input(component_id='all_upload_file_checklist', component_property='value'),
-        State(component_id='filename_filepath', component_property='data'),
-        prevent_initial_call=True
-        )
-
+    Output(component_id="upload_file_checklist", component_property='value'),
+    Output(component_id='all_upload_file_checklist', component_property='value'),
+    Output(component_id='UploadFiles_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='UploadFiles_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id="upload_file_checklist", component_property='value'),
+    Input(component_id='all_upload_file_checklist', component_property='value'),
+    State(component_id='filename_filepath', component_property='data'),
+    prevent_initial_call=True
+)
 def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filename_filepath_data):
-
     # Prevent update if there are no file names
     if filename_filepath_data is None:
         raise PreventUpdate
@@ -1831,23 +1825,22 @@ def file_upload_sync_checklist(upload_file_check, all_upload_file_check, filenam
 
         return no_update, no_update, error, color, True
 
+
 # Callback 11
 # Callback which syncs the all button of the clear file checklist. If all is clicked all files will be selected.
 # If all files are clicked all will be selected
 @app.callback(
-        Output(component_id="clear_file_checklist", component_property='value'),
-        Output(component_id='all_clear_file_checklist', component_property='value'),
-        Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
-        Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
-        Output(component_id='Workspace_alert_temp', component_property='is_open', allow_duplicate=True),
-        Input(component_id="clear_file_checklist", component_property='value'),
-        Input(component_id='all_clear_file_checklist', component_property='value'),
-        Input(component_id='filestorage', component_property='data'),
-        prevent_initial_call=True
-        )
-
+    Output(component_id="clear_file_checklist", component_property='value'),
+    Output(component_id='all_clear_file_checklist', component_property='value'),
+    Output(component_id='Workspace_alert_temp', component_property='children', allow_duplicate=True),
+    Output(component_id='Workspace_alert_temp', component_property='color', allow_duplicate=True),
+    Output(component_id='Workspace_alert_temp', component_property='is_open', allow_duplicate=True),
+    Input(component_id="clear_file_checklist", component_property='value'),
+    Input(component_id='all_clear_file_checklist', component_property='value'),
+    Input(component_id='filestorage', component_property='data'),
+    prevent_initial_call=True
+)
 def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
-
     # If stored data is none prevent update
     if data is None:
         raise PreventUpdate
@@ -1879,6 +1872,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 
     return no_update, no_update, error, color, True
 
+
 # Callback 12
 # Callback which syncs the all button of the vel checklist. If all is clicked all options will be selected.
 # If all options are clicked all will be selected
@@ -1892,15 +1886,13 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
     Input(component_id='all_vel_checklist', component_property='value'),
     prevent_initial_call=True
 )
-
 def vel_sync_checklist(vel_check, all_vel_checklist):
-
     # Try/Except, used to catch any errors not considered
     try:
 
         input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-        vel_type = ['t','U1','Ux', 'Uy', 'Uz']
+        vel_type = ['t', 'U1', 'Ux', 'Uy', 'Uz']
 
         if input_id == "vel_checklist":
             # If the velocity checklist input triggered the callback, update the all velocity checklist
@@ -1920,20 +1912,19 @@ def vel_sync_checklist(vel_check, all_vel_checklist):
 
         return no_update, no_update, error, color, True
 
+
 # Callback 13
 # Call back which updates the download time range to prevent error
 @app.callback(
-        Output(component_id="big_t", component_property='value', allow_duplicate=True),
-        Output(component_id="small_t", component_property='value', allow_duplicate=True),
-        Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id="small_t", component_property='value'),
-        Input(component_id="big_t", component_property='value'),
-        prevent_initial_call=True)
-
+    Output(component_id="big_t", component_property='value', allow_duplicate=True),
+    Output(component_id="small_t", component_property='value', allow_duplicate=True),
+    Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id="small_t", component_property='value'),
+    Input(component_id="big_t", component_property='value'),
+    prevent_initial_call=True)
 def update_vals(small_val, large_val):
-
     if large_val is None or small_val is None:
         raise PreventUpdate
 
@@ -1952,31 +1943,30 @@ def update_vals(small_val, large_val):
 
         return no_update, no_update, error, color, True,
 
+
 # Callback 14
 # Callback to download data
 @app.callback(
-        Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='Loading_variable_Download', component_property='data'),
-        Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
-        Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
-        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
-        Input(component_id="btn_download", component_property='n_clicks'),
-        State(component_id='Workspace_store', component_property='data'),
-        State(component_id="file_name_input", component_property='value'),
-        State(component_id="small_t", component_property='value'),
-        State(component_id="big_t", component_property='value'),
-        State(component_id="vel_checklist", component_property='value'),
-        State(component_id="file_checklist", component_property='value'),
-        State(component_id='filestorage', component_property='data'),
-        prevent_initial_call=True)
-
+    Output(component_id='Download_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Download_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Download_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='Loading_variable_Download', component_property='data'),
+    Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
+    Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
+    Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
+    Input(component_id="btn_download", component_property='n_clicks'),
+    State(component_id='Workspace_store', component_property='data'),
+    State(component_id="file_name_input", component_property='value'),
+    State(component_id="small_t", component_property='value'),
+    State(component_id="big_t", component_property='value'),
+    State(component_id="vel_checklist", component_property='value'),
+    State(component_id="file_checklist", component_property='value'),
+    State(component_id='filestorage', component_property='data'),
+    prevent_initial_call=True)
 def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value, file, file_data):
-
     try:
         # If download button is pressed
         if "btn_download" == ctx.triggered_id:
@@ -2068,14 +2058,16 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                         # Error messages
                         smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                                       ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' to ' + str(max1) +' (s)). '
+                                       ' AVAILABLE RANGE.' + ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(
+                            min1) + ' to ' + str(max1) + ' (s)). '
 
                         bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE' \
-                                     ' RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ('+ str(min1) +' to ' + str(max1) +' (s)). '
+                                     ' RANGE.' + ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(
+                            min1) + ' to ' + str(max1) + ' (s)). '
 
                         both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE' \
-                                       ' THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                               '(' + str(min1) + ' to ' + str(max1) +' (s)). '
+                                       ' THE AVAILABLE RANGE.' + ' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                                 '(' + str(min1) + ' to ' + str(max1) + ' (s)). '
 
                         # Cut data based on conditions and assign error message
                         if smallt is None and bigt is None:
@@ -2108,7 +2100,8 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                                 error_cut = bigt_error
 
                             else:
-                                both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS: ('+ str(smallt) +' to ' + str(bigt) +' (s)). '
+                                both_t_NO_error = 'THE DATA HAS BEEN CUT TO THE SPECIFIED LIMITS: (' + str(
+                                    smallt) + ' to ' + str(bigt) + ' (s)). '
                                 error_cut = both_t_NO_error
 
                         # Assign mask based on condition
@@ -2126,7 +2119,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                         # Concatenate the arrays
                         concatenated_array = np.column_stack(numpy_vect_data)
-                        concatenated_array1 = np.append([vector_value],concatenated_array,  axis=0)
+                        concatenated_array1 = np.append([vector_value], concatenated_array, axis=0)
 
                         # Assigning filenames
                         if selected_name is None or selected_name == '':
@@ -2134,15 +2127,15 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                             error_special = ''
                         else:
                             # Remove special characters from filename
-                            filename = re.sub(r'[^\w\s\-_]+', '',selected_name)
+                            filename = re.sub(r'[^\w\s\-_]+', '', selected_name)
                             # Assign error message
                             if filename != selected_name:
                                 error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
-                                            'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
+                                                'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
                                 if filename == '':
                                     filename = file
                                     error_special = ' DISALLOWED CHARACTERS HAVE BEEN REMOVED FROM THE FILENAME. ' \
-                                            'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
+                                                    'THE FILE HAS BEEN SAVED AS: ' + filename + '.'
                             else:
                                 error_special = ''
 
@@ -2174,7 +2167,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
                     Loading_variable = 'done'
 
         # Return error message, alert color, whether the alert should be open, and loading status
-        return error_temp, color_temp, True, error_perm, color_perm, open_perm, Loading_variable,\
+        return error_temp, color_temp, True, error_perm, color_perm, open_perm, Loading_variable, \
             Workspace_store_clear, filestorage_clear, filename_filepath_clear
 
     except Exception as e:
@@ -2183,12 +2176,13 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
         color_temp = 'danger'
 
         # Return error message, alert color, whether the alert should be open, and no update for the loading status
-        return error_temp, color_temp, True, no_update, no_update, no_update, no_update,\
+        return error_temp, color_temp, True, no_update, no_update, no_update, no_update, \
             no_update, no_update, no_update
+
 
 # Callback 15
 # Call back which updates the TI table time range to prevent error
-@ app.callback(
+@app.callback(
     Output(component_id="big_t_TI", component_property='value', allow_duplicate=True),
     Output(component_id="small_t_TI", component_property='value', allow_duplicate=True),
     Output(component_id='TI_alert', component_property='children', allow_duplicate=True),
@@ -2197,9 +2191,7 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
     Input(component_id="small_t_TI", component_property='value'),
     Input(component_id="big_t_TI", component_property='value'),
     prevent_initial_call=True)
-
 def update_vals2(small_val, large_val):
-
     if large_val is None or small_val is None:
         raise PreventUpdate
 
@@ -2217,6 +2209,7 @@ def update_vals2(small_val, large_val):
         color = 'danger'
 
         return no_update, no_update, error, color, True,
+
 
 # Callback 16
 # Callback to analyse data and update TI table
@@ -2321,16 +2314,19 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
                             # Error messages
                             smallt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MINIMUM TIME' \
-                                           ' AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.'+ \
-                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1)+' to '+str(max1) +' (s)). '
+                                           ' AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
+                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1) + ' to ' + str(
+                                max1) + ' (s)). '
 
                             bigt_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM TIME' \
                                          ' AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
-                                         ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1) +' to '+str(max1) +' (s)). '
+                                         ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1) + ' to ' + str(
+                                max1) + ' (s)). '
 
                             both_t_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE MAXIMUM' \
                                            ' AND MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE AVAILABLE RANGE.' + \
-                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1)+' to '+str(max1) +' (s)). '
+                                           ' AVAILABLE TIME RANGE FOR SELECTED DATA: (' + str(min1) + ' to ' + str(
+                                max1) + ' (s)). '
 
                             # Cut data based on conditions
                             if small_TI is None and big_TI is None:
@@ -2370,7 +2366,8 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
 
                                 else:
                                     both_t_NO_error = 'TURBULENCE INTENSITY CALCULATED. THE DATA HAS BEEN CUT TO THE ' \
-                                                      'SPECIFIED LIMITS: (' + str(small_TI)+' to '+str(big_TI) +' (s)). '
+                                                      'SPECIFIED LIMITS: (' + str(small_TI) + ' to ' + str(
+                                        big_TI) + ' (s)). '
                                     error_temp = both_t_NO_error
                                     color_temp = 'primary'
 
@@ -2421,7 +2418,7 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
                     Loading_variable = 'done'
 
         # Return updated table data, error message, color, and loading variable
-        return table_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, Workspace_store_clear,\
+        return table_data, error_temp, color_temp, True, error_perm, color_perm, open_perm, Workspace_store_clear, \
             filestorage_clear, filename_filepath_clear, Loading_variable
 
     except Exception as e:
@@ -2429,8 +2426,9 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
         error_temp = str(e)
         color_temp = 'danger'
 
-        return no_update, error_temp, color_temp, True, no_update, no_update, no_update, no_update, no_update,\
+        return no_update, error_temp, color_temp, True, no_update, no_update, no_update, no_update, no_update, \
             no_update, no_update
+
 
 # Callback 17
 # Callback to clear parameters table
@@ -2441,15 +2439,12 @@ def TI_caluculate(n_clicks, file_data, chosen_file, small_TI, big_TI, table_data
     Output(component_id='TI_alert', component_property='is_open', allow_duplicate=True),
     Input(component_id='Clear_Table', component_property='n_clicks'),
     prevent_initial_call=True)
-
 def clear_table(n_clicks):
-
     # Try/Except, used to catch any errors not considered
     try:
 
         # If clear table pressed clear data and display error message
         if "Clear_Table" == ctx.triggered_id:
-
             error = 'TABLE CLEARED'
 
             color = 'success'
@@ -2466,38 +2461,37 @@ def clear_table(n_clicks):
 
         return no_update, error, color, True
 
+
 # Callback 18
 # Callback which updates the graph based on graph options
 @app.callback(
-        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
-        Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
-        Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
-        Output(component_id='Loading_variable_Graph', component_property='data', allow_duplicate=True),
-        Input(component_id='plot_bttn', component_property='n_clicks'),
-        State(component_id = 'filestorage', component_property = 'data'),
-        State(component_id = 'File', component_property = 'value'),
-        State(component_id = 'Vect', component_property = 'value'),
-        State(component_id='time_small', component_property='value'),
-        State(component_id='time_large', component_property='value'),
-        State(component_id='legend_Data', component_property='data'),
-        State(component_id='title_Data', component_property='data'),
-        State(component_id='legend_onoff', component_property='value'),
-        State(component_id='title_onoff', component_property='value'),
-        State(component_id='Workspace_store', component_property='data'),
-        State(component_id='Time_unit_graph', component_property='value'),
-        State(component_id='Time_unit_graph', component_property='options'),
-        prevent_initial_call = True)
-
+    Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Workspace_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='Workspace_store', component_property='clear_data', allow_duplicate=True),
+    Output(component_id='filestorage', component_property='clear_data', allow_duplicate=True),
+    Output(component_id='filename_filepath', component_property='clear_data', allow_duplicate=True),
+    Output(component_id='Loading_variable_Graph', component_property='data', allow_duplicate=True),
+    Input(component_id='plot_bttn', component_property='n_clicks'),
+    State(component_id='filestorage', component_property='data'),
+    State(component_id='File', component_property='value'),
+    State(component_id='Vect', component_property='value'),
+    State(component_id='time_small', component_property='value'),
+    State(component_id='time_large', component_property='value'),
+    State(component_id='legend_Data', component_property='data'),
+    State(component_id='title_Data', component_property='data'),
+    State(component_id='legend_onoff', component_property='value'),
+    State(component_id='title_onoff', component_property='value'),
+    State(component_id='Workspace_store', component_property='data'),
+    State(component_id='Time_unit_graph', component_property='value'),
+    State(component_id='Time_unit_graph', component_property='options'),
+    prevent_initial_call=True)
 def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt, legend_data, title_data, leg, title,
                  Workspace_data, t_val, time_unit_options):
-
     # Try/Except, used to catch any errors not considered
     try:
 
@@ -2565,22 +2559,21 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                             if option['value'] == t_val:
                                 t_label = option['label']
 
-
                         # Error messages
                         smallt_error = 'THE DATA HAS BEEN CUT TO THE MINIMUM TIME AS THE REQUESTED TIME IS OUTSIDE THE' \
-                                       ' AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                           '('+ str(min1) +' to ' + str(max1) + ' ' + t_label+ ')'
+                                       ' AVAILABLE RANGE.' + ' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                             '(' + str(min1) + ' to ' + str(max1) + ' ' + t_label + ')'
 
                         bigt_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM TIME AS THE REQUESTED TIME IS OUTSIDE ' \
-                                     'THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
-                                                            '('+ str(min1) +' to ' + str(max1) + ' ' + t_label+ ')'
+                                     'THE AVAILABLE RANGE.' + ' AVAILABLE TIME RANGE FOR SELECTED DATA: ' \
+                                                              '(' + str(min1) + ' to ' + str(max1) + ' ' + t_label + ')'
 
                         both_t_error = 'THE DATA HAS BEEN CUT TO THE MAXIMUM AND MINIMUM TIME AS THE REQUESTED ' \
-                                       'TIME IS OUTSIDE THE AVAILABLE RANGE.'+' AVAILABLE TIME RANGE FOR SELECTED DATA:'\
-                                                      ' (' + str(min1) + ' to ' + str(max1) + ' ' + t_label+ ')'
+                                       'TIME IS OUTSIDE THE AVAILABLE RANGE.' + ' AVAILABLE TIME RANGE FOR SELECTED DATA:' \
+                                                                                ' (' + str(min1) + ' to ' + str(
+                            max1) + ' ' + t_label + ')'
 
                         both_t_NO_error = 'THE DATA HAS BEEN CUT TO: '
-
 
                         # Assign values to bigt and smallt if not inputted
                         if smallt is None and bigt is None:
@@ -2623,7 +2616,8 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                     bigt) + ' ' + t_label + ')'
                                 color_temp = 'primary'
                             else:
-                                error_cut_good = both_t_NO_error + '(' + str(smallt) + ' to ' + str(bigt) + ' ' + t_label+ ')'
+                                error_cut_good = both_t_NO_error + '(' + str(smallt) + ' to ' + str(
+                                    bigt) + ' ' + t_label + ')'
                                 color_temp = 'success'
                             error_cut = ''
 
@@ -2668,9 +2662,9 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                     go.Scattergl(
                                         name=f"{file} {vector}",
                                         showlegend=True),
-                                        hf_x=numpy_vect_data[file]['t'],
-                                        hf_y=numpy_vect_data[file][vector]
-                                    )
+                                    hf_x=numpy_vect_data[file]['t'],
+                                    hf_y=numpy_vect_data[file][vector]
+                                )
 
                                 # Creating a list of current legend names
                                 current_names.append(f"{file} {vector}")
@@ -2699,14 +2693,14 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
                                     fig.for_each_trace(lambda t: t.update(name=newname_result[t.name],
                                                                           legendgroup=newname_result[t.name],
                                                                           hovertemplate=t.hovertemplate.replace(
-                                                                          t.name,
-                                                                          newname_result[
-                                                                          t.name]) if t.hovertemplate is not None else None)
+                                                                              t.name,
+                                                                              newname_result[
+                                                                                  t.name]) if t.hovertemplate is not None else None)
                                                        )
 
                                     fig.layout.update(showlegend=True)
 
-                                    error_leg  = ''
+                                    error_leg = ''
 
                                 else:
                                     # If legend entries do not match display error message
@@ -2729,7 +2723,7 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 
         # Return figure, error message, alert color, and loading status
         return fig, error_temp, color_temp, True, error_perm, color_perm, open_perm, Workspace_Clear_data, \
-            Upload_Clear_data,filedata_Clear_data, Loading_Variable
+            Upload_Clear_data, filedata_Clear_data, Loading_Variable
 
     except Exception as e:
         # If any error display message
@@ -2749,20 +2743,18 @@ def update_graph(n_clicks, file_data, file_inputs, vector_inputs1, smallt, bigt,
 # Callback 19
 # Callback to clear graph through the click of a button
 @app.callback(
-        Output(component_id = 'Velocity_Graph', component_property = 'figure', allow_duplicate=True),
-        Output(component_id='File', component_property='value'),
-        Output(component_id='Vect', component_property='value'),
-        Output(component_id='time_small', component_property='value'),
-        Output(component_id='time_large', component_property='value'),
-        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-        Output(component_id='Time_unit_graph', component_property='value'),
-        Input(component_id='plot_clear_bttn', component_property='n_clicks'),
+    Output(component_id='Velocity_Graph', component_property='figure', allow_duplicate=True),
+    Output(component_id='File', component_property='value'),
+    Output(component_id='Vect', component_property='value'),
+    Output(component_id='time_small', component_property='value'),
+    Output(component_id='time_large', component_property='value'),
+    Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+    Output(component_id='Time_unit_graph', component_property='value'),
+    Input(component_id='plot_clear_bttn', component_property='n_clicks'),
     prevent_initial_call=True)
-
 def clear_graph(n_clicks):
-
     # Try/Except, used to catch any errors not considered
     try:
         if ctx.triggered_id == 'plot_clear_bttn':
@@ -2781,23 +2773,22 @@ def clear_graph(n_clicks):
 
         return no_update, no_update, no_update, no_update, no_update, error, color, True, no_update
 
+
 # Callback 20
 # Callback to update legend or title data
 @app.callback(
-     Output(component_id='New_name', component_property='value'),
-     Output(component_id='legend_Data', component_property='data'),
-     Output(component_id='title_Data', component_property='data'),
-     Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-     Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-     Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-     Input(component_id="dropdown_legend_update", component_property='n_clicks'),
-     Input(component_id="dropdown_title_update", component_property='n_clicks'),
-     Input(component_id="dropdown_clear", component_property='n_clicks'),
-     State(component_id='New_name', component_property='value'),
-     prevent_initial_call = True)
-
-def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
-
+    Output(component_id='New_name', component_property='value'),
+    Output(component_id='legend_Data', component_property='data'),
+    Output(component_id='title_Data', component_property='data'),
+    Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id="dropdown_legend_update", component_property='n_clicks'),
+    Input(component_id="dropdown_title_update", component_property='n_clicks'),
+    Input(component_id="dropdown_clear", component_property='n_clicks'),
+    State(component_id='New_name', component_property='value'),
+    prevent_initial_call=True)
+def update_leg_title_data(n_click, n_clicks1, n_clicks2, name_input):
     # Try/Except, used to catch any errors not considered
     try:
         # If legend update button is pressed
@@ -2850,6 +2841,7 @@ def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
         color = 'danger'
         return no_update, no_update, no_update, error, color, True
 
+
 # Callback 21
 # Callback which updates dropdowns
 @app.callback(
@@ -2866,9 +2858,7 @@ def update_leg_title_data(n_click, n_clicks1, n_clicks2,  name_input):
     Input(component_id='filestorage', component_property='data'),
     Input(component_id='filename_filepath', component_property='data'),
     prevent_initial_call=True)
-
 def update_dropdowns1(data, filename_filepath_upload_data):
-
     # Try/Except, used to catch any errors not considered
     try:
         if filename_filepath_upload_data is not None:
@@ -2886,8 +2876,8 @@ def update_dropdowns1(data, filename_filepath_upload_data):
             DataDrop_TI = []
         else:
             # If the data is not None, set the dropdown options and checklists accordingly
-            vect_options = ['U1','Ux', 'Uy', 'Uz']
-            vel_checklist = ['t','U1','Ux', 'Uy', 'Uz']
+            vect_options = ['U1', 'Ux', 'Uy', 'Uz']
+            vel_checklist = ['t', 'U1', 'Ux', 'Uy', 'Uz']
             file_dropdown_options = data[0]
             file_checklist = data[0]
             DataDrop_TI = data[0]
@@ -2904,22 +2894,21 @@ def update_dropdowns1(data, filename_filepath_upload_data):
         color = 'danger'
 
         # Return the updated dropdown options and checklists
-        return no_update, no_update, no_update, no_update, no_update,no_update, no_update, error, color, no_update,
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, error, color, no_update,
+
 
 # Callback 22
 # Call back which updates the graph cut time to prevent error
 @app.callback(
-        Output(component_id="time_large", component_property='value', allow_duplicate=True),
-        Output(component_id="time_small", component_property='value', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id='time_small', component_property='value'),
-        Input(component_id='time_large', component_property='value'),
-        prevent_initial_call=True)
-
+    Output(component_id="time_large", component_property='value', allow_duplicate=True),
+    Output(component_id="time_small", component_property='value', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id='time_small', component_property='value'),
+    Input(component_id='time_large', component_property='value'),
+    prevent_initial_call=True)
 def update_vals3(small_val, large_val):
-
     if large_val is None or small_val is None:
         raise PreventUpdate
 
@@ -2938,20 +2927,19 @@ def update_vals3(small_val, large_val):
 
         return no_update, no_update, error, color, True,
 
+
 # Callback 23
 # Call back which updates the graph time units
 @app.callback(
-        Output(component_id="time_large", component_property='placeholder', allow_duplicate=True),
-        Output(component_id="time_small", component_property='placeholder', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
-        Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
-        Input(component_id='Time_unit_graph', component_property='value'),
-        State(component_id='Time_unit_graph', component_property='options'),
-        prevent_initial_call=True)
-
+    Output(component_id="time_large", component_property='placeholder', allow_duplicate=True),
+    Output(component_id="time_small", component_property='placeholder', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='children', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='color', allow_duplicate=True),
+    Output(component_id='Graph_alert', component_property='is_open', allow_duplicate=True),
+    Input(component_id='Time_unit_graph', component_property='value'),
+    State(component_id='Time_unit_graph', component_property='options'),
+    prevent_initial_call=True)
 def update_unit(t_val, time_unit_options):
-
     for option in time_unit_options:
         if option['value'] == t_val:
             t_label = option['label']
@@ -2973,7 +2961,8 @@ def update_unit(t_val, time_unit_options):
 
         return no_update, no_update, error, color, True,
 
+
 # Run app
-if __name__== '__main__':
-    app.run_server(debug=False)
+if __name__ == '__main__':
+    app.run_server(debug=True)
 
