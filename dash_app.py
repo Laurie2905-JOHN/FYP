@@ -19,14 +19,6 @@ import statistics as st
 from plotly_resampler import FigureResampler
 import sys
 
-if getattr(sys, 'frozen', False):
-    # Running the app as an executable
-    app_path = os.path.dirname(sys.executable)
-else:
-    # Running the app as a script
-    app_path = os.path.dirname(os.path.abspath(__file__))
-
-sys.path.append(os.path.join(app_path, 'dash_data'))
 
 # Ignore warning of square root of negative number
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
