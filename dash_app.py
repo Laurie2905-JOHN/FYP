@@ -17,7 +17,6 @@ import scipy
 from scipy import interpolate
 import statistics as st
 from plotly_resampler import FigureResampler
-import sys
 
 
 # Ignore warning of square root of negative number
