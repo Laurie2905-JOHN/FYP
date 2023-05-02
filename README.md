@@ -15,3 +15,7 @@ Tidal turbulence studies reveal considerable variations between sites, and exist
 tools are both costly and inaccurate. The BARNACLE probe offers a cost-effective and accurate solution for measuring
 tidal stream turbulence. However, its data processing capabilities are limited, and data processing was previously
 done in MATLAB, which many users might not have access to.
+
+This project was completed as part of a BEng Final Year Project. 
+
+02/05/2023

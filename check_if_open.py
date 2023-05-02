@@ -25,7 +25,7 @@ def get_open_files_in_directory(directory_path):
     return open_files
 
 # Specify the directory path to check for open files
-directory_path = r"C:\Users\lauri\OneDrive\Documents (1)"
+directory_path = r""
 
 # Call the function to get the list of open files in the specified directory
 open_files_in_directory = get_open_files_in_directory(directory_path)

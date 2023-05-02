@@ -1081,10 +1081,10 @@ def clear_Workspace(n_clicks, Workspace_data):
             else:
 
                 table_data = []
-
                 deleted_files = []
                 error_files = []
 
+                # If workspace is a valid folder
                 if not is_valid_folder_path(Workspace_data):
                     error_temp = 'WORKSPACE NO LONGER EXISTS'
                     color_temp = 'danger'
@@ -1161,7 +1161,6 @@ def clear_Workspace(n_clicks, Workspace_data):
 )
 def update_Workspace_Alert(Workspace_data):
     try:
-
         if Workspace_data is None:
             alert_work = 'NO WORKSPACE SELECTED'
             color1 = 'danger'
@@ -1454,12 +1453,12 @@ def Analyse_content(n_clicks, filename_filepath_data, cal_data, SF, file_data, f
                         error_temp = 'CHECK SELECTED MOVING AVERAGE'
                         color_temp = "danger"
                         file_data = no_update
-
+                    # Check if no custom moving average is selected
                     elif moving_val == 'custom' and custom_moving is None:
                         error_temp = 'ENTER CUSTOM MOVING AVERAGE'
                         color_temp = "danger"
                         file_data = no_update
-
+                    # Check if moving average is an integer
                     elif moving_val == 'custom' and not isinstance(custom_moving, int):
                         error_temp = 'ENTER INTEGER VALUES FOR CUSTOM MOVING AVERAGE'
                         color_temp = "danger"
@@ -1898,7 +1897,7 @@ def file_clear_sync_checklist(clear_file_check, all_clear_check, data):
 def vel_sync_checklist(vel_check, all_vel_checklist):
     # Try/Except, used to catch any errors not considered
     try:
-
+        # Getting input id
         input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
         vel_type = ['t', 'U1', 'Ux', 'Uy', 'Uz']
@@ -2046,23 +2045,13 @@ def download(n_clicks, Workspace_data, selected_name, smallt, bigt, vector_value
 
                         numpy_vect_data = []
 
-                        def load_array_memmap(filename, folder_path, dtype, shape, row_numbers):
-                            filepath = os.path.join(folder_path, filename)
-                            mapped_data = np.memmap(filepath, dtype=dtype, mode='r', shape=shape)
-
-                            if row_numbers == 'all':
-                                loaded_data = mapped_data[:]
-                            else:
-                                loaded_data = mapped_data[row_numbers]
-
-                            return loaded_data
-
                         file_path = file_data[4][i]
 
                         shape_dtype = file_data[1][i]
 
                         shape, dtype = shape_dtype
 
+                        # Load all time data
                         t = load_array_memmap('t.dat', file_path, dtype=dtype, shape=shape[0], row_numbers='all')
 
                         min1 = file_data[5][i]

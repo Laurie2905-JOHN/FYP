@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 # Set your custom file path here
-file_path = r"C:\Users\lauri\OneDrive\Documents (1)\University\Year 3\Semester 2\BARNACLE\Example Data\BARNACLE DATA"
+file_path = r""
 
 # Read the input file and create a NumPy array
 with open(os.path.join(file_path, "Example 1.txt"), "r") as file:

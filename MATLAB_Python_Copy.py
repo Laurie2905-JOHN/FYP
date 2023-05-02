@@ -1,52 +1,187 @@
-import time
-from selenium import webdriver
-import subprocess
-import json
-import threading as thr
-from os import path
-import sys
+import numpy as np
+import scipy.io as sio
+import matplotlib.pyplot as plt
 
-# Kill the server if a dash app is already running
-def kill_server():
-    subprocess.run("lsof -t -i tcp:8080 | xargs kill -9", shell=True)
+# Constants
+rho = 997
+fs = 16  # sample rate
 
-# Start Dash app.
-def start_dash_app_frozen():
-    path_dir = str(path.dirname(sys.executable))
-    subprocess.Popen(path_dir+"/dash_app", shell=False)
+# File retrieving
+logfolder = "C:/Users/lauri/OneDrive/Documents (1)/University/Year 3/Semester 2/BARNACLE/Example Data/"
+ZeroFolder = logfolder
+ZeroFile = 'Mon1527.txt'
+BarnFolder = ZeroFolder
+BarnFile = 'Mon1501.txt'
+CalFolder = ZeroFolder
+CalFile = 'IanYawAndDynCalMk2.mat'
+VectorFolder = ZeroFolder
+VectFile = 'MinMon20210607150154'
+Cal = sio.loadmat(CalFolder + CalFile)
 
-# Start the driver
-def start_driver():
-    driver = webdriver.Chrome()
-    time.sleep(5) # give dash app time to start running
-    driver.get("http://0.0.0.0:8080/") # go to the local server
-    save_browser_session(driver) # save the browser identity info for giving future instructions to the browser (for instance opening up a new browser tab).
+Cal = Cal["Cal"]
+Dynfit = Cal[0][0][0].flatten()
+Yawfit = Cal[0][0][1].flatten()
+LDyn = Cal[0][0][2].flatten()
+LYaw = Cal[0][0][3].flatten()
+LDyn_0 = Cal[0][0][4].flatten()
 
-# Function to save browser session info
-def save_browser_session(input_driver):
-    driver = input_driver
-    executor_url = driver.command_executor._url
-    session_id = driver.session_id
-    browser_file = path_dir+"/browsersession.txt"
-    with open(browser_file, "w") as f:
-        f.write(executor_url)
-        f.write("\n")
-        f.write(session_id)
-    print("DRIVER SAVED IN TEXT FILE browsersession.txt")
+# Evaluating yawcal for a polynomial Cal.Yawfit and dyncal
+yawcal = np.zeros((91, 2))
+yawcal[:, 0] = np.linspace(-45, 45, 91)
+yawcal[:, 1] = np.polyval(Yawfit,yawcal[:, 0])
+dyncal = np.polyval(Dynfit, yawcal[:, 0])
 
-# Infinite while loop to keep server running
-def keep_server_running():
-    while True:
-        time.sleep(60)
-        print("Next run for 60 seconds")
+dyncal = dyncal * LDyn_0
 
-# Putting everything together in a function
-def main():
-    kill_server() # kill open server on port
-    thread = thr.Thread(target=start_dash_app_frozen)
-    thread.start() # start dash app on port
-    start_driver() # start selenium controled chrome browser and go to port
-    keep_server_running() # keep the main file running with a loop
+# Importing Zeroes
+zeros = {}
+zeros['pr_raw'] = np.loadtxt(ZeroFolder + ZeroFile, delimiter=',')
+zeros['pr_mean'] = np.mean(zeros['pr_raw'][1300:1708, :], axis=0)
 
-if __name__ == '__main__':
-    main()
+# Loading actual Barnacle data
+prb = {}
+prb['raw'] = np.loadtxt(BarnFolder + BarnFile, delimiter=',')
+prb['raw'] -= zeros['pr_mean']
+
+
+# Data analysis
+prb['denom'] = np.mean(prb['raw'][:, :4], axis = 1)
+prb['Lyaw'] = (prb['raw'][:, 1] - prb['raw'][:, 3]) / prb['denom']
+prb['Lpitch'] = (prb['raw'][:, 0] - prb['raw'][:, 2]) / prb['denom']
+
+from scipy import interpolate
+
+# Linear extrapolation of endpoints
+#slope = (y[-1] - y[-2]) / (x[-1] - x[-2])
+#y_extrap_left = y[0] - slope * (x[0] - x[1])
+#slope = (y[1] - y[0]) / (x[1] - x[0])
+#y_extrap_right = y[-1] + slope * (x[-1] - x[-2])
+
+ayaw_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
+apitch_interp = interpolate.interp1d(yawcal[:, 1], yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
+
+# Large disparity between MATLAB in ayaw
+
+prb['ayaw'] = ayaw_interp(prb['Lyaw'])
+test = ayaw_interp(-0.1170)
+print(test)
+prb['apitch'] = apitch_interp(prb['Lpitch'])
+
+
+plt.scatter(yawcal[:, 1], yawcal[:, 0])
+plt.scatter(prb['Lyaw'], prb['ayaw'])
+plt.show()
+#plt.scatter(yawcal[:, 1], yawcal[:, 0])
+#plt.scatter(prb['Lyaw'], prb['ayaw'])
+#plt.show()
+
+
+#plt.scatter(yawcal[:, 1], yawcal[:, 0])
+#plt.scatter(prb['Lpitch'], prb['apitch'])
+#plt.show()
+
+
+prb['pitchbigger'] = np.abs(prb['apitch']) > np.abs(prb['ayaw'])
+prb['amax'] = prb['pitchbigger'] * prb['apitch'] + (1 - prb['pitchbigger']) * prb['ayaw']
+
+interp1 = interpolate.interp1d(dyncal,yawcal[:, 0], kind = 'linear' ,fill_value = 'extrapolate')
+prb['ldyn'] = interp1(prb['amax'])
+ldyn_interp = interpolate.interp1d(yawcal[:, 0],dyncal, kind = 'linear' ,fill_value = 'extrapolate')
+prb['ldyn'] = ldyn_interp(prb['amax'])
+
+
+#plt.scatter(yawcal[:, 0], dyncal)
+#plt.scatter(prb['amax'], prb['ldyn'] )
+#plt.show()
+
+# Splitting into velocities
+prb['U1'] = np.sqrt(2 * -prb['ldyn'] * np.mean(prb['raw'][:, :4], axis=1) / rho)
+prb['U1'] = np.sqrt(2 * -prb['ldyn'] * np.mean(prb['raw'][:, :4], axis=1) / rho )
+prb['U1'][np.imag(prb['U1']) > 0] = 0
+
+
+
+prb['Ux'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.cos(np.deg2rad(prb['ayaw']))
+prb['Uy'] = prb['U1'] * np.cos(np.deg2rad(prb['apitch'])) * np.sin(np.deg2rad(prb['ayaw']))
+prb['Uz'] = prb['U1'] * np.sin(np.deg2rad(prb['apitch']))
+
+prb['t'] = np.linspace(0,prb['raw'].shape[0]/fs,prb['raw'].shape[0]);
+
+
+
+
+# Loading vector data
+vect = {}
+vect['raw'] = np.loadtxt(VectorFolder + VectFile + '.dat')
+vect['start'] = vect['raw'][:, 1]
+vect['Ux'] = -vect['raw'][:, 2]
+vect['Uy'] = vect['raw'][:, 3]
+vect['Uz'] = vect['raw'][:, 4]
+
+
+# Vector time data
+vect['t'] = (vect['start'] / fs) + np.linspace(0, (len(vect['raw'])-1)/fs, len(vect['raw']))
+
+vect['U1'] = np.sqrt(vect['Ux']**2 + vect['Uy']**2 + vect['Uz']**2)
+vect['apitch']  = np.arcsin(vect['Uz'] / vect['U1'])
+vect['ayaw']  = np.arctan(vect['Uy'] / vect['Ux'])
+
+
+
+# cut data so that each file is the same length
+if vect['t'][-1] > prb['t'][-1]:
+    vect['Ux'] = vect['Ux'] [vect['t'] <= prb['t'][-1]]
+    vect['Uy'] = vect['Uy'][vect['t'] <= prb['t'][-1]]
+    vect['Uz'] = vect['Uz'][vect['t'] <= prb['t'][-1]]
+    vect['ayaw'] = vect['ayaw'][vect['t'] <= prb['t'][-1]]
+    vect['apitch'] = vect['apitch'][vect['t'] <= prb['t'][-1]]
+    vect['t'] = vect['t'][vect['t'] <= prb['t'][-1]]
+
+elif prb['t'][-1] > vect['t'][-1]:
+    prb['Ux'] = prb['Ux'][prb['t'] <= vect['t'][-1]]
+    prb['Uy'] = prb['Uz'][prb['t'] <= vect['t'][-1]]
+    prb['Uz'] = prb['Uz'][prb['t']<= vect['t'][-1]]
+    prb['ayaw'] = prb['ayaw'][prb['t'] <= vect['t'][-1]]
+    prb['apitch'] = prb['apitch'][prb['t'] <= vect['t'][-1]]
+    prb['t'] = prb['t'][prb['t'] <= vect['t'][-1]]
+
+prb['Ux'] = prb['Ux'][prb['t'] >= vect['t'][0]]
+prb['Uy'] = prb['Uy'][prb['t'] >= vect['t'][0]]
+prb['Uz'] = prb['Uz'][prb['t'] >= vect['t'][0]]
+prb['ayaw'] = prb['ayaw'][prb['t'] >= vect['t'][0]]
+prb['apitch'] = prb['apitch'][prb['t'] >= vect['t'][0]]
+prb['t'] = prb['t'][prb['t']>= vect['t'][0]]
+
+
+#if vect['start'] < 0:
+    #vect['Ux'] = vect['Ux'][vect['t'] >= prb['t'][0]]
+    #vect['Uy'] = vect['Uy'][vect['t'] >= prb['t'][0]]
+   # vect['Uz'] = vect['Uz'][vect['t'] >= prb['t'][0]]
+    #vect['t'] = vect['t'][vect['t'] >= prb['t'][0]]
+
+
+
+
+fig, axs = plt.subplots(2, 2)
+axs[0, 0].plot(prb['t'], prb['Ux'], 'k')
+axs[0, 0].plot(vect['t'],  vect['Ux'] , 'r')
+plt.plot(prb['t'], prb['Ux'], 'k')
+plt.plot(vect['t'],  vect['Ux'] , 'r')
+
+axs[0, 1].plot(prb['t'], prb['Uy'], 'k')
+axs[0, 1].plot(vect['t'], vect['Uy'], 'r')
+#fig, axs = plt.subplots(1, 1)
+#axs[0, 0].plot(prb['t'], prb['Ux'], 'k')
+#axs[0, 0].plot(vect['t'],  vect['Ux'] , 'r')
+
+axs[1, 0].plot(prb['t'], prb['Uz'], 'k')
+axs[1, 0].plot(vect['t'], vect['Uz'], 'r')
+#axs[0, 1].plot(prb['t'], prb['Uy'], 'k')
+#axs[0, 1].plot(vect['t'], vect['Uy'], 'r')
+
+print(len(vect['Ux']))
+print(len(prb['Ux']))
+#axs[1, 0].plot(prb['t'], prb['Uz'], 'k')
+#axs[1, 0].plot(vect['t'], vect['Uz'], 'r')
+
+plt.show()
