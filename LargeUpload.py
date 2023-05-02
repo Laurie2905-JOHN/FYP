@@ -14,7 +14,7 @@ from dash.dependencies import Output
 app = dash.Dash(__name__)
 
 # Set the root folder for file uploads
-UPLOAD_FOLDER_ROOT = r'C:\Users\lauri\Desktop'
+UPLOAD_FOLDER_ROOT = r''
 
 # Configure the uploader component with the application and root folder
 du.configure_upload(
